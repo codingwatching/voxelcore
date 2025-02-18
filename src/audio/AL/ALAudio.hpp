@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <queue>
 #include <string>
+#include <array>
 #include <unordered_map>
 #include <vector>
 
@@ -12,9 +13,11 @@
 #ifdef __APPLE__
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
+#include <OpenAL/alext.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #endif
 
 namespace audio {
@@ -176,10 +179,17 @@ namespace audio {
 
         std::vector<uint> allbuffers;
         std::vector<uint> freebuffers;
-
         uint maxSources = 256;
+
+        void initEffects();
     public:
-        ALAudio(ALCdevice* device, ALCcontext* context);
+        std::array<uint, 2> effectSlots;
+        std::array<uint, 2> effects;
+        std::array<uint, 1> filters;
+
+        bool useEffects;
+
+        ALAudio(ALCdevice* device, ALCcontext* context, bool effects);
         ~ALAudio();
 
         uint getFreeSource();
