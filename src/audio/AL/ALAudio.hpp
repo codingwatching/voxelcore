@@ -9,6 +9,7 @@
 
 #include "typedefs.hpp"
 #include "audio/audio.hpp"
+#include "audio/effects.hpp"
 
 #ifdef __APPLE__
 #include <OpenAL/al.h>
@@ -180,11 +181,12 @@ namespace audio {
         std::vector<uint> allbuffers;
         std::vector<uint> freebuffers;
         uint maxSources = 256;
+        uint maxEffectSlots = 64;
 
         void initEffects();
     public:
-        std::array<uint, 2> effectSlots;
-        std::array<uint, 2> effects;
+        std::vector<uint> effectSlots;
+        std::vector<uint> effects;
         std::array<uint, 1> filters;
 
         bool useEffects;

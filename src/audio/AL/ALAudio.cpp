@@ -535,16 +535,42 @@ ALAudio::~ALAudio() {
     context = nullptr;
 }
 
+template<typename T>
+static bool get_proc_address(const char* name, T& ptr) {
+    ptr = (T) alGetProcAddress(name);
+    return ptr != nullptr;
+}
+
 void ALAudio::initEffects() {
-    for (uint i = 0; i < effectSlots.size(); i++) {
+    bool ok = get_proc_address("alAuxiliaryEffectSloti", alAuxiliaryEffectSloti)
+        && get_proc_address("alGenAuxiliaryEffectSlots", alGenAuxiliaryEffectSlots)
+        && get_proc_address("alGenEffects", alGenEffects)
+        && get_proc_address("alDeleteEffects", alDeleteEffects)
+        && get_proc_address("alIsEffect", alIsEffect)
+        && get_proc_address("alEffecti", alEffecti)
+        && get_proc_address("alEffectf", alEffectf)
+        && get_proc_address("alGenFilters", alGenFilters)
+        && get_proc_address("alDeleteFilters", alDeleteFilters)
+        && get_proc_address("alIsFilter", alIsFilter)
+        && get_proc_address("alFilteri", alFilteri)
+        && get_proc_address("alFilterf", alFilterf)
+    ;
+    if (!ok) {
+        logger.error() << "could not get effects extension function pointers";
+        useEffects = false;
+        return;
+    }
+    for (uint i = 0; i < maxEffectSlots; i++) {
+        effectSlots.emplace_back();
         alGenAuxiliaryEffectSlots(1, &effectSlots[i]);
         if (alGetError() != AL_NO_ERROR) {
-            logger.error() << "could not to create aux effect slot #" << i;
-            useEffects = false;
-            return;
+            break;
         }
     }
-    for (uint i = 0; i < effects.size(); i++) {
+    logger.info() << "created " << effectSlots.size() << " effect slots";
+
+    for (uint i = 0; i < 4; i++) {
+        effects.emplace_back();
         alGenEffects(1, &effects[i]);
         if (alGetError() != AL_NO_ERROR || !alIsEffect(effects[i])) {
             logger.error() << "could not to create effect #" << i;
@@ -552,6 +578,8 @@ void ALAudio::initEffects() {
             return;
         }
     }
+    logger.info() << "created " << effects.size() << " effects";
+
     for (uint i = 0; i < filters.size(); i++) {
         alGenFilters(1, &filters[i]);
         if (alGetError() != AL_NO_ERROR || !alIsFilter(filters[i])) {
@@ -569,6 +597,7 @@ void ALAudio::initEffects() {
         return;
     }
     alEffectf(effects[0], AL_REVERB_DECAY_TIME, 1.0f);
+    alEffectf(effects[0], AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.07f); // default is 0
 
     // Create lowpass filter
     alFilteri(filters[0], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
@@ -699,26 +728,6 @@ std::unique_ptr<ALAudio> ALAudio::create() {
     ALCint sends = 0;
     alcGetIntegerv(device, ALC_MAX_AUXILIARY_SENDS, 1, &sends);
     logger.info() << "device supports " << sends << " aux sends per source";
-
-    if (effects) {
-        bool ok = get_proc_address("alAuxiliaryEffectSloti", alAuxiliaryEffectSloti)
-               && get_proc_address("alGenAuxiliaryEffectSlots", alGenAuxiliaryEffectSlots)
-               && get_proc_address("alGenEffects", alGenEffects)
-               && get_proc_address("alDeleteEffects", alDeleteEffects)
-               && get_proc_address("alIsEffect", alIsEffect)
-               && get_proc_address("alEffecti", alEffecti)
-               && get_proc_address("alEffectf", alEffectf)
-               && get_proc_address("alGenFilters", alGenFilters)
-               && get_proc_address("alDeleteFilters", alDeleteFilters)
-               && get_proc_address("alIsFilter", alIsFilter)
-               && get_proc_address("alFilteri", alFilteri)
-               && get_proc_address("alFilterf", alFilterf)
-        ;
-        if (!ok) {
-            logger.error() << "could not get effects extension function pointers";
-            effects = false;
-        }
-    }
 
     logger.info() << "initialized";
     return std::make_unique<ALAudio>(device, context, effects);
