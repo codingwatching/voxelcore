@@ -89,8 +89,8 @@ static int l_escape(lua::State* L) {
 }
 
 static int l_escape_xml(lua::State* L) {
-    auto string = lua::require_lstring(L, 1);
-    return lua::pushstring(L, util::escape_xml(string));
+    auto string = lua::require_wstring(L, 1);
+    return lua::pushwstring(L, util::escape_xml(string));
 }
 
 const luaL_Reg utf8lib[] = {

@@ -60,24 +60,24 @@ std::string util::escape(std::string_view s, bool escapeUnicode) {
     return ss.str();
 }
 
-std::string util::escape_xml(std::string_view s) {
-    std::stringstream ss;
-    for (char c : s) {
+std::wstring util::escape_xml(std::wstring_view s) {
+    std::wstringstream ss;
+    for (wchar_t c : s) {
         switch (c) {
-            case '&':
-                ss << "&amp;";
+            case L'&':
+                ss << L"&amp;";
                 break;
-            case '<':
-                ss << "&lt;";
+            case L'<':
+                ss << L"&lt;";
                 break;
-            case '>':
-                ss << "&gt;";
+            case L'>':
+                ss << L"&gt;";
                 break;
             case '"':
-                ss << "&quot;";
+                ss << L"&quot;";
                 break;
             case '\'':
-                ss << "&apos;";
+                ss << L"&apos;";
                 break;
             default:
                 ss << c;
