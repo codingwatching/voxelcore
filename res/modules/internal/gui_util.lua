@@ -126,7 +126,8 @@ function gui.show_message(text, actual_callback)
     end
     gui.root.root:add(string.format([[
         <container id='%s' color='#00000080' size-func='-1,-1' z-index='10'>
-            <panel color='#507090E0' size='300' padding='16' gravity='center-center' interval='4'>
+            <panel color='#507090E0' size='300' padding='16'
+                   gravity='center-center' interval='4'>
                 <label>%s</label>
                 <button onclick='DATA.callback()'>@OK</button>
             </panel>
@@ -151,7 +152,8 @@ function gui.ask(text, on_yes, on_no)
     end
     gui.root.root:add(string.format([[
         <container id='%s' color='#00000080' size-func='-1,-1' z-index='10'>
-            <panel color='#507090E0' size='300' padding='16' gravity='center-center' interval='4'>
+            <panel color='#507090E0' size='300' padding='16'
+                   gravity='center-center' interval='4'>
                 <label margin='4'>%s</label>
                 <button onclick='DATA.on_yes()'>@Yes</button>
                 <button onclick='DATA.on_no()'>@No</button>
