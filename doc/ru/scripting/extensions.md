@@ -188,6 +188,12 @@ string.escape(str: string) -> string
 Экранирует строку. Является псевдонимом `utf8.escape`.
 
 ```lua
+string.escape_xml(text: str) -> str
+```
+
+Экранирует спец-символы XML. Является псевдонимом `utf8.escape_xml`.
+
+```lua
 string.pad(str: string, size: number, [опционально] char: string) -> string
 ```
 

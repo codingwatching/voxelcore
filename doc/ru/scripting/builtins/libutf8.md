@@ -30,4 +30,7 @@ utf8.lower(text: str) -> str
 
 -- Экранирует строку
 utf8.escape(text: str) -> str
+
+-- Экранирует спец-символы XML
+utf8.escape_xml(text: str) -> str
 ```
