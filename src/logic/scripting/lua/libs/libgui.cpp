@@ -1090,6 +1090,9 @@ static int l_gui_load_document(lua::State* L) {
 }
 
 static int l_set_syntax_styles(lua::State* L) {
+    if (engine->isHeadless()) {
+        return 0;
+    }
     engine->getGUI().setSyntaxColorScheme(std::make_unique<FontStylesScheme>(
         FontStylesScheme::parse(lua::tovalue(L, 1))
     ));
