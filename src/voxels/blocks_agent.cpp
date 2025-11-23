@@ -434,7 +434,8 @@ inline void get_voxels_impl(
                 }
             } else {
                 const voxel* cvoxels = chunk->voxels;
-                const light_t* clights = chunk->lightmap.getLights();
+                const light_t* clights =
+                    chunk->lightmap ? chunk->lightmap->getLights() : nullptr;
                 for (int ly = y; ly < y + h; ly++) {
                     for (int lz = std::max(z, cz * CHUNK_D);
                              lz < std::min(z + d, (cz + 1) * CHUNK_D);
@@ -451,7 +452,8 @@ inline void get_voxels_impl(
                                 CHUNK_D
                             );
                             voxels[vidx] = cvoxels[cidx];
-                            light_t light = clights[cidx];
+                            light_t light = clights ? clights[cidx]
+                                                    : Lightmap::SUN_LIGHT_ONLY;
                             if (backlight) {
                                 const auto block = blocks.get(voxels[vidx].id);
                                 if (block && block->lightPassing) {

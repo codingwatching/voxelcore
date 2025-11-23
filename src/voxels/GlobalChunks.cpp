@@ -91,14 +91,16 @@ static inline auto load_inventories(
 }
 
 static util::ObjectsPool<Chunk> chunks_pool(1'024);
+static util::ObjectsPool<Lightmap> lightmaps_pool;
 
-std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
+std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
     const auto& found = chunksMap.find(keyfrom(x, z));
     if (found != chunksMap.end()) {
         return found->second;
     }
 
-    auto chunk = chunks_pool.create(x, z);
+    auto chunk =
+        chunks_pool.create(x, z, lighting ? lightmaps_pool.create() : nullptr);
     chunksMap[keyfrom(x, z)] = chunk;
 
     World& world = *level.getWorld();
@@ -125,9 +127,11 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
             level.inventories->store(entry.second);
         }
     }
-    if (auto lights = regions.getLights(chunk->x, chunk->z)) {
-        chunk->lightmap.set(lights.get());
-        chunk->flags.loadedLights = true;
+    if (chunk->lightmap) {
+        if (auto lights = regions.getLights(chunk->x, chunk->z)) {
+            chunk->lightmap->set(lights.get());
+            chunk->flags.loadedLights = true;
+        }
     }
     chunk->blocksMetadata = regions.getBlocksData(chunk->x, chunk->z);
     return chunk;

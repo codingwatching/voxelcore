@@ -153,8 +153,10 @@ static void integrate_chunk_client(Chunk& chunk) {
 
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
-    chunk.lightmap.clear();
-    Lighting::prebuildSkyLight(chunk, *indices);
+    if (chunk.lightmap) {
+        chunk.lightmap->clear();
+        Lighting::prebuildSkyLight(chunk, *indices);
+    }
 
     for (int lz = -1; lz <= 1; lz++) {
         for (int lx = -1; lx <= 1; lx++) {
