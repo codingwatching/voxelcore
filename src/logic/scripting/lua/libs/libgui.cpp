@@ -1089,6 +1089,13 @@ static int l_gui_load_document(lua::State* L) {
     return 0;
 }
 
+static int l_set_syntax_styles(lua::State* L) {
+    engine->getGUI().setSyntaxColorScheme(std::make_unique<FontStylesScheme>(
+        FontStylesScheme::parse(lua::tovalue(L, 1))
+    ));
+    return 0;
+}
+
 const luaL_Reg guilib[] = {
     {"get_viewport", lua::wrap<l_gui_getviewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
@@ -1101,6 +1108,7 @@ const luaL_Reg guilib[] = {
     {"confirm", lua::wrap<l_gui_confirm>},
     {"alert", lua::wrap<l_gui_alert>},
     {"load_document", lua::wrap<l_gui_load_document>},
+    {"set_syntax_styles", lua::wrap<l_set_syntax_styles>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {nullptr, nullptr}
 };

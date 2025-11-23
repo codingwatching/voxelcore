@@ -150,6 +150,18 @@ _MENU = _GUI_ROOT.menu
 menu = _MENU
 gui.root = _GUI_ROOT
 
+do
+    local status, err = pcall(function()
+        local default_styles = toml.parse(file.read(
+            "res:devtools/default_syntax_scheme.toml"
+        ))
+        gui.set_syntax_styles(default_styles)
+    end)
+    if not status then
+        debug.error("could not to load default syntax scheme: "..err)
+    end
+end
+
 ---  Console library extension ---
 console.cheats = {}
 

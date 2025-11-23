@@ -80,6 +80,14 @@ std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
+void GUI::setSyntaxColorScheme(std::unique_ptr<FontStylesScheme> scheme) {
+    syntaxColorScheme = std::move(scheme);
+}
+
+FontStylesScheme* GUI::getSyntaxColorScheme() const {
+    return syntaxColorScheme.get();
+}
+
 void GUI::onAssetsLoad(Assets* assets) {
     rootDocument->rebuildIndices();
     assets->store(rootDocument, "core:root");
