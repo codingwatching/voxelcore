@@ -126,13 +126,39 @@ function gui.show_message(text, actual_callback)
     end
     gui.root.root:add(string.format([[
         <container id='%s' color='#00000080' size-func='-1,-1' z-index='10'>
-            <panel color='#90A0B0A0' size='300' padding='16' gravity='center-center' interval='4'>
+            <panel color='#507090E0' size='300' padding='16' gravity='center-center' interval='4'>
                 <label>%s</label>
                 <button onclick='DATA.callback()'>@OK</button>
             </panel>
         </container>
     ]], id, string.escape_xml(text)), {callback=callback})
     input.add_callback("key:escape", callback, gui.root[id])
+end
+
+function gui.ask(text, on_yes, on_no)
+    on_yes = on_yes or function() end
+    on_no = on_no or function() end
+
+    local id = "dialog_"..random.uuid()
+
+    local yes_callback = function()
+        gui.root[id]:destruct()
+        on_yes()
+    end
+    local no_callback = function()
+        gui.root[id]:destruct()
+        on_no()
+    end
+    gui.root.root:add(string.format([[
+        <container id='%s' color='#00000080' size-func='-1,-1' z-index='10'>
+            <panel color='#507090E0' size='300' padding='16' gravity='center-center' interval='4'>
+                <label margin='4'>%s</label>
+                <button onclick='DATA.on_yes()'>@Yes</button>
+                <button onclick='DATA.on_no()'>@No</button>
+            </panel>
+        </container>
+    ]], id, string.escape_xml(text)), {on_yes=yes_callback, on_no=no_callback})
+    input.add_callback("key:escape", no_callback, gui.root[id])
 end
 
 return gui_util
