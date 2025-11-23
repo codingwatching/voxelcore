@@ -105,7 +105,7 @@ static int l_container_add(lua::State* L) {
         auto subnode = guiutil::create(
             engine->getGUI(), xmlsrc, std::move(env)
         );
-        UINode::getIndices(subnode, docnode.document->getMapWriteable());
+        docnode.document->pushIndices(subnode);
         node->add(std::move(subnode));
     } catch (const std::exception& err) {
         throw std::runtime_error("container:add(...): " + std::string(err.what()));
@@ -410,9 +410,7 @@ static const std::string& request_node_id(const DocumentNode& docnode) {
             reinterpret_cast<std::ptrdiff_t>(docnode.node.get()));
     }
     docnode.node->setId(std::move(id));
-    UINode::getIndices(
-        docnode.node, docnode.document->getMapWriteable()
-    );
+    docnode.document->pushIndices(docnode.node);
     return docnode.node->getId();
 }
 
