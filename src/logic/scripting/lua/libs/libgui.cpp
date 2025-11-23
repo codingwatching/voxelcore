@@ -105,7 +105,7 @@ static int l_container_add(lua::State* L) {
         auto subnode = guiutil::create(
             engine->getGUI(), xmlsrc, std::move(env)
         );
-        UINode::getIndices(subnode, docnode.document->getMapWriteable());
+        docnode.document->pushIndices(subnode);
         node->add(std::move(subnode));
     } catch (const std::exception& err) {
         throw std::runtime_error("container:add(...): " + std::string(err.what()));
@@ -410,9 +410,7 @@ static const std::string& request_node_id(const DocumentNode& docnode) {
             reinterpret_cast<std::ptrdiff_t>(docnode.node.get()));
     }
     docnode.node->setId(std::move(id));
-    UINode::getIndices(
-        docnode.node, docnode.document->getMapWriteable()
-    );
+    docnode.document->pushIndices(docnode.node);
     return docnode.node->getId();
 }
 
@@ -1089,6 +1087,16 @@ static int l_gui_load_document(lua::State* L) {
     return 0;
 }
 
+static int l_set_syntax_styles(lua::State* L) {
+    if (engine->isHeadless()) {
+        return 0;
+    }
+    engine->getGUI().setSyntaxColorScheme(std::make_unique<FontStylesScheme>(
+        FontStylesScheme::parse(lua::tovalue(L, 1))
+    ));
+    return 0;
+}
+
 const luaL_Reg guilib[] = {
     {"get_viewport", lua::wrap<l_gui_getviewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
@@ -1101,6 +1109,7 @@ const luaL_Reg guilib[] = {
     {"confirm", lua::wrap<l_gui_confirm>},
     {"alert", lua::wrap<l_gui_alert>},
     {"load_document", lua::wrap<l_gui_load_document>},
+    {"set_syntax_styles", lua::wrap<l_set_syntax_styles>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {nullptr, nullptr}
 };

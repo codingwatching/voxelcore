@@ -80,6 +80,14 @@ std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
+void GUI::setSyntaxColorScheme(std::unique_ptr<FontStylesScheme> scheme) {
+    syntaxColorScheme = std::move(scheme);
+}
+
+FontStylesScheme* GUI::getSyntaxColorScheme() const {
+    return syntaxColorScheme.get();
+}
+
 void GUI::onAssetsLoad(Assets* assets) {
     rootDocument->rebuildIndices();
     assets->store(rootDocument, "core:root");
@@ -302,7 +310,7 @@ bool GUI::isFocusCaught() const {
 }
 
 void GUI::add(std::shared_ptr<UINode> node) {
-    UINode::getIndices(node, rootDocument->getMapWriteable());
+    rootDocument->pushIndices(node);
     container->add(std::move(node));
 }
 
