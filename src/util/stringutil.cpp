@@ -60,6 +60,33 @@ std::string util::escape(std::string_view s, bool escapeUnicode) {
     return ss.str();
 }
 
+std::string util::escape_xml(std::string_view s) {
+    std::stringstream ss;
+    for (char c : s) {
+        switch (c) {
+            case '&':
+                ss << "&amp;";
+                break;
+            case '<':
+                ss << "&lt;";
+                break;
+            case '>':
+                ss << "&gt;";
+                break;
+            case '"':
+                ss << "&quot;";
+                break;
+            case '\'':
+                ss << "&apos;";
+                break;
+            default:
+                ss << c;
+                break;
+        }
+    }
+    return ss.str();
+}
+
 std::string util::quote(const std::string& s) {
     return escape(s, false);
 }
