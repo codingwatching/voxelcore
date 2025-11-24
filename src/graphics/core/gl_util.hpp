@@ -49,6 +49,20 @@ namespace gl {
     /// TODO: extend
     inline const char* to_string(GLenum item) {
         switch (item) {
+            case GL_INVALID_ENUM:
+                return "invalid enum";
+            case GL_INVALID_VALUE:
+                return "invalid value";
+            case GL_INVALID_OPERATION:
+                return "invalid operation";
+            case GL_STACK_OVERFLOW:
+                return "stack overflow";
+            case GL_STACK_UNDERFLOW:
+                return "stack underflow";
+            case GL_OUT_OF_MEMORY:
+                return "out of memory";
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                return "invalid framebuffer operation";
             case GL_FRAMEBUFFER_UNDEFINED:
                 return "framebuffer undefined";
             case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
