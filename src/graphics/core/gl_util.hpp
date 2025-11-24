@@ -45,4 +45,26 @@ namespace gl {
         }
         return 0;
     }
+
+    /// TODO: extend
+    inline const char* to_string(GLenum item) {
+        switch (item) {
+            case GL_FRAMEBUFFER_UNDEFINED:
+                return "framebuffer undefined";
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                return "framebuffer incomplete attachment";
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                return "framebuffer incomplete missing attachment";
+            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                return "framebuffer incomplete draw buffer";
+            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                return "framebuffer incomplete read buffer";
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                return "framebuffer unsupported";
+            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+                return "framebuffer incomplete multisample";
+            default:
+                return "unknown";
+        }
+    }
 }
