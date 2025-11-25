@@ -73,16 +73,18 @@ static runnable create_runnable(
     return nullptr;
 }
 
-static OnAction create_action(
+static void register_action(
+    UINode& node,
     const UiXmlReader& reader,
     const xml::xmlelement& element,
-    const std::string& name
+    const std::string& name,
+    UIAction action
 ) {
     auto callback = create_runnable(reader, element, name);
     if (callback == nullptr) {
-        return nullptr;
+        return;
     }
-    return [callback](GUI&) { callback(); };
+    node.listenAction(action, [callback](GUI&) { callback(); });
 }
 
 /// @brief Read basic UINode properties
@@ -177,25 +179,13 @@ static void read_uinode(
         }
     }
 
-    if (auto onclick = create_action(reader, element, "onclick")) {
-        node.listenClick(onclick);
-    }
-
-    if (auto onclick = create_action(reader, element, "onrightclick")) {
-        node.listenRightClick(onclick);
-    }
-
-    if (auto onfocus = create_action(reader, element, "onfocus")) {
-        node.listenFocus(onfocus);
-    }
-
-    if (auto ondefocus = create_action(reader, element, "ondefocus")) {
-        node.listenDefocus(ondefocus);
-    }
-
-    if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) {
-        node.listenDoubleClick(ondoubleclick);
-    }
+    register_action(node, reader, element, "onclick", UIAction::CLICK);
+    register_action(node, reader, element, "onrightclick", UIAction::RIGHT_CLICK);
+    register_action(node, reader, element, "onfocus", UIAction::FOCUS);
+    register_action(node, reader, element, "ondefocus", UIAction::DEFOCUS);
+    register_action(node, reader, element, "ondoubleclick", UIAction::DOUBLE_CLICK);
+    register_action(node, reader, element, "onmouseover", UIAction::MOUSE_OVER);
+    register_action(node, reader, element, "onmouseout", UIAction::MOUSE_OUT);
 }
 
 static void read_container_impl(
