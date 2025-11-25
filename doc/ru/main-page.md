@@ -3,7 +3,7 @@
 Документация версии 0.30.
 
 > [!WARNING]
-> Версия находится в разработке. Перейдите к [документации для 0.28](https://github.com/MihailRis/voxelcore/blob/release-0.29/doc/ru/main-page.md)
+> Версия находится в разработке. Перейдите к [документации для 0.29.](https://github.com/MihailRis/voxelcore/blob/release-0.29/doc/ru/main-page.md)
 
 ## Разделы
 
