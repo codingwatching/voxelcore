@@ -42,6 +42,8 @@ Examples:
 - `ondoubleclick` - lua function called when you double click on an element.
 - `onfocus` - lua function called when focusing on an element.
 - `ondefocus` - lua function called when the element loses focus.
+- `onmouseover` - lua function called when the cursor enters an element.
+- `onmouseover` - lua function called when the cursor exits an element.
 - `tooltip` - tooltip text
 - `tooltip-delay` - tooltip show-up delay
 - `gravity` - automatic positioning of the element in the container. (Does not work in automatic containers like panel). Values: *top-left, top-center, top-right, center-left, center-center, center-right, bottom-left, bottom-center, bottom-right*.
