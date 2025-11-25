@@ -136,3 +136,4 @@ Table of contents:
 - [fix: root node id overriding](https://github.com/MihailRis/voxelcore/commit/91cb5ab7d8ca5376d87e1ad69b8f2cb05278d73d)
 - [fix extended block placement across chunk borders](https://github.com/MihailRis/voxelcore/commit/b85c5e367a2adea57ab0c3111e3d3b0cc924322b)
 - [fix modelviewer fbo creation](https://github.com/MihailRis/voxelcore/commit/be6710bc831f700bd9099860c704b3571d1d90fa)
+- [fix: panel width differs to size specified in xml](https://github.com/MihailRis/voxelcore/commit/8cc51a107e27e1cb5ae8343fa0151db9c9a66852)
