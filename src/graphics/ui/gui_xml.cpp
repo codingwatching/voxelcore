@@ -244,10 +244,7 @@ static void read_base_panel_impl(
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
         panel.setPadding(padding);
-        glm::vec2 size = panel.getSize();
-        panel.setSize(glm::vec2(
-            size.x + padding.x + padding.z, size.y + padding.y + padding.w
-        ));
+        panel.refresh();
     }
     if (element.has("orientation")) {
         auto& oname = element.attr("orientation").getText();
