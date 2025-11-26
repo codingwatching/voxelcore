@@ -28,7 +28,10 @@ Table of contents:
 - project:content content source
 - project start application script
 - uinode.exists property
-- `onrightclick` uinode event
+- uinode events:
+    - `onrightclick`
+    - `onmouseover`
+    - `onmouseout`
 - frameless window mode
 - settings:
     - `display.adaptive-menu-fps` experimental flag
