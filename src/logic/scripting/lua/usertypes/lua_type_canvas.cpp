@@ -220,6 +220,14 @@ static int l_set_data(State* L) {
 
     if (lua::isstring(L, 2)) {
         auto ptr = reinterpret_cast<ubyte*>(std::stoull(lua::tostring(L, 2)));
+        int len = lua::touinteger(L, 3);
+        if (len < image.getDataSize()) {
+            throw std::runtime_error(
+                "data size mismatch expected " +
+                std::to_string(image.getDataSize()) + ", got " +
+                std::to_string(len)
+            );
+        }
         std::memcpy(data, ptr, image.getDataSize());
         return 0;
     }
