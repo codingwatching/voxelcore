@@ -2,9 +2,6 @@
 
 Documentation for 0.30.
 
-> [!WARNING]
-> Version is in development. Proceed to [Documentation for 0.29.](https://github.com/MihailRis/voxelcore/blob/release-0.29/doc/en/main-page.md)
-
 ## Sections
 
 - [Assets preloading](assets-preload.md)
