@@ -163,9 +163,9 @@ void Engine::initialize(CoreParameters coreParameters) {
             langs::locale_by_envlocale(platform::detect_locale())
         );
     }
-    content = std::make_unique<ContentControl>(*project, *paths, *input, [this]() {
-        onContentLoad();
-    });
+    content = std::make_unique<ContentControl>(
+        *project, *paths, input.get(), [this]() { onContentLoad(); }
+    );
     scripting::initialize(this);
 
     if (!isHeadless()) {
