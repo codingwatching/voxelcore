@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 #include "Texture.hpp"
 #include "debug/Logger.hpp"
-#include "gl_util.hpp"
 
 static debug::Logger logger("gl-framebuffer");
 
@@ -20,35 +19,21 @@ Framebuffer::Framebuffer(uint fbo, uint depth, std::unique_ptr<Texture> texture)
 }
 
 static std::unique_ptr<Texture> create_texture(int width, int height, int format) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        format,
-        width,
-        height,
-        0,
-        format,
-        GL_UNSIGNED_BYTE,
-        nullptr
-    );
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0
-    );
-    return std::make_unique<Texture>(texture, width, height);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+    return std::make_unique<Texture>(tex, width, height);
 }
 
 Framebuffer::Framebuffer(uint width, uint height, bool alpha) 
   : width(width), height(height)
 {
-    width = std::max<uint>(1, width);
-    height = std::max<uint>(1, height);
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -60,17 +45,11 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha)
     // Setup depth attachment
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth
-    );
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        auto logLine = logger.error();
-        logLine << "framebuffer is not complete: ";
-        logLine << gl::to_string(status);
-        logLine << " (" << status << ")";
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        logger.error() << "framebuffer is not complete!";
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -99,7 +78,7 @@ void Framebuffer::resize(uint width, uint height) {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     texture = create_texture(width, height, format);
