@@ -91,7 +91,7 @@ static inline void generate_pole(
     voxel* voxels,
     int x, int z
 ) {
-    uint y = top;
+    uint y = std::min<uint>(top, CHUNK_H - 1);
     uint layerExtension = 0;
     for (const auto& layer : layers.layers) {
         // skip layer if can't be generated under sea level
@@ -106,7 +106,9 @@ static inline void generate_pole(
         } else {
             layerHeight += layerExtension;
         }
-        layerHeight = std::min(static_cast<uint>(layerHeight), y+1);
+        layerHeight = std::min(
+            static_cast<uint>(layerHeight), std::min<uint>(CHUNK_H - 1, y + 1)
+        );
 
         for (uint i = 0; i < layerHeight; i++, y--) {
             voxels[vox_index(x, y, z)].id = layer.rt.id;
