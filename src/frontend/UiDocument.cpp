@@ -45,7 +45,7 @@ std::shared_ptr<gui::UINode> UiDocument::get(const std::string& id) const {
     if (found == map.end()) {
         return nullptr;
     }
-    return found->second;
+    return found->second.lock();
 }
 
 const uidocscript& UiDocument::getScript() const {
