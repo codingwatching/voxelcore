@@ -289,7 +289,7 @@ namespace gui {
         /// @brief collect all nodes having id
         static void getIndices(
             const std::shared_ptr<UINode>& node,
-            std::unordered_map<std::string, std::shared_ptr<UINode>>& map
+            std::unordered_map<std::string, std::weak_ptr<UINode>>& map
         );
 
         static std::shared_ptr<UINode> find(

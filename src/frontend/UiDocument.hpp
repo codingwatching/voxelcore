@@ -19,7 +19,7 @@ struct uidocscript {
     bool onclose : 1;
 };
 
-using UINodesMap = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
+using UINodesMap = std::unordered_map<std::string, std::weak_ptr<gui::UINode>>;
 
 class UiDocument {
     std::string id;
