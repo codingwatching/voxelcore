@@ -290,8 +290,6 @@ void ContentLoader::loadContent(const dv::value& root) {
             item.placingBlock = def.name;
             item.tags = def.tags;
             item.scriptFile = def.name + BLOCK_ITEM_SUFFIX + ".lua";
-
-            logger.info() << "scriptFile: " << item.scriptFile;
     
             for (uint j = 0; j < 4; j++) {
                 item.emission[j] = def.emission[j];
