@@ -390,9 +390,14 @@ void UINode::getIndices(
     const std::string& id = node->getId();
     if (!id.empty()) {
         const auto& found = map.find(id);
-        if (found == map.end() || found->second.expired()) {
-            map[id] = node;
+
+        if (found != map.end()) {
+            auto prev = found->second.lock();
+            if (prev && prev->getParent()) {
+                return;
+            }
         }
+        map[id] = node;
     }
     auto container = std::dynamic_pointer_cast<gui::Container>(node);
     if (container) {
