@@ -40,11 +40,13 @@ jobs:
         zip -r ./release/voxelcore-${RELEASE_VERSION}_win64.zip ./artifacts/Windows-Build/*
         ls -la ./release
         tree ./release
+    - name: Checkout Release Branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.BRANCH_NAME }}
     - name: Create Tag
       run: |
         TAG_NAME="v${RELEASE_VERSION}"
-        
-        git switch $BRANCH_NAME
         git tag -a "${TAG_NAME}" -m "Automated release tag ${TAG_NAME}"
         git push origin "${TAG_NAME}"
     - name: Create Release Draft
