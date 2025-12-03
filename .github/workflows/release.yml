@@ -18,8 +18,8 @@ env:
 jobs:
   # build_linux:
   #   uses: ./.github/workflows/appimage.yml
-  # build_macos:
-  #   uses: ./.github/workflows/macos.yml
+  build_macos:
+    uses: ./.github/workflows/macos.yml
   # build_windows:
   #   uses: ./.github/workflows/windows.yml
   publish_release:
