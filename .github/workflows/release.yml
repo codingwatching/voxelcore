@@ -41,7 +41,7 @@ jobs:
            ./release/voxelcore-${RELEASE_VERSION}_x86-64.AppImage
         mv ./artifacts/VoxelEngineMacOs/VoxelEngineMacApp.dmg \
            ./release/voxelcore-${RELEASE_VERSION}_macos.dmg
-        zip -r ./release/voxelcore-${RELEASE_VERSION}_win64.zip ./artifacts/Windows-Build/*
+        (cd ./artifacts/Windows-Build && zip -r ../../release/voxelcore-${RELEASE_VERSION}_win64.zip .)
         ls -la ./release
         tree ./release
     - name: Create Tag
