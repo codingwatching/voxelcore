@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/windows-clang.yml
   publish_release:
     runs-on: ubuntu-latest
-    needs: [build_linux, build_macos, build-windows]
+    needs: [build_linux, build_macos, build_windows]
     steps:
     - name: Checkout Release Branch
       uses: actions/checkout@v4
