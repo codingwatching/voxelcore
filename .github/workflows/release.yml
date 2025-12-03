@@ -16,15 +16,15 @@ env:
   RELEASE_VERSION: ${{ github.event.inputs.version || 'testrelease' }}
   BRANCH_NAME: ${{ github.event.inputs.branch || 'main' }}
 jobs:
-  build_linux:
-    uses: ./.github/workflows/appimage.yml
-  build_macos:
-    uses: ./.github/workflows/macos.yml
-  build_windows:
-    uses: ./.github/workflows/windows.yml
+  # build_linux:
+  #   uses: ./.github/workflows/appimage.yml
+  # build_macos:
+  #   uses: ./.github/workflows/macos.yml
+  # build_windows:
+  #   uses: ./.github/workflows/windows.yml
   publish_release:
     runs-on: ubuntu-latest
-    needs: [build_linux, build_macos, build_windows]
+    needs: [build_macos]
     steps:
     - name: Download Build Artifact
       uses: actions/download-artifact@v4
@@ -33,11 +33,11 @@ jobs:
     - name: Show Artifacts
       run: |
         mkdir release
-        mv ./artifacts/AppImage/VoxelCore-latest-x86_64.AppImage \
-           ./release/voxelcore-${RELEASE_VERSION}_x86-64.AppImage
+        # mv ./artifacts/AppImage/VoxelCore-latest-x86_64.AppImage \
+        #    ./release/voxelcore-${RELEASE_VERSION}_x86-64.AppImage
         mv ./artifacts/VoxelEngineMacOs/VoxelEngineMacApp.dmg \
            ./release/voxelcore-${RELEASE_VERSION}_macos.dmg
-        zip -r ./release/voxelcore-${RELEASE_VERSION}_win64.zip ./artifacts/Windows-Build/*
+        # zip -r ./release/voxelcore-${RELEASE_VERSION}_win64.zip ./artifacts/Windows-Build/*
         ls -la ./release
         tree ./release
     - name: Checkout Release Branch
@@ -46,15 +46,19 @@ jobs:
         ref: ${{ env.BRANCH_NAME }}
     - name: Create Tag
       run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
         TAG_NAME="v${RELEASE_VERSION}"
         git tag -a "${TAG_NAME}" -m "Automated release tag ${TAG_NAME}"
         git push origin "${TAG_NAME}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release Draft
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ env.RELEASE_VERSION }}
         draft: true
         files: ./release/*
-        body: |
-          Auto-generated
+        generate_release_notes: true
 
