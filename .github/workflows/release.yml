@@ -10,23 +10,8 @@ on:
     branches: ["main"]
 jobs:
   build_linux:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Build AppImage
-      uses: ./.github/workflows/appimage.yml
+    uses: ./.github/workflows/appimage.yml
   build_macos:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Build DMG
-      uses: ./.github/workflows/macos.yml
+    uses: ./.github/workflows/macos.yml
   build_windows:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Build Exe
-      uses: ./.github/workflows/windows.yml
+    uses: ./.github/workflows/windows.yml
