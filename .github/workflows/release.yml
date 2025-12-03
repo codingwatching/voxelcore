@@ -25,5 +25,6 @@ jobs:
         path: ./artifacts
     - name: Show Artifacts
       run: |
-        ls ./artifacts
+        sudo apt install -y tree
+        tree ./artifacts
 
