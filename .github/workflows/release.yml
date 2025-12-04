@@ -10,8 +10,6 @@ on:
         description: 'Release branch name'
         required: true
         default: "release-0.0"
-  pull_request:
-    branches: ["main"]
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version || 'testrelease' }}
   BRANCH_NAME: ${{ github.event.inputs.branch || 'main' }}
