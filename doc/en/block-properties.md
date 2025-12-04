@@ -159,6 +159,8 @@ Face culling mode:
 - **optional** - face culling among blocks of the same rendering group can be disabled via the `graphics.dense-render` setting.
 - **disabled** - face culling among blocks of the same rendering group disabled.
 
+In `optional` mode, disabling `graphics.dense-render` will use the `*_opaque` texture variant (if available).
+
 ## Physics
 
 ### *obstacle*
