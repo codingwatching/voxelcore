@@ -6,13 +6,9 @@ on:
         description: 'Engine release version'
         required: true
         default: "0.0.0"
-      branch:
-        description: 'Release branch name'
-        required: true
-        default: "release-0.0"
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version || 'testrelease' }}
-  BRANCH_NAME: ${{ github.event.inputs.branch || 'main' }}
+  BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || 'main }}
 jobs:
   build_linux:
     uses: ./.github/workflows/appimage.yml
