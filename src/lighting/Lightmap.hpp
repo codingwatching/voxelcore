@@ -88,7 +88,7 @@ public:
     }
 
     std::unique_ptr<ubyte[]> encode() const;
-    static std::unique_ptr<light_t[]> decode(const ubyte* buffer);
+    void decode(const ubyte* src);
 
     static inline light_t SUN_LIGHT_ONLY = combine(0U, 0U, 0U, 15U);
 };

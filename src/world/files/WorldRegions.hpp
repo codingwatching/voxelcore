@@ -207,12 +207,12 @@ public:
     /// @brief Get chunk voxels data
     /// @param x chunk.x
     /// @param z chunk.z
-    /// @return voxels data buffer or nullptr
-    std::unique_ptr<ubyte[]> getVoxels(int x, int z);
+    /// @return true if data read
+    bool getVoxels(int x, int z, ubyte* dst);
 
     /// @brief Get cached lights for chunk at x,z
-    /// @return lights data or nullptr
-    std::unique_ptr<light_t[]> getLights(int x, int z);
+    /// @return true if data read
+    bool getLights(int x, int z, ubyte* dst);
     
     ChunkInventoriesMap fetchInventories(int x, int z);
 
