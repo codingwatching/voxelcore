@@ -138,7 +138,10 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     editor = std::make_unique<devtools::Editor>(*this);
     cmd = std::make_unique<cmd::CommandsInterpreter>();
-    network = network::Network::create(settings.network);
+
+    if (project->permissions.has(Permissions::NETWORK)) {
+        network = network::Network::create(settings.network);
+    }
 
     if (!params.debugServerString.empty()) {
         try {
@@ -233,7 +236,9 @@ void Engine::run() {
 }
 
 void Engine::postUpdate() {
-    network->update();
+    if (network) {
+        network->update();
+    }
     postRunnables.run();
     scripting::process_post_runnables();
 
@@ -266,6 +271,8 @@ void Engine::nextFrame(bool waitForRefresh) {
 }
 
 void Engine::startPauseLoop() {
+    assert (network != nullptr);
+
     bool initialCursorLocked = false;
     if (!isHeadless()) {
         initialCursorLocked = input->isCursorLocked();
