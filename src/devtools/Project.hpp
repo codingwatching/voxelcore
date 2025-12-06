@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -17,6 +18,7 @@ struct Project : Serializable {
     std::vector<std::string> basePacks;
     std::unique_ptr<scripting::IClientProjectScript> clientScript;
     std::unique_ptr<Process> setupCoroutine;
+    std::set<std::string> permissions;
 
     ~Project();
 
