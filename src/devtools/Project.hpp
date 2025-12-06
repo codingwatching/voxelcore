@@ -12,13 +12,21 @@ namespace scripting {
     class IClientProjectScript;
 }
 
+struct Permissions {
+    static inline std::string WRITE_TO_USER = "write-to-user";
+
+    std::set<std::string> permissions;
+
+    bool has(const std::string& name) const;
+};
+
 struct Project : Serializable {
     std::string name;
     std::string title;
     std::vector<std::string> basePacks;
     std::unique_ptr<scripting::IClientProjectScript> clientScript;
     std::unique_ptr<Process> setupCoroutine;
-    std::set<std::string> permissions;
+    Permissions permissions;
 
     ~Project();
 

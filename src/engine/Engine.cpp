@@ -134,6 +134,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     }
     paths = std::make_unique<EnginePaths>(params);
     loadProject();
+    paths->setupProject(*project);
 
     editor = std::make_unique<devtools::Editor>(*this);
     cmd = std::make_unique<cmd::CommandsInterpreter>();

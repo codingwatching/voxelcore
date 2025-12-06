@@ -12,7 +12,7 @@ Project::~Project() = default;
 
 dv::value Project::serialize() const {
     auto permissionsList = dv::list();
-    for (const auto& perm : permissions) {
+    for (const auto& perm : permissions.permissions) {
         permissionsList.add(perm);
     }
     return dv::object({
@@ -31,10 +31,11 @@ void Project::deserialize(const dv::value& src) {
     if (src.has("permissions")) {
         std::vector<std::string> perms;
         dv::get(src, "permissions", perms);
-        permissions = std::set<std::string>(perms.begin(), perms.end());
+        permissions.permissions =
+            std::set<std::string>(perms.begin(), perms.end());
     }
     logger.info() << "permissions: ";
-    for (const auto& perm : permissions) {
+    for (const auto& perm : permissions.permissions) {
         logger.info() << " - " << perm;
     }
 }
@@ -57,4 +58,8 @@ void Project::loadProjectStartScript() {
     } else {
         logger.warning() << "project start script does not exists";
     }
+}
+
+bool Permissions::has(const std::string& name) const {
+    return permissions.find(name) != permissions.end();
 }
