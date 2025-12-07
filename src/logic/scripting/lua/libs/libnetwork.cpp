@@ -520,7 +520,7 @@ static int l_pull_events(lua::State* L, network::Network& network) {
 }
 
 static int l_is_available(lua::State* L) {
-    return engine->getNetwork() != nullptr;
+    return lua::pushboolean(L, engine->getNetwork() != nullptr);
 }
 
 template <int(*func)(lua::State*, network::Network&)>
