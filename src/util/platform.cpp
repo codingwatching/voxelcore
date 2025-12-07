@@ -102,7 +102,7 @@ std::string platform::detect_locale() {
     if (programLocaleName && preferredLocaleName) {
         setlocale(LC_ALL, programLocaleName);
 
-        return std::string(preferredLocaleName, 5);
+        return std::string(preferredLocaleName);
     }
     return langs::FALLBACK_DEFAULT;
 }
