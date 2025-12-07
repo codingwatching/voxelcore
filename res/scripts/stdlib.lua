@@ -496,6 +496,7 @@ audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
 function __process_post_runnables()
+    print("1")
     if #__post_runnables then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __vc__error)
@@ -506,6 +507,7 @@ function __process_post_runnables()
         __post_runnables = {}
     end
 
+    print("2")
     local dead = {}
     for name, co in pairs(__vc_named_coroutines) do
         local success, err = coroutine.resume(co)
@@ -520,10 +522,15 @@ function __process_post_runnables()
         __vc_named_coroutines[name] = nil
     end
 
+    print("3")
     fn_audio_reset_fetch_buffer()
+    print("4")
     debug.pull_events()
+    print("5")
     network.__process_events()
+    print("6")
     block.__process_register_events()
+    print("7")
     block.__perform_ticks(time.delta())
 end
 

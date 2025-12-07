@@ -519,7 +519,7 @@ static int l_pull_events(lua::State* L, network::Network& network) {
     return 1;
 }
 
-int l_is_available(lua::State* L) {
+static int l_is_available(lua::State* L) {
     return engine->getNetwork() != nullptr;
 }
 
