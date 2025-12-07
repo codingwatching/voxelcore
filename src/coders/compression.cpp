@@ -141,6 +141,7 @@ void compression::decompress(const util::span<ubyte> src, ubyte* dst, size_t dst
                 );
             }
             std::memcpy(dst, buffer.data(), buffer.size());
+            break;
         }
         default:
             throw std::runtime_error("method not implemented");
