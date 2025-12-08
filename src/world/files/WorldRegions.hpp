@@ -55,6 +55,7 @@ struct regfile {
     io::path filename;
     int version;
     bool inUse = false;
+    std::array<uint32_t, REGION_CHUNKS_COUNT> offsets;
 
     regfile(io::path filename);
     regfile(const regfile&) = delete;
