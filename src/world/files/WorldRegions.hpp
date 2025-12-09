@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <condition_variable>
 #include <functional>
 #include <glm/glm.hpp>
@@ -7,12 +8,12 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "coders/compression.hpp"
+#include "io/io.hpp"
+#include "maths/voxmaths.hpp"
 #include "typedefs.hpp"
 #include "util/BufferPool.hpp"
 #include "voxels/Chunk.hpp"
-#include "maths/voxmaths.hpp"
-#include "coders/compression.hpp"
-#include "io/io.hpp"
 #include "world_regions_fwd.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
