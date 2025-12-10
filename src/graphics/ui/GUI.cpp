@@ -133,10 +133,10 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
 
     auto hover = container->getAt(cursor.pos);
     if (this->hover && this->hover != hover) {
-        this->hover->setHover(false);
+        this->hover->setMouseEnter(false);
     }
-    if (hover) {
-        hover->setHover(true);
+    if (hover && hover != this->hover) {
+        hover->setMouseEnter(true);
 
         int scroll = input.getScroll();
         if (scroll) {
@@ -144,6 +144,28 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
         }
     }
     this->hover = hover;
+    auto node = hover;
+    while (node) {
+        if (mouseOver.find(hover) != mouseOver.end()) {
+            break;   
+        }
+        mouseOver.insert(node);
+        node->setMouseOver(true);
+        auto parent = node->getParent();
+        if (parent) {
+            node = parent->shared_from_this();
+        }
+    }
+
+    for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
+        auto node = *it;
+        if (node->isInside(cursor.pos)) {
+            ++it;
+            continue;
+        }
+        node->setMouseOver(false);
+        it = mouseOver.erase(it);
+    }
 
     if (input.jclicked(Mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
@@ -219,7 +241,7 @@ void GUI::act(float delta, const glm::uvec2& vp) {
         actMouse(delta, cursor);
     } else {
         if (hover) {
-            hover->setHover(false);
+            hover->setMouseEnter(false);
             hover = nullptr;
         }
     }
