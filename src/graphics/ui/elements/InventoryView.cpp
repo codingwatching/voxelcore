@@ -382,7 +382,7 @@ void SlotView::performLeftClick(ItemStack& stack, ItemStack& grabbed) {
 
 void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
     if (layout.rightClick) {
-        layout.rightClick(inventoryid, stack);
+        layout.rightClick(inventoryId, stack);
         if (layout.updateFunc) {
             layout.updateFunc(layout.index, stack);
         }
@@ -454,7 +454,7 @@ const std::wstring& SlotView::getTooltip() const {
 void SlotView::bind(
     int64_t inventoryid, ItemStack& stack, const Content* content
 ) {
-    this->inventoryid = inventoryid;
+    this->inventoryId = inventoryid;
     bound = &stack;
     this->content = content;
 }
@@ -465,6 +465,10 @@ const SlotLayout& SlotView::getLayout() const {
 
 ItemStack& SlotView::getStack() {
     return *bound;
+}
+
+int64_t SlotView::getInventoryId() const {
+    return inventoryId;
 }
 
 InventoryView::InventoryView(GUI& gui) : Container(gui, glm::vec2()) {

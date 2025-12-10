@@ -61,7 +61,7 @@ namespace gui {
         SlotLayout layout;
         bool highlighted = false;
 
-        int64_t inventoryid = 0;
+        int64_t inventoryId = 0;
         ItemStack* bound = nullptr;
 
         void performLeftClick(ItemStack& stack, ItemStack& grabbed);
@@ -105,6 +105,7 @@ namespace gui {
 
         ItemStack& getStack();
         const SlotLayout& getLayout() const;
+        int64_t getInventoryId() const;
 
         static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
     };

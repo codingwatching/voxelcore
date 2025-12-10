@@ -209,6 +209,8 @@ static int p_get_inventory(UINode* node, lua::State* L) {
     if (auto inventory = dynamic_cast<InventoryView*>(node)) {
         auto inv = inventory->getInventory();
         return lua::pushinteger(L, inv ? inv->getId() : 0);
+    } else if (auto slot = dynamic_cast<SlotView*>(node)) {
+        return lua::pushinteger(L, slot->getInventoryId());
     }
     return 0;
 }
