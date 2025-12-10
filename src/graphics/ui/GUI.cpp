@@ -135,7 +135,7 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
     if (this->hover && this->hover != hover) {
         this->hover->setHover(false);
     }
-    if (hover) {
+    if (hover && hover != this->hover) {
         hover->setHover(true);
 
         int scroll = input.getScroll();

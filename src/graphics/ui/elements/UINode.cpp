@@ -48,14 +48,11 @@ void UINode::setAlign(Align align) {
 }
 
 void UINode::setHover(bool flag) {
-    if (hover == flag) {
-        return;
-    }
-    hover = flag;
     actions.notify(flag ? UIAction::MOUSE_ENTER : UIAction::MOUSE_LEAVE, gui);
 }
 
 void UINode::setMouseOver(bool flag) {
+    hover = flag;
     actions.notify(flag ? UIAction::MOUSE_OVER : UIAction::MOUSE_OUT, gui);
 }
 
