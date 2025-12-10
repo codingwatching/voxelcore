@@ -241,6 +241,7 @@ Properties:
 
 Properties:
 
-| Name      | Type | Read | Write | Description                                       |
-| --------- | ---- | ---- | ----- | ------------------------------------------------- |
-| inventory | int  | yes  | no    | id of the inventory to which the element is bound |
+| Name      | Type | Read | Write | Description                                        |
+| --------- | ---- | ---- | ----- | -------------------------------------------------- |
+| inventory | int  | yes  | no    | id of the inventory to which the element is bound  |
+| slotIndex | int  | yes  | no    | index of the slot to which the element is attached |
