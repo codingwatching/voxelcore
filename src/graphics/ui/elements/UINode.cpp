@@ -52,6 +52,10 @@ void UINode::setHover(bool flag) {
         return;
     }
     hover = flag;
+    actions.notify(flag ? UIAction::MOUSE_ENTER : UIAction::MOUSE_LEAVE, gui);
+}
+
+void UINode::setMouseOver(bool flag) {
     actions.notify(flag ? UIAction::MOUSE_OVER : UIAction::MOUSE_OUT, gui);
 }
 

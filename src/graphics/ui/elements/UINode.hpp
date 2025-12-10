@@ -59,7 +59,9 @@ namespace gui {
         DEFOCUS,
         RIGHT_CLICK,
         MOUSE_OVER,
-        MOUSE_OUT
+        MOUSE_OUT,
+        MOUSE_ENTER,
+        MOUSE_LEAVE,
     };
 
     using ActionsSet = TaggedCallbacksSet<UIAction, GUI&>;
@@ -170,8 +172,11 @@ namespace gui {
         virtual void setHover(bool flag);
         bool isHover() const;
 
+        void setMouseOver(bool flag);
+
         virtual void setParent(UINode* node);
         UINode* getParent() const;
+        std::shared_ptr<UINode> getParentShared() const;
 
         /// @brief Set element color (doesn't affect inner elements).
         /// Also replaces hover color to avoid adding extra properties
