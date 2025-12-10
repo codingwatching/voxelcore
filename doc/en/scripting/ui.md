@@ -236,3 +236,12 @@ Properties:
 | Name      | Type | Read | Write | Description                                       |
 | --------- | ---- | ---- | ----- | ------------------------------------------------- |
 | inventory | int  | yes  | yes   | id of the inventory to which the element is bound |
+
+## Slot
+
+Properties:
+
+| Name      | Type | Read | Write | Description                                        |
+| --------- | ---- | ---- | ----- | -------------------------------------------------- |
+| inventory | int  | yes  | no    | id of the inventory to which the element is bound  |
+| slotIndex | int  | yes  | no    | index of the slot to which the element is attached |
