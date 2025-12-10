@@ -133,10 +133,10 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
 
     auto hover = container->getAt(cursor.pos);
     if (this->hover && this->hover != hover) {
-        this->hover->setHover(false);
+        this->hover->setMouseEnter(false);
     }
     if (hover && hover != this->hover) {
-        hover->setHover(true);
+        hover->setMouseEnter(true);
 
         int scroll = input.getScroll();
         if (scroll) {
@@ -241,7 +241,7 @@ void GUI::act(float delta, const glm::uvec2& vp) {
         actMouse(delta, cursor);
     } else {
         if (hover) {
-            hover->setHover(false);
+            hover->setMouseEnter(false);
             hover = nullptr;
         }
     }

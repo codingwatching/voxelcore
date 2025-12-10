@@ -47,7 +47,7 @@ void UINode::setAlign(Align align) {
     this->align = align;
 }
 
-void UINode::setHover(bool flag) {
+void UINode::setMouseEnter(bool flag) {
     actions.notify(flag ? UIAction::MOUSE_ENTER : UIAction::MOUSE_LEAVE, gui);
 }
 

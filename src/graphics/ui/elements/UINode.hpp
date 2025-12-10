@@ -169,7 +169,7 @@ namespace gui {
         virtual void setAlign(Align align);
         Align getAlign() const;
 
-        virtual void setHover(bool flag);
+        virtual void setMouseEnter(bool flag);
         bool isHover() const;
 
         void setMouseOver(bool flag);
