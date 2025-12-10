@@ -215,6 +215,13 @@ static int p_get_inventory(UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_slot_index(UINode* node, lua::State* L) {
+    if (auto slot = dynamic_cast<SlotView*>(node)) {
+        return lua::pushinteger(L, slot->getIndex());
+    }
+    return 0;
+}
+
 static int p_get_reset(UINode* node, lua::State* L) {
     if (dynamic_cast<Menu*>(node)) {
         return lua::pushcfunction(L, l_menu_reset);
@@ -663,6 +670,7 @@ static int l_gui_getattr(lua::State* L) {
             {"reset", p_get_reset},
             {"paste", p_get_paste},
             {"inventory", p_get_inventory},
+            {"slotIndex", p_get_slot_index},
             {"focused", p_get_focused},
             {"cursor", p_get_cursor},
             {"data", p_get_data},

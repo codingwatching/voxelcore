@@ -452,10 +452,11 @@ const std::wstring& SlotView::getTooltip() const {
 }
 
 void SlotView::bind(
-    int64_t inventoryid, ItemStack& stack, const Content* content
+    int64_t inventoryid, ItemStack& stack, size_t index, const Content* content
 ) {
     this->inventoryId = inventoryid;
     bound = &stack;
+    this->index = index;
     this->content = content;
 }
 
@@ -469,6 +470,10 @@ ItemStack& SlotView::getStack() {
 
 int64_t SlotView::getInventoryId() const {
     return inventoryId;
+}
+
+size_t SlotView::getIndex() const {
+    return index;
 }
 
 InventoryView::InventoryView(GUI& gui) : Container(gui, glm::vec2()) {
@@ -514,9 +519,11 @@ void InventoryView::bind(
     this->inventory = inventory;
     this->content = content;
     for (auto slot : slots) {
+        const auto& layout = slot->getLayout();
         slot->bind(
             inventory->getId(),
-            inventory->getSlot(slot->getLayout().index),
+            inventory->getSlot(layout.index),
+            layout.index,
             content
         );
     }
