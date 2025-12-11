@@ -135,9 +135,10 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
     if (this->hover && this->hover != hover) {
         this->hover->setMouseEnter(false);
     }
-    if (hover && hover != this->hover) {
-        hover->setMouseEnter(true);
-
+    if (hover) {
+        if (hover != this->hover) {
+            hover->setMouseEnter(true);
+        }
         int scroll = input.getScroll();
         if (scroll) {
             hover->scrolled(scroll);
@@ -269,7 +270,7 @@ void GUI::draw(const DrawContext& pctx, const Assets& assets) {
     auto& page = menu->getCurrent();
     if (page.panel) {
         menu->setSize(page.panel->getSize());
-        page.panel->refresh();
+        // page.panel->refresh();
         if (auto panel = std::dynamic_pointer_cast<gui::Panel>(page.panel)) {
             panel->cropToContent();
         }
