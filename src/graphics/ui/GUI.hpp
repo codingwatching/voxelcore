@@ -2,6 +2,7 @@
 
 #include "delegates.hpp"
 
+#include <set>
 #include <queue>
 #include <memory>
 #include <vector>
@@ -80,6 +81,7 @@ namespace gui {
         std::unique_ptr<Camera> uicamera;
         std::shared_ptr<Menu> menu;
         std::queue<runnable> postRunnables;
+        std::set<std::shared_ptr<UINode>> mouseOver;
 
         PageLoaderFunc pagesLoader;
 

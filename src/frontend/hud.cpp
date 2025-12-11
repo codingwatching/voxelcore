@@ -470,7 +470,9 @@ void Hud::showExchangeSlot() {
         SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
     );
     exchangeSlot->setId("hud.exchange-slot");
-    exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), &content);
+    exchangeSlot->bind(
+        exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), 0, &content
+    );
     exchangeSlot->setColor(glm::vec4());
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
