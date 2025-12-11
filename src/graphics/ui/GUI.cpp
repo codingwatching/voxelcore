@@ -270,7 +270,6 @@ void GUI::draw(const DrawContext& pctx, const Assets& assets) {
     auto& page = menu->getCurrent();
     if (page.panel) {
         menu->setSize(page.panel->getSize());
-        // page.panel->refresh();
         if (auto panel = std::dynamic_pointer_cast<gui::Panel>(page.panel)) {
             panel->cropToContent();
         }
