@@ -577,6 +577,13 @@ static int p_get_options(UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_zindex(UINode* node, lua::State* L) {
+    if (node == nullptr) {
+        return 0;
+    }
+    return lua::pushinteger(L, node->getZIndex());
+}
+
 static int p_is_exists(UINode* node, lua::State* L) {
     return lua::pushboolean(L, node != nullptr);
 }
@@ -677,6 +684,7 @@ static int l_gui_getattr(lua::State* L) {
             {"parent", p_get_parent},
             {"region", p_get_region},
             {"options", p_get_options},
+            {"zIndex", p_get_zindex},
         };
     auto func = getters.find(attr);
     if (func != getters.end()) {
@@ -811,6 +819,15 @@ static void p_set_options(UINode* node, lua::State* L, int idx) {
             options.push_back(std::move(option));
         }
         selectbox->setOptions(std::move(options));
+    }
+}
+static void p_set_zindex(UINode* node, lua::State* L, int idx) {
+    if (node == nullptr) {
+        return;
+    }
+    node->setZIndex(lua::tointeger(L, idx));
+    if (auto parent = node->getParent()) {
+        parent->setMustRefresh();
     }
 }
 static void p_set_value(UINode* node, lua::State* L, int idx) {
@@ -961,6 +978,7 @@ static int l_gui_setattr(lua::State* L) {
             {"focused", p_set_focused},
             {"region", p_set_region},
             {"options", p_set_options},
+            {"zIndex", p_set_zindex},
         };
     auto func = setters.find(attr);
     if (func != setters.end()) {
