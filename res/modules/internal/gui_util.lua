@@ -136,6 +136,37 @@ function gui.show_message(text, actual_callback)
     input.add_callback("key:escape", callback, gui.root[id])
 end
 
+function gui.show_input_dialog(text, actual_callback, validator, confirm_text)
+    local id = "dialog_"..random.uuid()
+
+    local callback = function()
+        if not gui.root[id.."_input"].valid then
+            return
+        end
+        gui.root[id]:destruct()
+        if actual_callback then
+            actual_callback(gui.root[id.."_input"].text)
+        end
+    end
+    gui.root.root:add(string.format([[
+        <container id='%s' color='#00000080' size-func='-1,-1' z-index='10'>
+            <panel color='#507090E0' size='600' padding='16'
+                   gravity='center-center' interval='4'>
+                <label>%s</label>
+                <textbox id='%s_input' validator='DATA.validator'/>
+                <button onclick='DATA.callback()'>%s</button>
+            </panel>
+        </container>
+    ]], id, string.escape_xml(text), id, string.escape_xml(confirm_text or gui.str("OK"))), {
+        callback=callback,
+        validator=validator or function() return #text > 0 end
+    })
+    input.add_callback("key:escape", callback, gui.root[id])
+    input.add_callback("key:enter", callback, gui.root[id])
+    gui.root[id.."_input"].focused = true
+end
+
+
 function gui.ask(text, on_yes, on_no)
     on_yes = on_yes or function() end
     on_no = on_no or function() end

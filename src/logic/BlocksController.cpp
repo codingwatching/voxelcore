@@ -151,8 +151,12 @@ void BlocksController::randomTick(
 
     for (int s = 0; s < segments; s++) {
         for (int i = 0; i < 4; i++) {
+            int segmentY = s * segheight;
+            if (segmentY  > chunk.top) {
+                break;
+            }
             int bx = random.rand() % CHUNK_W;
-            int by = random.rand() % segheight + s * segheight;
+            int by = random.rand() % segheight + segmentY;
             int bz = random.rand() % CHUNK_D;
             const voxel& vox = chunk.voxels[vox_index(bx, by, bz)];
             auto& block = indices->blocks.require(vox.id);
