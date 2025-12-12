@@ -9,6 +9,7 @@
 
 #include "typedefs.hpp"
 #include "voxel.hpp"
+#include "constants.hpp"
 #include "util/AreaMap2D.hpp"
 
 class VoxelRenderer;
@@ -126,7 +127,7 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
     bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void getVoxels(VoxelsVolume& volume, bool backlight = false) const;
+    void getVoxels(VoxelsVolume& volume, bool backlight = false, int top = CHUNK_H) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newW, uint32_t newD);
