@@ -146,11 +146,18 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
     }
     this->hover = hover;
     auto node = hover;
+
     while (node) {
-        if (mouseOver.find(hover) != mouseOver.end()) {
-            break;   
+        if (std::find_if(
+                mouseOver.begin(),
+                mouseOver.end(),
+                [&hover](const std::weak_ptr<UINode>& weak) {
+                    auto locked = weak.lock();
+                    return locked && locked == hover;
+                }) != mouseOver.end()) {
+            break;
         }
-        mouseOver.insert(node);
+        mouseOver.push_back(node);
         node->setMouseOver(true);
         auto parent = node->getParent();
         if (parent) {
@@ -159,12 +166,14 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
     }
 
     for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
-        auto node = *it;
-        if (node->isInside(cursor.pos)) {
-            ++it;
-            continue;
+        auto node = it->lock();
+        if (node) {
+            if (node->isInside(cursor.pos)) {
+                ++it;
+                continue;
+            }
+            node->setMouseOver(false);
         }
-        node->setMouseOver(false);
         it = mouseOver.erase(it);
     }
 
@@ -270,6 +279,7 @@ void GUI::draw(const DrawContext& pctx, const Assets& assets) {
     auto& page = menu->getCurrent();
     if (page.panel) {
         menu->setSize(page.panel->getSize());
+        page.panel->refresh();
         if (auto panel = std::dynamic_pointer_cast<gui::Panel>(page.panel)) {
             panel->cropToContent();
         }
