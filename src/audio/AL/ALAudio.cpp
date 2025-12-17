@@ -656,7 +656,6 @@ void ALAudio::setListener(
 ) {
     ALfloat listenerOri[] = {at.x, at.y, at.z, up.x, up.y, up.z};
 
-    logger.info() << "velcotiy: " << glm::length(velocity);
     AL_CHECK(alListener3f(AL_POSITION, position.x, position.y, position.z));
     AL_CHECK(alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z));
     AL_CHECK(alListenerfv(AL_ORIENTATION, listenerOri));
