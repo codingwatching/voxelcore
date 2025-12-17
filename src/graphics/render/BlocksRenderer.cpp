@@ -28,10 +28,6 @@ BlocksRenderer::BlocksRenderer(
     cache(cache),
     settings(settings)
 {
-    voxelsBuffer = std::make_unique<VoxelsVolume>(
-        CHUNK_W + voxelBufferPadding*2,
-        CHUNK_H,
-        CHUNK_D + voxelBufferPadding*2);
     blockDefsCache = content.getIndices()->blocks.getDefs();
 }
 
@@ -687,12 +683,9 @@ SortingMeshData BlocksRenderer::renderTranslucent(
     return sortingMesh;
 }
 
-void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
+void BlocksRenderer::build(const Chunk* chunk, const VoxelsVolume& volume) {
     this->chunk = chunk;
-    voxelsBuffer->setPosition(
-        chunk->x * CHUNK_W - voxelBufferPadding, 0,
-        chunk->z * CHUNK_D - voxelBufferPadding);
-    chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get(), chunk->top + 1);
+    this->voxelsBuffer = &volume;
     if (voxelsBuffer->pickBlockId(
         chunk->x * CHUNK_W, 0, chunk->z * CHUNK_D
     ) == BLOCK_VOID) {
@@ -733,7 +726,7 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
     indexCount = 0;
     denseIndexCount = 0;
 
-    denseRender = false; //settings.graphics.denseRender.get();
+    denseRender = false;
     densePass = false;
     render(voxels, beginEnds);
 
@@ -762,15 +755,18 @@ ChunkMeshData BlocksRenderer::createMesh() {
                 util::Buffer(denseIndexBuffer.get(), denseIndexCount),
             },
             util::Buffer(
-                ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
+                ChunkVertex::ATTRIBUTES,
+                sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
             )
         ),
         std::move(sortingMesh)
     };
 }
 
-ChunkMesh BlocksRenderer::render(const Chunk *chunk, const Chunks *chunks) {
-    build(chunk, chunks);
+ChunkMesh BlocksRenderer::render(
+    const Chunk* chunk, const VoxelsVolume& volume
+) {
+    build(chunk, volume);
 
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
         vertexBuffer.get(), vertexCount, 
@@ -781,11 +777,6 @@ ChunkMesh BlocksRenderer::render(const Chunk *chunk, const Chunks *chunks) {
     ), std::move(sortingMesh)};
 }
 
-VoxelsVolume* BlocksRenderer::getVoxelsBuffer() const {
-    return voxelsBuffer.get();
-}
-
 size_t BlocksRenderer::getMemoryConsumption() const {
-    size_t volume = voxelsBuffer->getW() * voxelsBuffer->getH() * voxelsBuffer->getD();
-    return capacity * (sizeof(ChunkVertex) + sizeof(uint32_t) * 2) + volume * (sizeof(voxel) + sizeof(light_t));
+    return capacity * (sizeof(ChunkVertex) + sizeof(uint32_t) * 2);
 }
