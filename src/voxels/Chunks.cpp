@@ -334,7 +334,8 @@ bool Chunks::putChunk(const std::shared_ptr<Chunk>& chunk) {
 // reduce nesting on next modification
 // 25.06.2024: not now
 // 11.11.2024: not now
-void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
+// 12.12.2025: not now
+void Chunks::getVoxels(VoxelsVolume& volume, bool backlight, int top) const {
     voxel* voxels = volume.getVoxels();
     light_t* lights = volume.getLights();
     int x = volume.getX();
@@ -342,7 +343,7 @@ void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
     int z = volume.getZ();
 
     int w = volume.getW();
-    int h = volume.getH();
+    int h = std::min<int>(volume.getH(), top);
     int d = volume.getD();
 
     int scx = floordiv<CHUNK_W>(x);

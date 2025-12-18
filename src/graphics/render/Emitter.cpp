@@ -126,7 +126,7 @@ void Emitter::update(
 }
 
 void Emitter::stop() {
-    count = 0;
+    this->count = 0;
 }
 
 bool Emitter::isDead() const {
@@ -138,7 +138,7 @@ bool Emitter::isReferred() const {
 }
 
 const EmitterOrigin& Emitter::getOrigin() const {
-    return origin;
+    return this->origin;
 }
 
 void Emitter::setOrigin(const EmitterOrigin& origin) {

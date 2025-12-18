@@ -485,6 +485,8 @@ ALAudio::ALAudio(ALCdevice* device, ALCcontext* context)
     for (auto& name : inputDevices) {
         logger.info() << "  " << name;
     }
+
+    alDopplerFactor(1.0 / 3.0);
 }
 
 ALAudio::~ALAudio() {
