@@ -103,6 +103,7 @@ void Emitter::update(
 
         glm::vec3 spawnOffset = generate_coord(preset.spawnShape);
         spawnOffset *= preset.spawnSpread;
+        spawnOffset += preset.spawnOffset;
 
         particle.position = position + spawnOffset;
         particle.lifetime *= 1.0f - preset.lifetimeSpread * random.randFloat();
