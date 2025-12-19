@@ -29,7 +29,24 @@ static int l_set_pos(lua::State* L) {
 
 static int l_set_texture(lua::State* L) {
     if (auto wrapper = renderer->blockWraps->get(lua::tointeger(L, 1))) {
-        wrapper->texture = lua::require_string(L, 2);
+        for (int i = 0; i < wrapper->textureFaces.size(); i++) {
+            wrapper->textureFaces[i] = lua::require_string(L, 2);
+        }
+    }
+    return 0;
+}
+
+static int l_set_faces(lua::State* L) {
+    if (auto wrapper = renderer->blockWraps->get(lua::tointeger(L, 1))) {
+        for (int i = 0; i < wrapper->textureFaces.size(); i++) {
+            if (lua::isnil(L, 2 + i)) {
+                wrapper->cullingBits &= ~(1 << i);
+                wrapper->textureFaces[i] = "";
+            } else {
+                wrapper->cullingBits |= (1 << i);
+                wrapper->textureFaces[i] = lua::require_string(L, 2 + i);
+            }
+        }
     }
     return 0;
 }
@@ -39,5 +56,6 @@ const luaL_Reg blockwrapslib[] = {
     {"unwrap", lua::wrap<l_unwrap>},
     {"set_pos", lua::wrap<l_set_pos>},
     {"set_texture", lua::wrap<l_set_texture>},
+    {"set_faces", lua::wrap<l_set_faces>},
     {nullptr, nullptr}
 };
