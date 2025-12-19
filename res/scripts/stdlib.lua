@@ -24,6 +24,12 @@ function tb_frame_tostring(frame)
     return s
 end
 
+local core_set_setting = core.set_setting
+function core.set_setting(name, value, ...)
+    core_set_setting(name, value, ...)
+    events.emit("core:setting."..name..".set", value)
+end
+
 local function complete_app_lib(app)
     app.sleep = sleep
     app.script = __VC_SCRIPT_NAME
