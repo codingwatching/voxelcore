@@ -30,13 +30,21 @@ void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
     shader.uniform1i("u_alphaClip", false);
 
     util::TextureRegion texRegions[6] {};
+    const Texture* texture = nullptr;
     UVRegion uvRegions[6] {};
     for (int i = 0; i < 6; i++) {
+        if (wrapper.cullingBits & (1 << i) == 0) {
+            continue;
+        }
         auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
         texRegions[i] = texRegion;
         uvRegions[i] = texRegion.region;
+
+        if (texture == nullptr) {
+            texture = texRegion.texture;
+        }
     }
-    batch->setTexture(texRegions[0].texture);
+    batch->setTexture(texture);
 
     const voxel* vox = chunks.get(wrapper.position);
     if (vox == nullptr || vox->id == BLOCK_VOID) {
