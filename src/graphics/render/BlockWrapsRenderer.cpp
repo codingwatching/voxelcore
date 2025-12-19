@@ -25,59 +25,58 @@ BlockWrapsRenderer::BlockWrapsRenderer(
 BlockWrapsRenderer::~BlockWrapsRenderer() = default;
 
 void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
-    auto textureRegion = util::get_texture_region(assets, wrapper.texture, "");
-
     auto& shader = assets.require<Shader>("entity");
     shader.use();
     shader.uniform1i("u_alphaClip", false);
 
-    const UVRegion& cracksRegion = textureRegion.region;
-    UVRegion regions[6] {
-        cracksRegion, cracksRegion, cracksRegion,
-        cracksRegion, cracksRegion, cracksRegion
-    };
-    batch->setTexture(textureRegion.texture);
+    util::TextureRegion texRegions[6] {};
+    UVRegion uvRegions[6] {};
+    for (int i = 0; i < 6; i++) {
+        auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
+        texRegions[i] = texRegion;
+        uvRegions[i] = texRegion.region;
+    }
+    batch->setTexture(texRegions[0].texture);
 
     const voxel* vox = chunks.get(wrapper.position);
-    if (vox == nullptr) {
+    if (vox == nullptr || vox->id == BLOCK_VOID) {
         return;
     }
-    if (vox->id != BLOCK_VOID) {
-        const auto& def = level.content.getIndices()->blocks.require(vox->id);
-        switch (def.getModel(vox->state.userbits).type) {
-            case BlockModelType::BLOCK:
-                batch->cube(
-                    glm::vec3(wrapper.position) + glm::vec3(0.5f),
-                    glm::vec3(1.01f),
-                    regions,
-                    glm::vec4(1,1,1,0),
-                    false
-                );
-                break;
-            case BlockModelType::AABB: {
-                const auto& aabb =
-                    (def.rotatable ? def.rt.hitboxes[vox->state.rotation]
-                                   : def.hitboxes)
-                        .at(0);
-                const auto& size = aabb.size();
-                regions[0].scale(size.z, size.y);
-                regions[1].scale(size.z, size.y);
-                regions[2].scale(size.x, size.z);
-                regions[3].scale(size.x, size.z);
-                regions[4].scale(size.x, size.y);
-                regions[5].scale(size.x, size.y);
-                batch->cube(
-                    glm::vec3(wrapper.position) + aabb.center(),
-                    size * glm::vec3(1.01f),
-                    regions,
-                    glm::vec4(1,1,1,0),
-                    false
-                );
-                break;
-            }
-            default:
-                break;
+    const auto& def = level.content.getIndices()->blocks.require(vox->id);
+    switch (def.getModel(vox->state.userbits).type) {
+        case BlockModelType::BLOCK:
+            batch->cube(
+                glm::vec3(wrapper.position) + glm::vec3(0.5f),
+                glm::vec3(1.01f),
+                uvRegions,
+                glm::vec4(1, 1, 1, 0),
+                false,
+                wrapper.cullingBits
+            );
+            break;
+        case BlockModelType::AABB: {
+            const auto& aabb =
+                (def.rotatable ? def.rt.hitboxes[vox->state.rotation]
+                                : def.hitboxes).at(0);
+            const auto& size = aabb.size();
+            uvRegions[0].scale(size.z, size.y);
+            uvRegions[1].scale(size.z, size.y);
+            uvRegions[2].scale(size.x, size.z);
+            uvRegions[3].scale(size.x, size.z);
+            uvRegions[4].scale(size.x, size.y);
+            uvRegions[5].scale(size.x, size.y);
+            batch->cube(
+                glm::vec3(wrapper.position) + aabb.center(),
+                size * glm::vec3(1.01f),
+                uvRegions,
+                glm::vec4(1, 1, 1, 0),
+                false,
+                wrapper.cullingBits
+            );
+            break;
         }
+        default:
+            break;
     }
 }
 
@@ -93,9 +92,8 @@ u64id_t BlockWrapsRenderer::add(
     const glm::ivec3& position, const std::string& texture
 ) {
     u64id_t id = nextWrapper++;
-    wrappers[id] = std::make_unique<BlockWrapper>(
-        BlockWrapper {position, texture}
-    );
+    wrappers[id] = std::make_unique<BlockWrapper>(BlockWrapper {
+        position, {texture, texture, texture, texture, texture, texture}});
     return id;
 }
 

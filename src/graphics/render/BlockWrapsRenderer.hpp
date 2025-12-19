@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -15,7 +16,8 @@ class DrawContext;
 
 struct BlockWrapper {
     glm::ivec3 position;
-    std::string texture;
+    std::array<std::string, 6> textureFaces {};
+    uint8_t cullingBits = 0xFF;
 };
 
 class BlockWrapsRenderer {
