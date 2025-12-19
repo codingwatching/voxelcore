@@ -81,8 +81,8 @@ struct GraphicsSettings {
     IntegerSetting chunkMaxRenderers {6, -4, 32};
     /// @brief Advanced render pipeline
     FlagSetting advancedRender {true};
-    /// @brief Screen space ambient occlusion
-    FlagSetting ssao {true};
+    /// @brief Screen space ambient occlusion quality
+    IntegerSetting ssao {1, 0, 2};
     /// @brief Shadows quality
     IntegerSetting shadowsQuality {0, 0, 3};
     /// @brief Dense render distance
