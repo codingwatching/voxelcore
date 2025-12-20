@@ -9,9 +9,10 @@ using namespace scripting;
 static int l_wrap(lua::State* L) {
     auto position = lua::tovec3(L, 1);
     std::string texture = lua::require_string(L, 2);
+    float emission = lua::isnumber(L, 3) ? lua::tonumber(L, 3) : 1.0f;
 
     return lua::pushinteger(
-        L, renderer->blockWraps->add(position, std::move(texture))
+        L, renderer->blockWraps->add(position, std::move(texture), emission)
     );
 }
 

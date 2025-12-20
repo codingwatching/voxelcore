@@ -22,7 +22,7 @@ class DrawContext;
 struct BlockWrapper {
     glm::ivec3 position;
     std::array<std::string, 6> textureFaces {};
-    float emission = 1.0f;
+    float emission = 0.0f;
 
     // --- render cache ---
     util::TextureRegion texRegions[6] {};
@@ -53,7 +53,9 @@ public:
 
     void draw(const DrawContext& ctx, const Player& player);
 
-    u64id_t add(const glm::ivec3& position, const std::string& texture);
+    u64id_t add(
+        const glm::ivec3& position, const std::string& texture, float emission
+    );
 
     BlockWrapper* get(u64id_t id) const;
 

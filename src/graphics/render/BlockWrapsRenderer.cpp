@@ -57,7 +57,9 @@ void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
     glm::vec4 light(1, 1, 1, 0);
     if (wrapper.emission < 1.0f) {
         light = Lightmap::extractNormalized(chunks.getLight(wrapper.position));
-        light = wrapper.emission + (1.0f - light);
+        light.r += wrapper.emission;
+        light.g += wrapper.emission;
+        light.b += wrapper.emission;
     }
     switch (wrapper.modelType) {
         case BlockModelType::BLOCK:
@@ -150,11 +152,13 @@ void BlockWrapsRenderer::draw(const DrawContext& pctx, const Player& player) {
 }
 
 u64id_t BlockWrapsRenderer::add(
-    const glm::ivec3& position, const std::string& texture
+    const glm::ivec3& position, const std::string& texture, float emission
 ) {
     u64id_t id = nextWrapper++;
     wrappers[id] = std::make_unique<BlockWrapper>(BlockWrapper {
-        position, {texture, texture, texture, texture, texture, texture}});
+        position,
+        {texture, texture, texture, texture, texture, texture},
+        emission});
     return id;
 }
 
