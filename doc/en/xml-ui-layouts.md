@@ -108,6 +108,7 @@ Inner text is a button text.
 
 ## *label*
 
+- `text-align` - text alignment (*left/center/right*). Type: string.
 - `valign` - vertical text alignment: top/center/bottom.
 - `supplier` - text supplier (called every frame).
 - `autoresize` - automatic change of element size (default - false). Does not affect font size.

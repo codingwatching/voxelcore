@@ -309,6 +309,11 @@ static std::shared_ptr<UINode> read_label(
     std::wstring text = parse_inner_text(element, reader.getContext());
     auto label = std::make_shared<Label>(reader.getGUI(), text);
     read_uinode(reader, element, *label);
+    if (element.has("text-align")) {
+        label->setAlign(align_from_string(
+            element.attr("text-align").getText(), label->getAlign()
+        ));
+    }
     if (element.has("valign")) {
         label->setVerticalAlign(align_from_string(
             element.attr("valign").getText(), label->getVerticalAlign()
