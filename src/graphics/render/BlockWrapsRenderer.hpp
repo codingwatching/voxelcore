@@ -4,20 +4,28 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <map>
 
+#include "assets/assets_util.hpp"
 #include "MainBatch.hpp"
 #include "typedefs.hpp"
 
 class Assets;
 class Player;
 class Level;
+struct voxel;
 class Chunks;
+class Texture;
 class DrawContext;
 
 struct BlockWrapper {
     glm::ivec3 position;
     std::array<std::string, 6> textureFaces {};
+    util::TextureRegion texRegions[6] {};
+    UVRegion uvRegions[6] {};
+    const voxel* vox = nullptr;
     uint8_t cullingBits = 0xFF;
+    uint8_t dirtySides = 0xFF;
 };
 
 class BlockWrapsRenderer {
@@ -26,10 +34,13 @@ class BlockWrapsRenderer {
     const Chunks& chunks;
     std::unique_ptr<MainBatch> batch;
 
+    std::multimap<const Texture*, BlockWrapper*> renderOrder;
     std::unordered_map<u64id_t, std::unique_ptr<BlockWrapper>> wrappers;
     u64id_t nextWrapper = 1;
 
-    void draw(const BlockWrapper& wrapper);
+    void draw(const BlockWrapper& wrapper, const Texture* texture);
+
+    void refreshWrapper(BlockWrapper& wrapper);
 public:
     BlockWrapsRenderer(
         const Assets& assets, const Level& level, const Chunks& chunks

@@ -40,11 +40,17 @@ static int l_set_faces(lua::State* L) {
     if (auto wrapper = renderer->blockWraps->get(lua::tointeger(L, 1))) {
         for (int i = 0; i < wrapper->textureFaces.size(); i++) {
             if (lua::isnil(L, 2 + i)) {
-                wrapper->cullingBits &= ~(1 << i);
-                wrapper->textureFaces[i] = "";
+                if (wrapper->cullingBits & (1 << i)) {
+                    wrapper->cullingBits &= ~(1 << i);
+                    wrapper->textureFaces[i] = "";
+                    wrapper->dirtySides |= (1 << i);
+                }
             } else {
-                wrapper->cullingBits |= (1 << i);
-                wrapper->textureFaces[i] = lua::require_string(L, 2 + i);
+                auto texture = lua::require_string(L, 2 + i);;
+                if ((wrapper->cullingBits & (1 << i)) == 0x0 || wrapper->textureFaces[i] != texture) {
+                    wrapper->cullingBits |= (1 << i);
+                    wrapper->textureFaces[i] = texture;
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 #include "BlockWrapsRenderer.hpp"
 
 #include "assets/Assets.hpp"
-#include "assets/assets_util.hpp"
 #include "constants.hpp"
 #include "content/Content.hpp"
 #include "graphics/core/Atlas.hpp"
@@ -12,6 +11,8 @@
 #include "voxels/Block.hpp"
 #include "voxels/Chunks.hpp"
 #include "world/Level.hpp"
+
+#include <algorithm>
 
 BlockWrapsRenderer::BlockWrapsRenderer(
     const Assets& assets, const Level& level, const Chunks& chunks
@@ -24,62 +25,46 @@ BlockWrapsRenderer::BlockWrapsRenderer(
 
 BlockWrapsRenderer::~BlockWrapsRenderer() = default;
 
-void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
-    auto& shader = assets.require<Shader>("entity");
-    shader.use();
-    shader.uniform1i("u_alphaClip", false);
-
-    util::TextureRegion texRegions[6] {};
-    const Texture* texture = nullptr;
-    UVRegion uvRegions[6] {};
-    for (int i = 0; i < 6; i++) {
-        if (wrapper.cullingBits & (1 << i) == 0) {
-            continue;
-        }
-        auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
-        texRegions[i] = texRegion;
-        uvRegions[i] = texRegion.region;
-
-        if (texture == nullptr) {
-            texture = texRegion.texture;
-        }
-    }
-    batch->setTexture(texture);
-
-    const voxel* vox = chunks.get(wrapper.position);
-    if (vox == nullptr || vox->id == BLOCK_VOID) {
+void BlockWrapsRenderer::draw(const BlockWrapper& wrapper, const Texture* texture) {
+    if (wrapper.cullingBits == 0x0) {
         return;
     }
-    const auto& def = level.content.getIndices()->blocks.require(vox->id);
-    switch (def.getModel(vox->state.userbits).type) {
+
+    uint8_t cullingBits = wrapper.cullingBits;
+    for (int i = 0; i < 6; i++) {
+        if ((cullingBits & (1 << i)) == 0x0) {
+            continue;
+        }
+        cullingBits &= ~((wrapper.texRegions[i].texture != texture) << i);
+    }
+    if (cullingBits == 0x0) {
+        return;
+    }
+
+    const auto& def = level.content.getIndices()->blocks.require(wrapper.vox->id);
+    switch (def.getModel(wrapper.vox->state.userbits).type) {
         case BlockModelType::BLOCK:
             batch->cube(
                 glm::vec3(wrapper.position) + glm::vec3(0.5f),
                 glm::vec3(1.01f),
-                uvRegions,
+                wrapper.uvRegions,
                 glm::vec4(1, 1, 1, 0),
                 false,
-                wrapper.cullingBits
+                cullingBits
             );
             break;
         case BlockModelType::AABB: {
             const auto& aabb =
-                (def.rotatable ? def.rt.hitboxes[vox->state.rotation]
+                (def.rotatable ? def.rt.hitboxes[wrapper.vox->state.rotation]
                                 : def.hitboxes).at(0);
             const auto& size = aabb.size();
-            uvRegions[0].scale(size.z, size.y);
-            uvRegions[1].scale(size.z, size.y);
-            uvRegions[2].scale(size.x, size.z);
-            uvRegions[3].scale(size.x, size.z);
-            uvRegions[4].scale(size.x, size.y);
-            uvRegions[5].scale(size.x, size.y);
             batch->cube(
                 glm::vec3(wrapper.position) + aabb.center(),
                 size * glm::vec3(1.01f),
-                uvRegions,
+                wrapper.uvRegions,
                 glm::vec4(1, 1, 1, 0),
                 false,
-                wrapper.cullingBits
+                cullingBits
             );
             break;
         }
@@ -88,10 +73,60 @@ void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
     }
 }
 
+void BlockWrapsRenderer::refreshWrapper(BlockWrapper& wrapper) {
+    for (int i = 0; i < 6; i++) {
+        if ((wrapper.cullingBits & (1 << i)) == 0) {
+            continue;
+        }
+        auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
+        wrapper.texRegions[i] = texRegion;
+        wrapper.uvRegions[i] = texRegion.region;
+
+        renderOrder.insert({texRegion.texture, &wrapper});
+    }
+    wrapper.dirtySides = 0x0;
+
+    const voxel* vox = chunks.get(wrapper.position);
+    if (vox == nullptr || vox->id == BLOCK_VOID) {
+        return;
+    }
+    const auto& def = level.content.getIndices()->blocks.require(vox->id);
+    switch (def.getModel(vox->state.userbits).type) {
+        case BlockModelType::AABB: {
+            const auto& aabb =
+                (def.rotatable ? def.rt.hitboxes[vox->state.rotation]
+                                : def.hitboxes).at(0);
+            const auto& size = aabb.size();
+            wrapper.uvRegions[0].scale(size.z, size.y);
+            wrapper.uvRegions[1].scale(size.z, size.y);
+            wrapper.uvRegions[2].scale(size.x, size.z);
+            wrapper.uvRegions[3].scale(size.x, size.z);
+            wrapper.uvRegions[4].scale(size.x, size.y);
+            wrapper.uvRegions[5].scale(size.x, size.y);
+            break;
+        }
+        default:
+            break;
+    }
+    wrapper.vox = vox;
+}
+
 void BlockWrapsRenderer::draw(const DrawContext& pctx, const Player& player) {
     auto ctx = pctx.sub();
+
+    auto& shader = assets.require<Shader>("entity");
+    shader.use();
+    shader.uniform1i("u_alphaClip", false);
+    
     for (const auto& [_, wrapper] : wrappers) {
-        draw(*wrapper);
+        if (wrapper->dirtySides) {
+            refreshWrapper(*wrapper);
+        }
+    }
+
+    for (const auto& [texture, wrapper] : renderOrder) {
+        batch->setTexture(texture);
+        draw(*wrapper, texture);
     }
     batch->flush();
 }
@@ -114,5 +149,19 @@ BlockWrapper* BlockWrapsRenderer::get(u64id_t id) const {
 }
 
 void BlockWrapsRenderer::remove(u64id_t id) {
+    auto found = wrappers.find(id);
+    if (found == wrappers.end()) {
+        return;
+    }
+    auto wrapper = std::move(found->second);
     wrappers.erase(id);
+
+    auto it = renderOrder.begin();
+    while (it != renderOrder.end()) {
+        if (it->second == wrapper.get()) {
+            it = renderOrder.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
