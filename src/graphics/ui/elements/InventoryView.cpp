@@ -126,9 +126,7 @@ static std::wstring get_caption_string(
             langs::get(util::str2wstr_utf8(caption->asString()))
         );
     } else {
-        return util::pascal_case(
-            langs::get(util::str2wstr_utf8(item.caption))
-        );
+        return util::pascal_case(langs::get(util::str2wstr_utf8(item.caption)));
     }
 }
 // TODO: Refactor
@@ -395,7 +393,11 @@ void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
             int halfremain = stack.getCount() / 2;
             grabbed.setCount(stack.getCount() - halfremain);
             // reset all data in the origin slot
-            stack = ItemStack(stack.getItemId(), halfremain);
+            if (stack.getCount() > 1) {
+                stack = ItemStack(stack.getItemId(), halfremain);
+            } else {
+                stack = ItemStack(0, 0);
+            }
         }
         return;
     }
