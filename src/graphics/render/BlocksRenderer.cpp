@@ -452,10 +452,7 @@ glm::vec4 BlocksRenderer::pickLight(int x, int y, int z) const {
     if (isOpenForLight(x, y, z)) {
         light_t light = voxelsBuffer->pickLight(chunk->x * CHUNK_W + x, y,
                                                 chunk->z * CHUNK_D + z);
-        return glm::vec4(Lightmap::extract(light, 0),
-                         Lightmap::extract(light, 1),
-                         Lightmap::extract(light, 2),
-                         Lightmap::extract(light, 3)) / 15.0f;
+        return Lightmap::extractNormalized(light);
     } else {
         return glm::vec4(0.0f);
     }
