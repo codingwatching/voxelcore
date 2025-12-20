@@ -25,7 +25,7 @@ BlockWrapsRenderer::BlockWrapsRenderer(
 
 BlockWrapsRenderer::~BlockWrapsRenderer() = default;
 
-void BlockWrapsRenderer::draw(const BlockWrapper& wrapper, const Texture* texture) {
+void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
     if (wrapper.cullingBits == 0x0) {
         return;
     }
@@ -41,8 +41,15 @@ void BlockWrapsRenderer::draw(const BlockWrapper& wrapper, const Texture* textur
         return;
     }
 
-    const auto& def = level.content.getIndices()->blocks.require(wrapper.vox->id);
-    switch (def.getModel(wrapper.vox->state.userbits).type) {
+    // one frame can be invalid due to texture change but ok
+    const auto& def =
+        level.content.getIndices()->blocks.require(wrapper.vox->id);
+
+    if (wrapper.modelType != def.getModel(wrapper.vox->state.userbits).type) {
+        wrapper.dirtySides = 0xFF;
+        refreshWrapper(wrapper);
+    }
+    switch (wrapper.modelType) {
         case BlockModelType::BLOCK:
             batch->cube(
                 glm::vec3(wrapper.position) + glm::vec3(0.5f),
@@ -78,7 +85,8 @@ void BlockWrapsRenderer::refreshWrapper(BlockWrapper& wrapper) {
         if ((wrapper.cullingBits & (1 << i)) == 0) {
             continue;
         }
-        auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
+        auto texRegion =
+            util::get_texture_region(assets, wrapper.textureFaces[i], "");
         wrapper.texRegions[i] = texRegion;
         wrapper.uvRegions[i] = texRegion.region;
 
@@ -91,7 +99,8 @@ void BlockWrapsRenderer::refreshWrapper(BlockWrapper& wrapper) {
         return;
     }
     const auto& def = level.content.getIndices()->blocks.require(vox->id);
-    switch (def.getModel(vox->state.userbits).type) {
+    wrapper.modelType = def.getModel(vox->state.userbits).type;
+    switch (wrapper.modelType) {
         case BlockModelType::AABB: {
             const auto& aabb =
                 (def.rotatable ? def.rt.hitboxes[vox->state.rotation]

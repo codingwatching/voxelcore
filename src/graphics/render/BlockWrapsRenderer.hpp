@@ -7,6 +7,7 @@
 #include <map>
 
 #include "assets/assets_util.hpp"
+#include "voxels/Block.hpp"
 #include "MainBatch.hpp"
 #include "typedefs.hpp"
 
@@ -24,6 +25,7 @@ struct BlockWrapper {
     util::TextureRegion texRegions[6] {};
     UVRegion uvRegions[6] {};
     const voxel* vox = nullptr;
+    BlockModelType modelType {};
     uint8_t cullingBits = 0xFF;
     uint8_t dirtySides = 0xFF;
 };
@@ -38,7 +40,7 @@ class BlockWrapsRenderer {
     std::unordered_map<u64id_t, std::unique_ptr<BlockWrapper>> wrappers;
     u64id_t nextWrapper = 1;
 
-    void draw(const BlockWrapper& wrapper, const Texture* texture);
+    void draw(BlockWrapper& wrapper, const Texture* texture);
 
     void refreshWrapper(BlockWrapper& wrapper);
 public:

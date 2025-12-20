@@ -47,7 +47,8 @@ static int l_set_faces(lua::State* L) {
                 }
             } else {
                 auto texture = lua::require_string(L, 2 + i);;
-                if ((wrapper->cullingBits & (1 << i)) == 0x0 || wrapper->textureFaces[i] != texture) {
+                if ((wrapper->cullingBits & (1 << i)) == 0x0
+                 || wrapper->textureFaces[i] != texture) {
                     wrapper->cullingBits |= (1 << i);
                     wrapper->textureFaces[i] = texture;
                 }
