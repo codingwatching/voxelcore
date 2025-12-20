@@ -22,9 +22,11 @@ class DrawContext;
 struct BlockWrapper {
     glm::ivec3 position;
     std::array<std::string, 6> textureFaces {};
+    float emission = 1.0f;
+
+    // --- render cache ---
     util::TextureRegion texRegions[6] {};
     UVRegion uvRegions[6] {};
-    const voxel* vox = nullptr;
     BlockModelType modelType {};
     uint8_t cullingBits = 0xFF;
     uint8_t dirtySides = 0xFF;

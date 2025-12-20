@@ -100,7 +100,7 @@ bool Chunks::isObstacleBlock(int32_t x, int32_t y, int32_t z) {
     return indices.blocks.require(v->id).obstacle;
 }
 
-ubyte Chunks::getLight(const glm::ivec3& pos) const {
+light_t Chunks::getLight(const glm::ivec3& pos) const {
     return getLight(pos.x, pos.y, pos.z);
 }
 

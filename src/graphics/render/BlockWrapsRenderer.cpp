@@ -7,6 +7,7 @@
 #include "graphics/core/Shader.hpp"
 #include "graphics/core/DrawContext.hpp"
 #include "graphics/render/MainBatch.hpp"
+#include "lighting/Lightmap.hpp"
 #include "objects/Player.hpp"
 #include "voxels/Block.hpp"
 #include "voxels/Chunks.hpp"
@@ -41,13 +42,22 @@ void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
         return;
     }
 
+    const voxel* vox = chunks.get(wrapper.position);
+    if (vox == nullptr || vox->id == BLOCK_VOID) {
+        return;
+    }
     // one frame can be invalid due to texture change but ok
     const auto& def =
-        level.content.getIndices()->blocks.require(wrapper.vox->id);
+        level.content.getIndices()->blocks.require(vox->id);
 
-    if (wrapper.modelType != def.getModel(wrapper.vox->state.userbits).type) {
+    if (wrapper.modelType != def.getModel(vox->state.userbits).type) {
         wrapper.dirtySides = 0xFF;
         refreshWrapper(wrapper);
+    }
+    glm::vec4 light(1, 1, 1, 0);
+    if (wrapper.emission < 1.0f) {
+        light = Lightmap::extractNormalized(chunks.getLight(wrapper.position));
+        light = wrapper.emission + (1.0f - light);
     }
     switch (wrapper.modelType) {
         case BlockModelType::BLOCK:
@@ -55,22 +65,22 @@ void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
                 glm::vec3(wrapper.position) + glm::vec3(0.5f),
                 glm::vec3(1.01f),
                 wrapper.uvRegions,
-                glm::vec4(1, 1, 1, 0),
-                false,
+                light,
+                wrapper.emission,
                 cullingBits
             );
             break;
         case BlockModelType::AABB: {
             const auto& aabb =
-                (def.rotatable ? def.rt.hitboxes[wrapper.vox->state.rotation]
+                (def.rotatable ? def.rt.hitboxes[vox->state.rotation]
                                 : def.hitboxes).at(0);
             const auto& size = aabb.size();
             batch->cube(
                 glm::vec3(wrapper.position) + aabb.center(),
                 size * glm::vec3(1.01f),
                 wrapper.uvRegions,
-                glm::vec4(1, 1, 1, 0),
-                false,
+                light,
+                wrapper.emission,
                 cullingBits
             );
             break;
@@ -117,7 +127,6 @@ void BlockWrapsRenderer::refreshWrapper(BlockWrapper& wrapper) {
         default:
             break;
     }
-    wrapper.vox = vox;
 }
 
 void BlockWrapsRenderer::draw(const DrawContext& pctx, const Player& player) {

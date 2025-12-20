@@ -152,7 +152,7 @@ public:
         const glm::vec3& size,
         const UVRegion(&texfaces)[6],
         const glm::vec4& tint,
-        bool shading,
+        float emission,
         uint8_t cullingBits = 0xFF
     );
 };
