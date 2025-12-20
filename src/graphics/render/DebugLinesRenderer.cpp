@@ -48,6 +48,7 @@ static void draw_route(
 void DebugLinesRenderer::drawBorders(
     LineBatch& batch, int sx, int sy, int sz, int ex, int ey, int ez
 ) {
+    batch.lineWidth(1.0f);
     int ww = ex - sx;
     int dd = ez - sz;
     /*corner*/ {
