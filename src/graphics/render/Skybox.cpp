@@ -28,7 +28,7 @@ Skybox::Skybox(uint size, Shader& shader)
     shader(shader),
     batch3d(std::make_unique<Batch3D>(4096))
 {
-    auto cubemap = std::make_unique<Cubemap>(size, size, ImageFormat::rgb888);
+    auto cubemap = std::make_unique<Cubemap>(size, size, ImageFormat::RGB888);
 
     uint fboid;
     glGenFramebuffers(1, &fboid);

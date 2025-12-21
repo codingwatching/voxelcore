@@ -650,7 +650,7 @@ static std::shared_ptr<UINode> read_canvas(
         size = element.attr("size").asVec2();
     }
     auto image =
-        std::make_shared<Canvas>(reader.getGUI(), ImageFormat::rgba8888, size);
+        std::make_shared<Canvas>(reader.getGUI(), ImageFormat::RGBA8888, size);
     read_uinode(reader, element, *image);
     return image;
 }

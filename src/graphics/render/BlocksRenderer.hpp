@@ -1,16 +1,16 @@
 #pragma once
 
-#include <memory>
-#include <glm/glm.hpp>
-#include "voxels/voxel.hpp"
 #include "typedefs.hpp"
-
+#include "voxels/voxel.hpp"
 #include "voxels/Block.hpp"
 #include "voxels/Chunk.hpp"
 #include "voxels/VoxelsVolume.hpp"
 #include "maths/util.hpp"
 #include "commons.hpp"
 #include "settings.hpp"
+
+#include <memory>
+#include <glm/glm.hpp>
 
 template<typename VertexStructure> class Mesh;
 class Content;

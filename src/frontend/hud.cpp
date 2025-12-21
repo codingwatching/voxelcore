@@ -157,7 +157,7 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
       frontend(frontend),
       player(player),
       debugImgWorldGen(std::make_unique<ImageData>(
-          ImageFormat::rgba8888, WORLDGEN_IMG_SIZE, WORLDGEN_IMG_SIZE
+          ImageFormat::RGBA8888, WORLDGEN_IMG_SIZE, WORLDGEN_IMG_SIZE
       )) {
     contentAccess = createContentAccess();
     contentAccess->setId("hud.content-access");
