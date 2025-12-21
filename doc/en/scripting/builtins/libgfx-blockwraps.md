@@ -55,4 +55,4 @@ gfx.blockwraps.set_tints(
 )
 ```
 
-Wrappers are not automatically removed without calling `unwrap`.
+Wrappers will not be automatically removed without calling `unwrap`.
