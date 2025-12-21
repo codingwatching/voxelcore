@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <cstring>
+#include <glm/vec4.hpp>
 
 inline constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOL/2;
 
@@ -85,6 +86,15 @@ public:
 
     static constexpr light_t extract(light_t light, ubyte channel) {
         return (light >> (channel << 2)) & 0xF;
+    }
+
+    static glm::vec4 extractNormalized(light_t light) {
+        return glm::vec4(
+            extract(light, 0) / 15.0f,
+            extract(light, 1) / 15.0f,
+            extract(light, 2) / 15.0f,
+            extract(light, 3) / 15.0f
+        );
     }
 
     std::unique_ptr<ubyte[]> encode() const;

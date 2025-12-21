@@ -128,12 +128,11 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
     chunk->flags.modified = false;
     if (important) {
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
-        inwork[key] = true;
 
         auto mesh = renderer->render(chunk.get(), *voxelsBuffer);
-        meshes[glm::ivec2(chunk->x, chunk->z)] =
+        meshes[key] =
             ChunkMesh {std::move(mesh.mesh), std::move(mesh.sortingMeshData)};
-        return meshes[glm::ivec2(chunk->x, chunk->z)].mesh.get();
+        return meshes[key].mesh.get();
     }
     if (inwork.find(key) != inwork.end()) {
         return nullptr;

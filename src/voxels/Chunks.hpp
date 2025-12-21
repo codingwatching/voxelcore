@@ -76,6 +76,7 @@ public:
         return get(pos.x, pos.y, pos.z);
     }
 
+    light_t getLight(const glm::ivec3& pos) const;
     light_t getLight(int32_t x, int32_t y, int32_t z) const;
     ubyte getLight(int32_t x, int32_t y, int32_t z, int channel) const;
     void set(int32_t x, int32_t y, int32_t z, uint32_t id, blockstate state);
