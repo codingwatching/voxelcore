@@ -22,6 +22,27 @@ class ContentGfxCache;
 struct UVRegion;
 
 class BlocksRenderer {
+public:
+    BlocksRenderer(
+        size_t capacity,
+        const Content& content,
+        const ContentGfxCache& cache,
+        const EngineSettings& settings
+    );
+    virtual ~BlocksRenderer();
+
+    void build(const Chunk* chunk, const VoxelsVolume& volume);
+    ChunkMesh render(
+        const Chunk* chunk, const VoxelsVolume& volume
+    );
+    ChunkMeshData createMesh();
+
+    size_t getMemoryConsumption() const;
+
+    bool isCancelled() const {
+        return cancelled;
+    }
+private:
     static const glm::vec3 SUN_VECTOR;
     const Content& content;
     std::unique_ptr<ChunkVertex[]> vertexBuffer;
@@ -160,24 +181,4 @@ class BlocksRenderer {
 
     void render(const voxel* voxels, const int beginEnds[256][2]);
     SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
-public:
-    BlocksRenderer(
-        size_t capacity,
-        const Content& content,
-        const ContentGfxCache& cache,
-        const EngineSettings& settings
-    );
-    virtual ~BlocksRenderer();
-
-    void build(const Chunk* chunk, const VoxelsVolume& volume);
-    ChunkMesh render(
-        const Chunk* chunk, const VoxelsVolume& volume
-    );
-    ChunkMeshData createMesh();
-
-    size_t getMemoryConsumption() const;
-
-    bool isCancelled() const {
-        return cancelled;
-    }
 };
