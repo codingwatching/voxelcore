@@ -1,15 +1,16 @@
 #pragma once
 
+#include "assets/assets_util.hpp"
+#include "voxels/Block.hpp"
+#include "MainBatch.hpp"
+#include "typedefs.hpp"
+
 #include <array>
 #include <string>
 #include <memory>
 #include <unordered_map>
 #include <map>
-
-#include "assets/assets_util.hpp"
-#include "voxels/Block.hpp"
-#include "MainBatch.hpp"
-#include "typedefs.hpp"
+#include <glm/vec4.hpp>
 
 class Assets;
 class Player;
@@ -22,6 +23,7 @@ class DrawContext;
 struct BlockWrapper {
     glm::ivec3 position;
     std::array<std::string, 6> textureFaces {};
+    std::array<glm::vec3, 6> tints {};
     float emission = 0.0f;
 
     // --- render cache ---
@@ -54,7 +56,10 @@ public:
     void draw(const DrawContext& ctx, const Player& player);
 
     u64id_t add(
-        const glm::ivec3& position, const std::string& texture, float emission
+        const glm::ivec3& position,
+        const std::string& texture,
+        const glm::vec3& tint,
+        float emission
     );
 
     BlockWrapper* get(u64id_t id) const;

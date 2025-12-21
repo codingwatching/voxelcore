@@ -86,7 +86,8 @@ void MainBatch::cube(
     const glm::vec3& coord,
     const glm::vec3& size,
     const UVRegion(&texfaces)[6],
-    const glm::vec4& tint,
+    const glm::vec4& lights,
+    const glm::vec3 tints[],
     float emission,
     uint8_t cullingBits
 ) {
@@ -98,42 +99,42 @@ void MainBatch::cube(
     quad(
         coord + Z * size.z * 0.5f,
         X, Y, Z, glm::vec2(size.x, size.y),
-        do_tint((1.0f - emission) * 0.8 + emission) * tint,
-        glm::vec3(1.0f), texfaces[5]
+        do_tint((1.0f - emission) * 0.8 + emission) * lights,
+        tints[5], texfaces[5]
     );
     if (cullingBits & 0x10)
     quad(
         coord - Z * size.z * 0.5f,
         -X, Y, -Z, glm::vec2(size.x, size.y),
-        do_tint((1.0f - emission) * 0.9 + emission) * tint,
-        glm::vec3(1.0f), texfaces[4]
+        do_tint((1.0f - emission) * 0.9 + emission) * lights,
+        tints[4], texfaces[4]
     );
     if (cullingBits & 0x8)
     quad(
         coord + Y * size.y * 0.5f,
         -X, Z, Y, glm::vec2(size.x, size.z),
-        do_tint((1.0f - emission) * 1.0 + emission) * tint,
-        glm::vec3(1.0f), texfaces[3]
+        do_tint((1.0f - emission) * 1.0 + emission) * lights,
+        tints[3], texfaces[3]
     );
     if (cullingBits & 0x4)
     quad(
         coord - Y * size.y * 0.5f,
         X, Z, -Y, glm::vec2(size.x, size.z),
-        do_tint((1.0f - emission) * 0.7 + emission) * tint,
-        glm::vec3(1.0f), texfaces[2]
+        do_tint((1.0f - emission) * 0.7 + emission) * lights,
+        tints[2], texfaces[2]
     );
     if (cullingBits & 0x2)
     quad(
         coord + X * size.x * 0.5f,
         -Z, Y, X, glm::vec2(size.z, size.y),
-        do_tint((1.0f - emission) * 0.8 + emission) * tint,
-        glm::vec3(1.0f), texfaces[1]
+        do_tint((1.0f - emission) * 0.8 + emission) * lights,
+        tints[1], texfaces[1]
     );
     if (cullingBits & 0x1)
     quad(
         coord - X * size.x * 0.5f,
         Z, Y, -X, glm::vec2(size.z, size.y),
-        do_tint((1.0f - emission) * 0.9 + emission) * tint,
-        glm::vec3(1.0f), texfaces[0]
+        do_tint((1.0f - emission) * 0.9 + emission) * lights,
+        tints[0], texfaces[0]
     );
 }
