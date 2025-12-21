@@ -39,6 +39,20 @@ gfx.blockwraps.set_faces(
     -- face texture 6 (+Z)
     face6?: string
 )
+
+-- Sets the tint of the sides (-X, +X, -Y, +Y, -Z, +Z).
+-- RGB [0.0; 1.0]
+gfx.blockwraps.set_tints(
+    -- wrapper id
+    id: int,
+    -- side 1 color (-X)
+    face1?: vec3,
+    -- side 2 color (+X)
+    face2?: vec3,
+    ...
+    -- side 6 color (+Z)
+    face6?: vec3
+)
 ```
 
 Wrappers are not automatically removed without calling `unwrap`.
