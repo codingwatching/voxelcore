@@ -33,6 +33,7 @@ static int l_set_texture(lua::State* L) {
         for (int i = 0; i < wrapper->textureFaces.size(); i++) {
             wrapper->textureFaces[i] = lua::require_string(L, 2);
         }
+        wrapper->dirtySides = 0xFF;
     }
     return 0;
 }
