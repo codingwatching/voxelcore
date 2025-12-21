@@ -8,7 +8,14 @@
 ```lua
 -- Создаёт обертку на указанной позиции, с указанной текстурой.
 -- Возвращает id обёртки.
-gfx.blockwraps.wrap(position: vec3, texture: string) -> int
+gfx.blockwraps.wrap(
+    -- Позиция блока
+    position: vec3,
+    -- Текстура обёртки
+    texture: string,
+    -- Излучение [0.0; 1.0]
+    [опционально] emission: number = 1.0
+) -> int
 
 -- Удаляет обертку, если она существует.
 gfx.blockwraps.unwrap(id: int)
@@ -18,6 +25,21 @@ gfx.blockwraps.set_pos(id: int, position: vec3)
 
 -- Меняет текстуру обёртки, если она существует.
 gfx.blockwraps.set_texture(id: int, texture: string)
+
+-- Устанавливает текстуры сторон (-X, +X, -Y, +Y, -Z, +Z).
+-- - nil - отключает отображение стороны.
+-- - "" - монотонная текстура.
+gfx.blockwraps.set_faces(
+    -- id обёртки
+    id: int,
+    -- текстура стороны 1 (-X)
+    face1?: string,
+    -- текстура стороны 2 (+X)
+    face2?: string,
+    ...
+    -- текстура стороны 6 (+Z)
+    face6?: string
+)
 ```
 
 Обертки не удаляются автоматически без вызова `unwrap`.
