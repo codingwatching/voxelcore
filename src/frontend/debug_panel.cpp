@@ -76,6 +76,12 @@ std::shared_ptr<UINode> create_debug_panel(
     static float fpsAvgFast = fps;
     static float fpsAvgLong = fps;
     static std::wstring fpsString = L"";
+    static int drawCalls = 0;
+    static int drawCallsMin = drawCalls;
+    static int drawCallsMinOld = drawCallsMin;
+    static int drawCallsMax = drawCalls;
+    static int drawCallsMaxOld = drawCallsMax;
+    static float drawCallsAvgLong = drawCalls;
 
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
@@ -87,6 +93,10 @@ std::shared_ptr<UINode> create_debug_panel(
         fpsMax = std::max(fps, fpsMax);
         fpsAvgFast = fpsAvgFast * (1 - AVG_ALPHA) + fps * AVG_ALPHA;
         fpsAvgLong = fpsAvgLong * (1 - AVG_BETA) + fps * AVG_BETA;
+
+        drawCallsMin = std::min(drawCalls, drawCallsMin);
+        drawCallsMax = std::max(drawCalls, drawCallsMax);
+        drawCallsAvgLong = drawCallsAvgLong * (1 - AVG_BETA) + drawCalls * AVG_BETA;
     });
 
     panel->listenInterval(2.0f, []() {
@@ -94,6 +104,11 @@ std::shared_ptr<UINode> create_debug_panel(
         fpsMin = fps;
         fpsMaxOld = fpsMax;
         fpsMax = fps;
+
+        drawCallsMinOld = drawCallsMin;
+        drawCallsMin = drawCalls;
+        drawCallsMaxOld = drawCallsMax;
+        drawCallsMax = drawCalls;
     });
 
     if (network) {
@@ -117,9 +132,11 @@ std::shared_ptr<UINode> create_debug_panel(
         return L"meshes: " + std::to_wstring(MeshStats::meshesCount);
     }));
     panel->add(create_label(gui, []() {
-        int drawCalls = MeshStats::drawCalls;
+        drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
-        return L"draw-calls: " + std::to_wstring(drawCalls);
+        return L"draw-calls: " + std::to_wstring(int(drawCallsAvgLong)) + L" / " +
+               std::to_wstring(std::min(drawCallsMinOld, drawCallsMin)) + L" / " +
+               std::to_wstring(std::max(drawCallsMaxOld, drawCallsMax));
     }));
     panel->add(create_label(gui, []() {
         return L"speakers: " + std::to_wstring(audio::count_speakers())+
