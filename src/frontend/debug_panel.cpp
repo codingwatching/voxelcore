@@ -70,6 +70,10 @@ std::shared_ptr<UINode> create_debug_panel(
     static int fps = 0;
     static int fpsMin = fps;
     static int fpsMax = fps;
+    static float fpsAvgFast = fps;
+    static float fpsAvgLong = fps;
+    static float fpsAvgAlpha = 0.1;
+    static float fpsAvgBeta = 0.01;
     static std::wstring fpsString = L"";
 
     static size_t lastTotalDownload = 0;
@@ -80,10 +84,11 @@ std::shared_ptr<UINode> create_debug_panel(
         fps = 1.0f / engine.getTime().getDelta();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
+        fpsAvgFast = fpsAvgFast * (1 - fpsAvgAlpha) + fps * fpsAvgAlpha;
+        fpsAvgLong = fpsAvgLong * (1 - fpsAvgBeta) + fps * fpsAvgBeta;
     });
 
-    panel->listenInterval(0.5f, []() {
-        fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
+    panel->listenInterval(2.0f, []() {
         fpsMin = fps;
         fpsMax = fps;
     });
@@ -101,8 +106,10 @@ std::shared_ptr<UINode> create_debug_panel(
         });
     }
 
-    panel->add(create_label(gui, []() { return L"fps: "+fpsString;}));
-   
+    panel->add(create_label(gui, []() {
+        return L"fps: " + std::to_wstring(int(fpsAvgFast)) + L" / " + std::to_wstring(int(fpsAvgLong)) + L" / " +
+               std::to_wstring(fpsMin) + L" / " + std::to_wstring(fpsMax);
+    }));
     panel->add(create_label(gui, []() {
         return L"meshes: " + std::to_wstring(MeshStats::meshesCount);
     }));
