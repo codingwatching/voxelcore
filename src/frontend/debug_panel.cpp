@@ -73,7 +73,6 @@ std::shared_ptr<UINode> create_debug_panel(
     static int fpsMinOld = fpsMin;
     static int fpsMax = fps;
     static int fpsMaxOld = fpsMax;
-    static float fpsAvgFast = fps;
     static float fpsAvgLong = fps;
     static std::wstring fpsString = L"";
     static int drawCalls = 0;
@@ -83,8 +82,7 @@ std::shared_ptr<UINode> create_debug_panel(
     static int drawCallsMaxOld = drawCallsMax;
     static float drawCallsAvgLong = drawCalls;
 
-    inline const float AVG_ALPHA = 0.1;
-    inline const float AVG_BETA = 0.01;
+    inline const float AVG_ALPHA = 0.01;
 
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
@@ -94,12 +92,11 @@ std::shared_ptr<UINode> create_debug_panel(
         fps = 1.0f / engine.getTime().getDelta();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
-        fpsAvgFast = fpsAvgFast * (1 - AVG_ALPHA) + fps * AVG_ALPHA;
-        fpsAvgLong = fpsAvgLong * (1 - AVG_BETA) + fps * AVG_BETA;
+        fpsAvgLong = fpsAvgLong * (1 - AVG_ALPHA) + fps * AVG_ALPHA;
 
         drawCallsMin = std::min(drawCalls, drawCallsMin);
         drawCallsMax = std::max(drawCalls, drawCallsMax);
-        drawCallsAvgLong = drawCallsAvgLong * (1 - AVG_BETA) + drawCalls * AVG_BETA;
+        drawCallsAvgLong = drawCallsAvgLong * (1 - AVG_ALPHA) + drawCalls * AVG_ALPHA;
     });
 
     panel->listenInterval(2.0f, []() {
@@ -128,7 +125,7 @@ std::shared_ptr<UINode> create_debug_panel(
     }
 
     panel->add(create_label(gui, []() {
-        return L"fps: " + std::to_wstring(int(fpsAvgFast)) + L" / " + std::to_wstring(int(fpsAvgLong)) + L" / " +
+        return L"fps: " + std::to_wstring(int(fpsAvgLong)) + L" / " +
                std::to_wstring(std::min(fpsMinOld, fpsMin)) + L" / " + std::to_wstring(std::max(fpsMaxOld, fpsMax));
     }));
     panel->add(create_label(gui, []() {
