@@ -1,3 +1,4 @@
+#include "constants.hpp"
 #include "audio/audio.hpp"
 #include "delegates.hpp"
 #include "engine/Engine.hpp"
@@ -74,8 +75,6 @@ std::shared_ptr<UINode> create_debug_panel(
     static int fpsMaxOld = fpsMax;
     static float fpsAvgFast = fps;
     static float fpsAvgLong = fps;
-    static float fpsAvgAlpha = 0.1;
-    static float fpsAvgBeta = 0.01;
     static std::wstring fpsString = L"";
 
     static size_t lastTotalDownload = 0;
@@ -86,8 +85,8 @@ std::shared_ptr<UINode> create_debug_panel(
         fps = 1.0f / engine.getTime().getDelta();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
-        fpsAvgFast = fpsAvgFast * (1 - fpsAvgAlpha) + fps * fpsAvgAlpha;
-        fpsAvgLong = fpsAvgLong * (1 - fpsAvgBeta) + fps * fpsAvgBeta;
+        fpsAvgFast = fpsAvgFast * (1 - AVG_ALPHA) + fps * AVG_ALPHA;
+        fpsAvgLong = fpsAvgLong * (1 - AVG_BETA) + fps * AVG_BETA;
     });
 
     panel->listenInterval(2.0f, []() {
