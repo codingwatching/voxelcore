@@ -83,6 +83,9 @@ std::shared_ptr<UINode> create_debug_panel(
     static int drawCallsMaxOld = drawCallsMax;
     static float drawCallsAvgLong = drawCalls;
 
+    inline const float AVG_ALPHA = 0.1;
+    inline const float AVG_BETA = 0.01;
+
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
     static std::wstring netSpeedString = L"";

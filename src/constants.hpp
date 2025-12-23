@@ -73,6 +73,3 @@ inline const std::string SKELETONS_FOLDER = "skeletons";
 inline const std::string POST_EFFECTS_FOLDER = "shaders/effects";
 
 inline const std::string FONT_DEFAULT = "normal";
-
-inline const float AVG_ALPHA = 0.1;
-inline const float AVG_BETA = 0.01;
