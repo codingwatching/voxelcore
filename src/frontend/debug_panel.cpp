@@ -134,8 +134,11 @@ std::shared_ptr<UINode> create_debug_panel(
     panel->add(create_label(gui, []() {
         drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
-        return L"draw-calls: " + std::to_wstring(int(drawCallsAvgLong)) +
-               L" / " +
+        return L"draw-calls: " + std::to_wstring(drawCalls) +
+               L" (avg: " + std::to_wstring(int(drawCallsAvgLong)) + L" )";
+    }));
+    panel->add(create_label(gui, []() {
+        return L"    min/max: " +
                std::to_wstring(std::min(drawCallsMinOld, drawCallsMin)) +
                L" / " +
                std::to_wstring(std::max(drawCallsMaxOld, drawCallsMax));
