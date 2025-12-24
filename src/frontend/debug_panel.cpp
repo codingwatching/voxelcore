@@ -70,16 +70,21 @@ std::shared_ptr<UINode> create_debug_panel(
     static int fpsMinOld = fpsMin;
     static int fpsMax = fps;
     static int fpsMaxOld = fpsMax;
+    static int framesCount = 0;
+    static float deltaSum = 0.;
     static float fpsAvgLong = fps;
     static std::wstring fpsString = L"";
+
     static int drawCalls = 0;
     static int drawCallsMin = drawCalls;
     static int drawCallsMinOld = drawCallsMin;
     static int drawCallsMax = drawCalls;
     static int drawCallsMaxOld = drawCallsMax;
     static float drawCallsAvgLong = drawCalls;
+    static std::wstring drawCallsString = L"";
 
-    static float AVG_ALPHA = 0.01;
+
+    static const float AVG_ALPHA = 0.3;
 
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
@@ -89,12 +94,25 @@ std::shared_ptr<UINode> create_debug_panel(
         fps = 1.0f / engine.getTime().getDelta();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
-        fpsAvgLong = fpsAvgLong * (1 - AVG_ALPHA) + fps * AVG_ALPHA;
+        framesCount++;
+        deltaSum += engine.getTime().getDelta();
 
         drawCallsMin = std::min(drawCalls, drawCallsMin);
         drawCallsMax = std::max(drawCalls, drawCallsMax);
         drawCallsAvgLong =
             drawCallsAvgLong * (1 - AVG_ALPHA) + drawCalls * AVG_ALPHA;
+    });
+
+    panel->listenInterval(0.2f, []() {
+        if (framesCount < 1) {
+            return;
+        }
+        fpsAvgLong = framesCount / deltaSum;
+        framesCount = 0;
+        deltaSum = 0.0;
+
+        fpsString = std::to_wstring(int(fpsAvgLong));
+        drawCallsString = std::to_wstring(int(drawCallsAvgLong));
     });
 
     panel->listenInterval(2.0f, []() {
@@ -124,7 +142,7 @@ std::shared_ptr<UINode> create_debug_panel(
     }
 
     panel->add(create_label(gui, []() {
-        return L"fps: " + std::to_wstring(int(fpsAvgLong)) + L" / " +
+        return L"fps: " + fpsString + L" / " +
                std::to_wstring(std::min(fpsMinOld, fpsMin)) + L" / " +
                std::to_wstring(std::max(fpsMaxOld, fpsMax));
     }));
@@ -134,8 +152,8 @@ std::shared_ptr<UINode> create_debug_panel(
     panel->add(create_label(gui, []() {
         drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
-        return L"draw-calls: " + std::to_wstring(drawCalls) +
-               L" (avg: " + std::to_wstring(int(drawCallsAvgLong)) + L" )";
+        return L"draw-calls: " + std::to_wstring(drawCalls) + L" ( avg: " +
+               drawCallsString + L" )";
     }));
     panel->add(create_label(gui, []() {
         return L"    min/max: " +
