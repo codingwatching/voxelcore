@@ -83,7 +83,6 @@ std::shared_ptr<UINode> create_debug_panel(
     static float drawCallsAvgLong = drawCalls;
     static std::wstring drawCallsString = L"";
 
-
     static const float AVG_ALPHA = 0.3;
 
     static size_t lastTotalDownload = 0;
@@ -152,8 +151,10 @@ std::shared_ptr<UINode> create_debug_panel(
     panel->add(create_label(gui, []() {
         drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
-        return L"draw-calls: " + std::to_wstring(drawCalls) + L" ( avg: " +
-               drawCallsString + L" )";
+        auto drawCallsStr = std::to_wstring(drawCalls);
+        drawCallsStr.resize(6, ' ');
+        return L"draw-calls: " + drawCallsStr +
+               L" ( avg: " + drawCallsString + L" )";
     }));
     panel->add(create_label(gui, []() {
         return L"    min/max: " +
