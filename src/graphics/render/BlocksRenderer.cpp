@@ -785,7 +785,7 @@ ChunkMesh BlocksRenderer::render(
             IndexBufferData {indexBuffer.get(), indexCount},
             IndexBufferData {denseIndexBuffer.get(), denseIndexCount},
         }
-    ), std::move(sortingMesh)};
+    ), std::move(sortingMesh), nullptr};
 }
 
 size_t BlocksRenderer::getMemoryConsumption() const {

@@ -73,14 +73,16 @@ ChunksRenderer::ChunksRenderer(
                   *level, cache, settings
               );
           },
-          [&](RendererResult& result) {
-              if (!result.cancelled) {
-                  auto meshData = std::move(result.meshData);
-                  meshes[result.key] = ChunkMesh {
-                      std::make_unique<Mesh<ChunkVertex>>(meshData.mesh),
-                      std::move(meshData.sortingMesh)};
-              }
-              inwork.erase(result.key);
+          [&](RendererResult&& result) {
+                if (!result.cancelled) {
+                    auto meshData = std::move(result.meshData);
+                    auto chunk = std::make_unique<Mesh<ChunkVertex>>(meshData.mesh);
+                    meshes[result.key] = ChunkMesh {
+                        std::move(chunk),
+                        std::move(meshData.sortingMesh),
+                        nullptr};
+                }
+                inwork.erase(result.key);
           },
           settings.graphics.chunkMaxRenderers.get()
       ) {
@@ -130,8 +132,8 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
 
         auto mesh = renderer->render(chunk.get(), *voxelsBuffer);
-        meshes[key] =
-            ChunkMesh {std::move(mesh.mesh), std::move(mesh.sortingMeshData)};
+        meshes[key] = ChunkMesh {
+            std::move(mesh.mesh), std::move(mesh.sortingMeshData), nullptr};
         return meshes[key].mesh.get();
     }
     if (inwork.find(key) != inwork.end()) {
@@ -174,7 +176,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::getOrRender(
 }
 
 void ChunksRenderer::update() {
-    threadPool.update();
+    threadPool.pullResults();
 }
 
 const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(

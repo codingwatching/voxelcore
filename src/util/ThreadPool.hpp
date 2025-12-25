@@ -42,7 +42,7 @@ namespace util {
         std::condition_variable jobsMutexCondition;
         std::mutex jobsMutex;
         std::vector<std::unique_lock<std::mutex>> workersBlocked;
-        consumer<R&> resultConsumer;
+        consumer<R&&> resultConsumer;
         consumer<T&> onJobFailed = nullptr;
         runnable onComplete = nullptr;
         std::atomic<int> busyWorkers = 0;
@@ -116,7 +116,7 @@ namespace util {
         ThreadPool(
             std::string name,
             supplier<std::shared_ptr<Worker<T, R>>> workersSupplier,
-            consumer<R&> resultConsumer,
+            consumer<R&&> resultConsumer,
             int maxWorkers=UNLIMITED
         )
             : logger(std::move(name)), resultConsumer(resultConsumer) {
@@ -178,22 +178,28 @@ namespace util {
         }
 
         void update() override {
+            pullResults();
+        }
+
+        size_t pullResults(size_t maxResults = -1) {
             if (!working) {
-                return;
+                return 0;
             }
             if (failed) {
                 throw std::runtime_error("some job failed");
             }
 
             bool complete = false;
+            size_t resultsProcessed = 0;
             {
                 std::lock_guard<std::mutex> lock(resultsMutex);
-                while (!results.empty()) {
-                    ThreadPoolResult<T, R> entry = results.front();
+                while (!results.empty() && resultsProcessed < maxResults) {
+                    ThreadPoolResult<T, R> entry = std::move(results.front());
                     results.pop();
 
+                    ++resultsProcessed;
                     try {
-                        resultConsumer(entry.entry);
+                        resultConsumer(std::move(entry.entry));
                     } catch (std::exception& err) {
                         logger.error() << err.what();
                         if (onJobFailed) {
@@ -227,6 +233,7 @@ namespace util {
             if (complete) {
                 terminate();
             }
+            return resultsProcessed;
         }
 
         void enqueueJob(T job) {

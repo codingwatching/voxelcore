@@ -354,7 +354,7 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
         std::make_shared<util::ThreadPool<aloader_entry, assetload::postfunc>>(
             "assets-loader-pool",
             [=]() { return std::make_shared<LoaderWorker>(this); },
-            [this](const assetload::postfunc& func) { func(&assets); }
+            [this](assetload::postfunc&& func) { func(&assets); }
         );
     pool->setOnComplete(std::move(onDone));
     while (!entries.empty()) {
