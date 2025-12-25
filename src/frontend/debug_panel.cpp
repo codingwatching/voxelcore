@@ -67,62 +67,58 @@ std::shared_ptr<UINode> create_debug_panel(
 
     static int fps = 0;
     static int fpsMin = fps;
-    static int fpsMinOld = fpsMin;
     static int fpsMax = fps;
-    static int fpsMaxOld = fpsMax;
     static int framesCount = 0;
     static float deltaSum = 0.;
-    static float fpsAvgLong = fps;
+    static int drawCallsSum = 0;
     static std::wstring fpsString = L"";
 
     static int drawCalls = 0;
     static int drawCallsMin = drawCalls;
-    static int drawCallsMinOld = drawCallsMin;
     static int drawCallsMax = drawCalls;
-    static int drawCallsMaxOld = drawCallsMax;
-    static float drawCallsAvgLong = drawCalls;
-    static std::wstring drawCallsString = L"";
-
-    static const float AVG_ALPHA = 0.3;
+    static std::wstring drawCallsAvgString = L"";
+    static std::wstring drawCallsMinMaxString = L"";
 
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
     static std::wstring netSpeedString = L"";
 
     panel->listenInterval(0.016f, [&engine]() {
-        fps = 1.0f / engine.getTime().getDelta();
+        double delta = engine.getTime().getDelta();
+        fps = 1.0f / delta;
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
-        framesCount++;
-        deltaSum += engine.getTime().getDelta();
-
         drawCallsMin = std::min(drawCalls, drawCallsMin);
         drawCallsMax = std::max(drawCalls, drawCallsMax);
-        drawCallsAvgLong =
-            drawCallsAvgLong * (1 - AVG_ALPHA) + drawCalls * AVG_ALPHA;
+
+        framesCount++;
+        deltaSum += delta;
+        drawCallsSum += drawCalls;
     });
 
-    panel->listenInterval(0.2f, []() {
+    panel->listenInterval(0.5f, []() {
         if (framesCount < 1) {
             return;
         }
-        fpsAvgLong = framesCount / deltaSum;
+        int avgFps = glm::round(framesCount / deltaSum);
+        int avgDrawCalls = drawCallsSum / framesCount;
         framesCount = 0;
         deltaSum = 0.0;
+        drawCallsSum = 0;
 
-        fpsString = std::to_wstring(int(fpsAvgLong));
-        drawCallsString = std::to_wstring(int(drawCallsAvgLong));
-    });
+        fpsString = L"fps: " + std::to_wstring(avgFps) + L" / " +
+               std::to_wstring(fpsMin) + L" / " +
+               std::to_wstring(fpsMax);
+        drawCallsAvgString = std::to_wstring(avgDrawCalls);
+        drawCallsMinMaxString = L"    min/max: " +
+               std::to_wstring(drawCallsMin) +
+               L" / " +
+               std::to_wstring(drawCallsMax);
 
-    panel->listenInterval(2.0f, []() {
-        fpsMinOld = fpsMin;
         fpsMin = fps;
-        fpsMaxOld = fpsMax;
         fpsMax = fps;
 
-        drawCallsMinOld = drawCallsMin;
         drawCallsMin = drawCalls;
-        drawCallsMaxOld = drawCallsMax;
         drawCallsMax = drawCalls;
     });
 
@@ -140,11 +136,7 @@ std::shared_ptr<UINode> create_debug_panel(
         });
     }
 
-    panel->add(create_label(gui, []() {
-        return L"fps: " + fpsString + L" / " +
-               std::to_wstring(std::min(fpsMinOld, fpsMin)) + L" / " +
-               std::to_wstring(std::max(fpsMaxOld, fpsMax));
-    }));
+    panel->add(create_label(gui, []() { return fpsString; }));
     panel->add(create_label(gui, []() {
         return L"meshes: " + std::to_wstring(MeshStats::meshesCount);
     }));
@@ -154,13 +146,10 @@ std::shared_ptr<UINode> create_debug_panel(
         auto drawCallsStr = std::to_wstring(drawCalls);
         drawCallsStr.resize(6, ' ');
         return L"draw-calls: " + drawCallsStr +
-               L" ( avg: " + drawCallsString + L" )";
+               L" (avg: " + drawCallsAvgString + L")";
     }));
     panel->add(create_label(gui, []() {
-        return L"    min/max: " +
-               std::to_wstring(std::min(drawCallsMinOld, drawCallsMin)) +
-               L" / " +
-               std::to_wstring(std::max(drawCallsMaxOld, drawCallsMax));
+        return drawCallsMinMaxString;
     }));
     panel->add(create_label(gui, []() {
         return L"speakers: " + std::to_wstring(audio::count_speakers()) +
