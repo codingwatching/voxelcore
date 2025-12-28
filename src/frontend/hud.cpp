@@ -385,15 +385,12 @@ void Hud::update(bool visible) {
 /// @brief Show inventory on the screen and turn on inventory mode blocking movement
 void Hud::openInventory() {
     auto& content = frontend.getLevel().content;
-    showExchangeSlot();
 
-    inventoryOpen = true;
     auto inventory = player.getInventory();
     auto inventoryDocument = assets.get<UiDocument>("core:inventory");
     inventoryView = std::dynamic_pointer_cast<InventoryView>(inventoryDocument->getRoot());
     inventoryView->bind(inventory, &content);
     add(HudElement(HudElementMode::INVENTORY, inventoryDocument, inventoryView, false));
-    add(HudElement(HudElementMode::INVENTORY, nullptr, exchangeSlot, false));
 }
 
 std::shared_ptr<Inventory> Hud::openInventory(
@@ -414,9 +411,10 @@ std::shared_ptr<Inventory> Hud::openInventory(
 
     if (playerInventory) {
         openInventory();
-    } else {
-        inventoryOpen = true;
     }
+    showExchangeSlot();
+    inventoryOpen = true;
+
     if (inv == nullptr) {
         inv = level.inventories->createVirtual(secondInvView->getSlotsCount());
     }
@@ -446,9 +444,10 @@ void Hud::openInventory(
     secondUI = blockUI;
     if (playerInventory) {
         openInventory();
-    } else {
-        inventoryOpen = true;
     }
+    showExchangeSlot();
+    inventoryOpen = true;
+
     if (blockinv == nullptr) {
         blockinv = level.inventories->createVirtual(blockUI->getSlotsCount());
     }
@@ -477,6 +476,7 @@ void Hud::showExchangeSlot() {
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
     gui.store(SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
+    add(HudElement(HudElementMode::INVENTORY, nullptr, exchangeSlot, false));
 }
 
 void Hud::showOverlay(
@@ -488,10 +488,10 @@ void Hud::showOverlay(
     secondUI = doc->getRoot();
     if (playerInventory) {
         openInventory();
-    } else {
-        showExchangeSlot();
-        inventoryOpen = true;
     }
+    showExchangeSlot();
+    inventoryOpen = true;
+
     add(HudElement(HudElementMode::INVENTORY, doc, secondUI, false), args);
 }
 
