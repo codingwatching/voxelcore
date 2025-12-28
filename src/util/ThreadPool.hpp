@@ -219,7 +219,7 @@ namespace util {
                     }
                 }
 
-                if (onComplete && busyWorkers == 0) {
+                if (onComplete && busyWorkers == 0 && results.empty()) {
                     std::lock_guard<std::mutex> jobsLock(jobsMutex);
                     if (jobs.empty()) {
                         onComplete();
