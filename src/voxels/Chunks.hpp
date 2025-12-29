@@ -23,6 +23,8 @@ class LevelEvents;
 class Block;
 class VoxelsVolume;
 
+template <int w, int h, int d> class StaticVoxelsVolume;
+
 /// Player-centred chunks matrix
 class Chunks {
     LevelEvents* events;
@@ -128,7 +130,34 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
     bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void getVoxels(VoxelsVolume& volume, bool backlight = false, int top = CHUNK_H) const;
+    void getVoxels(
+        VoxelsVolume& volume, bool backlight = false, int top = CHUNK_H
+    ) const;
+
+    template <int w, int h, int d>
+    void getVoxels(
+        StaticVoxelsVolume<w, h, d>& volume,
+        bool backlight = false,
+        int top = CHUNK_H
+    ) const {
+        getVoxels(
+            volume.getVoxels(),
+            volume.getLights(),
+            {volume.getX(), volume.getY(), volume.getZ()},
+            {w, h, d},
+            backlight,
+            top
+        );
+    }
+
+    void getVoxels(
+        voxel* voxels,
+        light_t* lights,
+        const glm::ivec3& pos,
+        const glm::ivec3& size,
+        bool backlight,
+        int top
+    ) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newW, uint32_t newD);

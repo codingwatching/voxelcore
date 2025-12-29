@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.hpp"
 #include "graphics/core/MeshData.hpp"
 #include "util/Buffer.hpp"
 
@@ -51,3 +52,12 @@ struct ChunkMesh {
     SortingMeshData sortingMeshData;
     std::unique_ptr<Mesh<ChunkVertex> > sortedMesh;
 };
+
+inline constexpr int VOXELS_BUFFER_PADDING = 2;
+
+template<int, int, int> class StaticVoxelsVolume;
+
+using VoxelsRenderVolume = StaticVoxelsVolume<
+    CHUNK_W + VOXELS_BUFFER_PADDING * 2,
+    CHUNK_H,
+    CHUNK_D + VOXELS_BUFFER_PADDING * 2>;

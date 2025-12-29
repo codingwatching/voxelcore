@@ -52,7 +52,7 @@ namespace util {
         bool standaloneResults = true;
         bool stopOnFail = true;
 
-        void threadLoop(int index, std::shared_ptr<Worker<T, R>> worker) {
+        void threadLoop(int index, std::unique_ptr<Worker<T, R>> worker) {
             std::condition_variable variable;
             std::mutex mutex;
             bool locked = false;
@@ -76,7 +76,7 @@ namespace util {
                     {
                         std::lock_guard<std::mutex> lock(resultsMutex);
                         results.push(ThreadPoolResult<T, R> {
-                            job, variable, index, locked, result});
+                            job, variable, index, locked, std::move(result)});
                         if (!standaloneResults) {
                             locked = true;
                         }
@@ -115,7 +115,7 @@ namespace util {
         /// unlimited, -2 is half of auto count, -4 is quarter.
         ThreadPool(
             std::string name,
-            supplier<std::shared_ptr<Worker<T, R>>> workersSupplier,
+            supplier<std::unique_ptr<Worker<T, R>>> workersSupplier,
             consumer<R&&> resultConsumer,
             int maxWorkers=UNLIMITED
         )
@@ -236,7 +236,7 @@ namespace util {
             return resultsProcessed;
         }
 
-        void enqueueJob(T job) {
+        void enqueueJob(T&& job) {
             {
                 std::lock_guard<std::mutex> lock(jobsMutex);
                 jobs.push(std::move(job));

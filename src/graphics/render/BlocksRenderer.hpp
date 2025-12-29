@@ -17,7 +17,6 @@ class Content;
 class Block;
 class Chunk;
 class Chunks;
-class VoxelsVolume;
 class ContentGfxCache;
 struct UVRegion;
 
@@ -31,9 +30,9 @@ public:
     );
     ~BlocksRenderer();
 
-    void build(const Chunk* chunk, const VoxelsVolume& volume);
+    void build(const Chunk* chunk, const VoxelsRenderVolume& volume);
     ChunkMesh render(
-        const Chunk* chunk, const VoxelsVolume& volume
+        const Chunk* chunk, const VoxelsRenderVolume& volume
     );
     ChunkMeshData createMesh();
 
@@ -58,7 +57,7 @@ private:
     bool densePass = false;
     bool denseRender = false;
     const Chunk* chunk = nullptr;
-    const VoxelsVolume* voxelsBuffer = nullptr;
+    const VoxelsRenderVolume* voxelsBuffer = nullptr;
 
     const Block* const* blockDefsCache;
     const ContentGfxCache& cache;
@@ -142,8 +141,6 @@ private:
         bool lights,
         bool ao
     );
-
-    bool isOpenForLight(int x, int y, int z) const;
 
     // Does block allow to see other blocks sides (is it transparent)
     inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {

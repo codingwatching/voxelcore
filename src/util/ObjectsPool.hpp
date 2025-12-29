@@ -50,6 +50,10 @@ namespace util {
         size_t countTotal() const {
             return objects.size();
         }
+
+        size_t countFree() const {
+            return freeObjects.size();
+        }
     private:
         std::vector<std::unique_ptr<void, AlignedDeleter>> objects;
         std::queue<void*> freeObjects;
