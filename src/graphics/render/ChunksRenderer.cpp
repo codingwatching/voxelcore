@@ -123,7 +123,6 @@ std::shared_ptr<VoxelsRenderVolume> ChunksRenderer::prepareVoxelsVolume(
 const Mesh<ChunkVertex>* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
-    important = true;
     glm::ivec2 key(chunk->x, chunk->z);
     chunk->flags.modified = false;
     if (important) {
@@ -135,7 +134,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
         return meshes[key].mesh.get();
     }
     if (inwork.find(key) != inwork.end() ||
-        ((inwork.size() >= threadPool.getWorkTotal() ||
+        ((inwork.size() >= threadPool.getWorkersCount() ||
           enqueuedInFrame >= MAX_CHUNKS_ENQUEUED_IN_FRAME) &&
          lowPriority)) {
         return nullptr;

@@ -130,29 +130,36 @@ public:
         return lights;
     }
 
-    inline blockid_t pickBlockId(int bx, int by, int bz) const {
-        if (bx < x || by < y || bz < z || bx >= x + w || by >= y + h ||
-            bz >= z + d) {
+    inline blockid_t pickBlockId(uint bx, uint by, uint bz) const {
+        bx -= x;
+        by -= y;
+        bz -= z;
+        if (bx >= w || by >= h || bz >= d) {
             return BLOCK_VOID;
         }
-        return voxels[vox_index(bx - x, by - y, bz - z, w, d)].id;
+        return voxels[vox_index(bx, by, bz, w, d)].id;
     }
 
     
-    inline voxel pickBlock(int bx, int by, int bz) const {
-        if (bx < x || by < y || bz < z || bx >= x + w || by >= y + h ||
-            bz >= z + d) {
-            return {BLOCK_VOID, {}};
+    inline const voxel& pickBlock(uint bx, uint by, uint bz) const {
+        bx -= x;
+        by -= y;
+        bz -= z;
+        if (bx >= w || by >= h || bz >= d) {
+            static voxel voidVoxel {BLOCK_VOID, {}};
+            return voidVoxel;
         }
-        return voxels[vox_index(bx - x, by - y, bz - z, w, d)];
+        return voxels[vox_index(bx, by, bz, w, d)];
     }
 
-    inline light_t pickLight(int bx, int by, int bz) const {
-        if (bx < x || by < y || bz < z || bx >= x + w || by >= y + h ||
-            bz >= z + d) {
+    inline light_t pickLight(uint bx, uint by, uint bz) const {
+        bx -= x;
+        by -= y;
+        bz -= z;
+        if (bx >= w || by >= h || bz >= d) {
             return 0;
         }
-        return lights[vox_index(bx - x, by - y, bz - z, w, d)];
+        return lights[vox_index(bx, by, bz, w, d)];
     }
 private:
     int x, y, z;

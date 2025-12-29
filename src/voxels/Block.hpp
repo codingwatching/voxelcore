@@ -123,7 +123,7 @@ VC_ENUM_METADATA(BlockModelType)
     {"custom", BlockModelType::CUSTOM},
 VC_ENUM_END
 
-enum class CullingMode {
+enum class CullingMode : uint8_t {
     DEFAULT,
     OPTIONAL,
     DISABLED,
