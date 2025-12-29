@@ -369,8 +369,6 @@ static inline light_t apply_backlight(light_t light) {
     );
 }
 
-#include "util/timeutil.hpp"
-
 // ugly
 static inline void sample_chunk(
     const decltype(ContentIndices::blocks)& defs,
@@ -427,7 +425,6 @@ void Chunks::getVoxels(
     bool backlight,
     int top
 ) const {
-    timeutil::ScopeLogTimer log(111);
     int h = std::min<int>(size.y, top);
 
     int scx = floordiv<CHUNK_W>(pos.x);

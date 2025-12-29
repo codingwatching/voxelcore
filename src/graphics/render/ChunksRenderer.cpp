@@ -120,11 +120,10 @@ std::shared_ptr<VoxelsRenderVolume> ChunksRenderer::prepareVoxelsVolume(
     return voxelsBuffer;
 }
 
-#include "util/timeutil.hpp"
-
 const Mesh<ChunkVertex>* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
+    important = true;
     glm::ivec2 key(chunk->x, chunk->z);
     chunk->flags.modified = false;
     if (important) {
