@@ -419,6 +419,7 @@ inline void set_rotation(
 /// @param norm [out] surface normal vector
 /// @param iend [out] ray end integer position (voxel position + normal)
 /// @param filter filtered ids
+/// @param includeNonSelectable will non-selectable blocks be included
 /// @return voxel pointer or nullptr
 voxel* raycast(
     const Chunks& chunks,
@@ -428,7 +429,8 @@ voxel* raycast(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 );
 
 /// @brief Cast ray to a selectable block with filter based on id.
@@ -440,6 +442,7 @@ voxel* raycast(
 /// @param norm [out] surface normal vector
 /// @param iend [out] ray end integer position (voxel position + normal)
 /// @param filter filtered ids
+/// @param includeNonSelectable will non-selectable blocks be included
 /// @return voxel pointer or nullptr
 voxel* raycast(
     const GlobalChunks& chunks,
@@ -449,7 +452,8 @@ voxel* raycast(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 );
 
 void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false);

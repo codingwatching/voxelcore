@@ -215,10 +215,11 @@ voxel* Chunks::rayCast(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 ) const {
     return blocks_agent::raycast(
-        *this, start, dir, maxDist, end, norm, iend, std::move(filter)
+        *this, start, dir, maxDist, end, norm, iend, std::move(filter), includeNonSelectable
     );
 }
 
