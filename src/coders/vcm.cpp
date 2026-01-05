@@ -71,6 +71,39 @@ static void perform_rect(const xmlelement& root, model::Model& model) {
     );
 }
 
+static void perform_triangle(const xmlelement& root, model::Model& model) {
+    auto pointA = root.attr("a").asVec3();
+    auto pointB = root.attr("b").asVec3();
+    auto pointC = root.attr("c").asVec3();
+
+    float uvs[6] {0, 0, 1, 0, 1, 1};
+
+    bool shading = true;
+    if (root.has("shading")) {
+        shading = to_boolean(root.attr("shading"));
+    }
+    if (root.has("uv")) {
+        root.attr("uv").asNumbers(uvs, sizeof(uvs) / sizeof(float));
+    }
+    
+    glm::vec3 ba = pointB - pointA;
+    glm::vec3 ca = pointC - pointA;
+    glm::vec3 normal = glm::normalize(glm::cross(ba, ca));
+
+    std::string texture = root.attr("texture", "$0").getText();
+    auto& mesh = model.addMesh(texture, shading);
+
+    mesh.addTriangle(
+        pointA,
+        pointB,
+        pointC,
+        normal,
+        {uvs[0], uvs[1]},
+        {uvs[2], uvs[3]},
+        {uvs[4], uvs[5]}
+    );
+}
+
 static void perform_box(const xmlelement& root, model::Model& model) {
     auto from = root.attr("from").asVec3();
     auto to = root.attr("to").asVec3();
@@ -181,6 +214,8 @@ static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
             perform_rect(*elem, model);
         } else if (tag == "box") {
             perform_box(*elem, model);
+        } else if (tag == "tri") {
+            perform_triangle(*elem, model);
         }
     }
 
