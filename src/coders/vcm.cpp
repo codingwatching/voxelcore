@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "xml.hpp"
 #include "util/stringutil.hpp"
@@ -76,32 +77,35 @@ static void perform_triangle(const xmlelement& root, model::Model& model) {
     auto pointB = root.attr("b").asVec3();
     auto pointC = root.attr("c").asVec3();
 
-    float uvs[6] {0, 0, 1, 0, 1, 1};
+    glm::vec2 uvs[3] {{0, 0}, {1, 0}, {1, 1}};
 
     bool shading = true;
     if (root.has("shading")) {
         shading = to_boolean(root.attr("shading"));
     }
-    if (root.has("uv")) {
-        root.attr("uv").asNumbers(uvs, sizeof(uvs) / sizeof(float));
-    }
-    
+
     glm::vec3 ba = pointB - pointA;
     glm::vec3 ca = pointC - pointA;
     glm::vec3 normal = glm::normalize(glm::cross(ba, ca));
-
+    
+    if (root.has("uv")) {
+        root.attr("uv").asNumbers(glm::value_ptr(uvs[0]), 6);
+    } else {
+        UVRegion region {};
+        if (root.has("region")) {
+            region.set(root.attr("region").asVec4());
+        }
+        if (root.has("region-scale")) {
+            region.scale(root.attr("region-scale").asVec2());
+        }
+        for (auto& uv : uvs) {
+            uv = region.apply(uv);
+        }
+    }
+    
     std::string texture = root.attr("texture", "$0").getText();
     auto& mesh = model.addMesh(texture, shading);
-
-    mesh.addTriangle(
-        pointA,
-        pointB,
-        pointC,
-        normal,
-        {uvs[0], uvs[1]},
-        {uvs[2], uvs[3]},
-        {uvs[4], uvs[5]}
-    );
+    mesh.addTriangle(pointA, pointB, pointC, normal, uvs[0], uvs[1], uvs[2]);
 }
 
 static void perform_box(const xmlelement& root, model::Model& model) {
