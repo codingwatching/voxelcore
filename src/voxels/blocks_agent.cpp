@@ -264,8 +264,7 @@ static inline voxel* raycast_blocks(
         }
 
         const auto& def = blocks.require(voxel->id);
-        if ((filter.empty() && def.selectable) ||
-            (!filter.empty() && filter.find(def.rt.id) == filter.end())) {
+        if (def.selectable && (filter.empty() || filter.find(def.rt.id) == filter.end())) {
             end.x = px + t * dx;
             end.y = py + t * dy;
             end.z = pz + t * dz;
