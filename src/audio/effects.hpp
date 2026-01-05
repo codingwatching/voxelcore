@@ -26,4 +26,8 @@ namespace audio {
     protected:
         const Effect* effect = nullptr;
     };
+
+    struct Acoustics {
+        float reverbDecayTime;
+    };
 }

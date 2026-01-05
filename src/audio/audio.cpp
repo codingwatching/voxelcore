@@ -496,6 +496,10 @@ void audio::update(double delta) {
     }
 }
 
+void audio::set_acoustics(Acoustics acoustics) {
+    backend->setAcoustics(std::move(acoustics));
+}
+
 void audio::reset_channel(int index) {
     auto channel = get_channel(index);
     if (channel == nullptr) {

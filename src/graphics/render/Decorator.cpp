@@ -23,8 +23,11 @@
 #include "io/io.hpp"
 #include "audio/audio.hpp"
 #include "maths/util.hpp"
+#include "debug/Logger.hpp"
 
 namespace fs = std::filesystem;
+
+static debug::Logger logger("decorator");
 
 /// @brief Not greater than 64 for this BIG_PRIME value
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
@@ -70,19 +73,56 @@ Decorator::Decorator(
 
 void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
     const auto& found = blockEmitters.find(pos);
-    if (found == blockEmitters.end()) {
-        auto treg = util::get_texture_region(
-            assets, def.particles->texture, ""
-        );
-        blockEmitters[pos] = renderer.particles->add(std::make_unique<Emitter>(
-            level,
-            glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
-            *def.particles,
-            treg.texture,
-            treg.region,
-            -1
-        ));
+    if (found != blockEmitters.end()) {
+        return;
     }
+    auto treg = util::get_texture_region(
+        assets, def.particles->texture, ""
+    );
+    blockEmitters[pos] = renderer.particles->add(std::make_unique<Emitter>(
+        level,
+        glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
+        *def.particles,
+        treg.texture,
+        treg.region,
+        -1
+    ));
+}
+
+void Decorator::updateAcoustics(const Camera& camera) {
+    audio::Acoustics acoustics {};
+    util::PseudoRandom random(0x34621B361);
+
+    auto& chunks = *player.chunks;
+    const auto& start = camera.position;
+    float rayLength = 40.0f;
+
+    int rays = 100;
+    int hit = 0;
+    float averageDistance = 0.0f;
+    for (int i = 0; i < rays; i++) {
+        glm::vec3 dir {
+            random.randFloat() - 0.5f,
+            random.randFloat() - 0.5f,
+            random.randFloat() - 0.5f,
+        };
+        dir = glm::normalize(dir);
+        auto end = chunks.rayCastToObstacle(start, dir, rayLength);
+        auto distance = glm::distance(start, end);
+        if (distance >= rayLength * 0.98f) {
+            continue;
+        }
+        hit++;
+        averageDistance += distance * 0.2f;
+    }
+    float decayTime = (averageDistance / hit) * ((hit / static_cast<float>(rays)) - 0.6f) * 1.6f;
+    decayTime *= 2.5f;
+    decayTime *= decayTime;
+    logger.info() << "rays hit " << hit << "/" << rays << " decay-time: " << decayTime;
+
+
+    acoustics.reverbDecayTime = decayTime;
+    audio::set_acoustics(std::move(acoustics));
 }
 
 void Decorator::updateRandom(
@@ -283,4 +323,5 @@ void Decorator::update(
     }
     updateBlockEmitters(camera);
     updateTextNotes();
+    updateAcoustics(camera);
 }

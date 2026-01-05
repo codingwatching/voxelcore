@@ -780,15 +780,18 @@ void ALAudio::setListener(
     AL_CHECK(alListenerf(AL_GAIN, get_channel(0)->getVolume()));
 }
 
-void ALAudio::update(double delta) {
+void ALAudio::update(double) {
+}
+
+void ALAudio::setAcoustics(Acoustics acoustics) {
     if (!useEffects) {
         return;
     }
     int reverbEffect = effects[REVERB_EFFECT];
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, 1.0f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.07f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, std::max<float>(0.1f, acoustics.reverbDecayTime)));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.14f));
+    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
+    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.5f));
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }

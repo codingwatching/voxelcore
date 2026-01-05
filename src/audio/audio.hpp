@@ -7,6 +7,7 @@
 #include "typedefs.hpp"
 #include "settings.hpp"
 #include "io/fwd.hpp"
+#include "effects.hpp"
 
 namespace audio {
     /// @brief playing speaker uid
@@ -394,6 +395,7 @@ namespace audio {
         virtual std::vector<std::string> getInputDeviceNames() = 0;
         virtual std::vector<std::string> getOutputDeviceNames() = 0;
         virtual void update(double delta) = 0;
+        virtual void setAcoustics(Acoustics acoustics) = 0;
 
         /// @brief Check if backend is an abstraction that does not internally
         /// work with actual audio data or play anything
@@ -579,6 +581,8 @@ namespace audio {
     /// @brief Update audio streams and sound instanced
     /// @param delta time elapsed since the last update (seconds)
     void update(double delta);
+
+    void set_acoustics(Acoustics acoustics);
 
     /// @brief Stop all playing audio in channel, reset channel state
     void reset_channel(int channel);
