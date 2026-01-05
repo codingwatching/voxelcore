@@ -24,6 +24,7 @@ namespace {
     std::vector<std::unique_ptr<Channel>> channels;
     util::ObjectsKeeper objects_keeper {};
     std::unique_ptr<InputDevice> input_device = nullptr;
+    static bool input_enabled = false;
 }
 
 Channel::Channel(std::string name) : name(std::move(name)) {
@@ -152,7 +153,9 @@ public:
     }
 };
 
-void audio::initialize(bool enabled, AudioSettings& settings) {
+void audio::initialize(
+    bool enabled, bool inputEnabled, AudioSettings& settings
+) {
     enabled = enabled && settings.enabled.get();
     if (enabled) {
         logger.info() << "initializing ALAudio backend";
@@ -182,7 +185,10 @@ void audio::initialize(bool enabled, AudioSettings& settings) {
         }, true));
     }
 
-    ::input_device = backend->openInputDevice("", 44100, 1, 16);
+    if (inputEnabled) {
+        ::input_device = backend->openInputDevice("", 44100, 1, 16);
+        ::input_enabled = true;
+    }
     if (::input_device) {
         ::input_device->startCapture();
     }
@@ -270,6 +276,10 @@ std::vector<std::string> audio::get_output_devices_names() {
 
 void audio::set_input_device(const std::string& deviceName) {
     logger.info() << "setting input device to " << deviceName;
+    if (!::input_enabled) {
+        logger.warning() << "unable to set input device due to project permissions";
+        return;
+    }
     if (deviceName == audio::DEVICE_NONE) {
         if (::input_device) {
             ::input_device->stopCapture();

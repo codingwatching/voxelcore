@@ -160,7 +160,11 @@ void Engine::initialize(CoreParameters coreParameters) {
     if (!params.headless) {
         initializeClient();
     }
-    audio::initialize(!params.headless, settings.audio);
+    audio::initialize(
+        !params.headless,
+        project->permissions.has(Permissions::RECORD_AUDIO),
+        settings.audio
+    );
 
     if (settings.ui.language.get() == "auto") {
         settings.ui.language.set(

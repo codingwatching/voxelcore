@@ -2,5 +2,6 @@
 name = "default"
 base_packs = ["base"]
 permissions = [
-    "network"
+    "network",
+    "record-audio"
 ]
