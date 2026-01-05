@@ -695,12 +695,6 @@ std::unique_ptr<InputDevice> ALAudio::openInputDevice(
     );
 }
 
-template<typename T>
-static bool get_proc_address(const char* name, T& ptr) {
-    ptr = (T) alGetProcAddress(name);
-    return ptr != nullptr;
-}
-
 std::unique_ptr<ALAudio> ALAudio::create() {
     alc_enumeration_ext = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
 
