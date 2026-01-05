@@ -53,6 +53,8 @@ static LPALISFILTER alIsFilter = nullptr;
 static LPALFILTERI alFilteri = nullptr;
 static LPALFILTERF alFilterf = nullptr;
 
+static inline constexpr int REVERB_EFFECT = 0;
+static inline constexpr int LOWPASS_FILTER = 0;
 
 ALSound::ALSound(
     ALAudio* al, uint buffer, const std::shared_ptr<PCM>& pcm, bool keepPCM
@@ -398,7 +400,7 @@ void ALSpeaker::play() {
     ));
     if (al->useEffects) {
         AL_CHECK(alSource3i(source, AL_AUXILIARY_SEND_FILTER, al->effectSlots[0], 0, al->filters[0]));
-        //AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[0]));
+        //AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER]));
     }
     AL_CHECK(alSourcePlay(source));
 }
@@ -507,7 +509,7 @@ ALAudio::ALAudio(ALCdevice* device, ALCcontext* context, bool useEffects)
     alGetError();
 
     if (useEffects) {
-        initEffects();
+        this->useEffects = initEffects();
     }
 }
 
@@ -541,8 +543,8 @@ static bool get_proc_address(const char* name, T& ptr) {
     return ptr != nullptr;
 }
 
-void ALAudio::initEffects() {
-    bool ok = get_proc_address("alAuxiliaryEffectSloti", alAuxiliaryEffectSloti)
+static bool request_efx_ext_functions() {
+    return get_proc_address("alAuxiliaryEffectSloti", alAuxiliaryEffectSloti)
         && get_proc_address("alGenAuxiliaryEffectSlots", alGenAuxiliaryEffectSlots)
         && get_proc_address("alGenEffects", alGenEffects)
         && get_proc_address("alDeleteEffects", alDeleteEffects)
@@ -553,12 +555,13 @@ void ALAudio::initEffects() {
         && get_proc_address("alDeleteFilters", alDeleteFilters)
         && get_proc_address("alIsFilter", alIsFilter)
         && get_proc_address("alFilteri", alFilteri)
-        && get_proc_address("alFilterf", alFilterf)
-    ;
-    if (!ok) {
+        && get_proc_address("alFilterf", alFilterf);
+}
+
+bool ALAudio::initEffects() {
+    if (!request_efx_ext_functions()) {
         logger.error() << "could not get effects extension function pointers";
-        useEffects = false;
-        return;
+        return false;
     }
     for (uint i = 0; i < maxEffectSlots; i++) {
         effectSlots.emplace_back();
@@ -574,8 +577,7 @@ void ALAudio::initEffects() {
         alGenEffects(1, &effects[i]);
         if (alGetError() != AL_NO_ERROR || !alIsEffect(effects[i])) {
             logger.error() << "could not to create effect #" << i;
-            useEffects = false;
-            return;
+            return false;
         }
     }
     logger.info() << "created " << effects.size() << " effects";
@@ -584,36 +586,32 @@ void ALAudio::initEffects() {
         alGenFilters(1, &filters[i]);
         if (alGetError() != AL_NO_ERROR || !alIsFilter(filters[i])) {
             logger.error() << "could not to create filter #" << i;
-            useEffects = false;
-            return;
+            return false;
         }
     }
 
     // Create reverb effect
-    alEffecti(effects[0], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+    alEffecti(effects[REVERB_EFFECT], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
     if (alGetError() != AL_NO_ERROR) {
         logger.error() << "reverb effect is not supported";
-        useEffects = false;
-        return;
+        return false;
     }
-    alEffectf(effects[0], AL_REVERB_DECAY_TIME, 1.0f);
-    alEffectf(effects[0], AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.07f); // default is 0
 
     // Create lowpass filter
-    alFilteri(filters[0], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
+    alFilteri(filters[LOWPASS_FILTER], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
     if (alGetError() != AL_NO_ERROR) {
         logger.error() << "lowpass filter is not supported";
-        useEffects = false;
-        return;
+        return false;
     }
-    alFilterf(filters[0], AL_LOWPASS_GAIN, 1.0f);
-    alFilterf(filters[0], AL_LOWPASS_GAINHF, 0.1f);
+    alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAIN, 1.0f);
+    alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAINHF, 0.01f);
 
     // Attach effect to aux effect slot
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, effects[0]);
     if (alGetError() == AL_NO_ERROR) {
         logger.info() << "successfully loaded effect into effect slot";
     }
+    return true;
 }
 
 std::unique_ptr<Sound> ALAudio::createSound(
@@ -782,5 +780,15 @@ void ALAudio::setListener(
     AL_CHECK(alListenerf(AL_GAIN, get_channel(0)->getVolume()));
 }
 
-void ALAudio::update(double) {
+void ALAudio::update(double delta) {
+    if (!useEffects) {
+        return;
+    }
+    int reverbEffect = effects[REVERB_EFFECT];
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, 1.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.07f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.0f));
+    alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }

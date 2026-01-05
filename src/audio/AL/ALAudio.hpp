@@ -183,7 +183,7 @@ namespace audio {
         uint maxSources = 256;
         uint maxEffectSlots = 64;
 
-        void initEffects();
+        bool initEffects();
     public:
         std::vector<uint> effectSlots;
         std::vector<uint> effects;
