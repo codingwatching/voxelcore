@@ -18,8 +18,8 @@ function update_setting(x, id, name, postfix)
     -- updating label
     document[id..".L"].text = string.format(
         "%s: %s%s", 
-        gui.str(name, "settings"), 
-        core.str_setting(id), 
+        gui.str(name, "settings"),
+        core.str_setting(id),
         postfix
     )
 end
