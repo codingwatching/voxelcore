@@ -6,6 +6,7 @@
 #include "content/ContentControl.hpp"
 #include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
+#include "devtools/Project.hpp"
 #include "network/Network.hpp"
 #include "util/platform.hpp"
 #include "window/Window.hpp"
@@ -13,6 +14,10 @@
 using namespace scripting;
 
 static int l_start_debug_instance(lua::State* L) {
+    if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
+        throw std::runtime_error("project has no debugging permission");
+    }
+
     int port = lua::tointeger(L, 1);
     if (port == 0) {
         auto network = engine->getNetwork();

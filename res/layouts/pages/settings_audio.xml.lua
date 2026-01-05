@@ -18,8 +18,8 @@ function update_setting(x, id, name, postfix)
     -- updating label
     document[id..".L"].text = string.format(
         "%s: %s%s", 
-        gui.str(name, "settings"), 
-        core.str_setting(id), 
+        gui.str(name, "settings"),
+        core.str_setting(id),
         postfix
     )
 end
@@ -67,5 +67,8 @@ function on_open()
         table.insert(devices, {value=name, text=name})
     end
     selectbox.options = devices
-    selectbox.value = audio.__get_input_info().device_specifier
+    local info = audio.__get_input_info()
+    if info then
+        selectbox.value = info.device_specifier
+    end
 end
