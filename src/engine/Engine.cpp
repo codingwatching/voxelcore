@@ -139,7 +139,8 @@ void Engine::initialize(CoreParameters coreParameters) {
     editor = std::make_unique<devtools::Editor>(*this);
     cmd = std::make_unique<cmd::CommandsInterpreter>();
 
-    if (project->permissions.has(Permissions::NETWORK)) {
+    if (project->permissions.has(Permissions::NETWORK) ||
+        !params.debugServerString.empty()) {
         network = network::Network::create(settings.network);
     }
 

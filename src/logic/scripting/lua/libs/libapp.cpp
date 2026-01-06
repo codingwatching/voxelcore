@@ -29,6 +29,7 @@ static int l_start_debug_instance(lua::State* L) {
             throw std::runtime_error("could not find free port");
         }
     }
+    auto projectPath = lua::isstring(L, 2) ? lua::require_lstring(L, 2) : "";
     const auto& paths = engine->getPaths();
 
     std::vector<std::string> args {
@@ -36,6 +37,11 @@ static int l_start_debug_instance(lua::State* L) {
         "--dir", paths.getUserFilesFolder().u8string(),
         "--dbg-server",  "tcp:" + std::to_string(port),
     };
+    if (!projectPath.empty()) {
+        args.emplace_back("--project");
+        args.emplace_back(io::resolve(std::string(projectPath)).string());
+    }
+
     platform::new_engine_instance(std::move(args));
     return lua::pushinteger(L, port);
 }
