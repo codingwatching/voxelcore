@@ -91,7 +91,7 @@ void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
 
 void Decorator::updateAcoustics(const Camera& camera) {
     audio::Acoustics acoustics {};
-    util::PseudoRandom random(0x34621B361);
+    util::PseudoRandom random(34621U);
 
     auto& chunks = *player.chunks;
     const auto& start = camera.position;
@@ -115,7 +115,7 @@ void Decorator::updateAcoustics(const Camera& camera) {
         hit++;
         averageDistance += distance * 0.2f;
     }
-    float decayTime = (averageDistance / hit) * ((hit / static_cast<float>(rays)) - 0.6f) * 1.6f;
+    float decayTime = (averageDistance / hit) * glm::max(0.0f, glm::pow(hit / static_cast<float>(rays), 9.0f) - 0.6f) * 1.6f;
     decayTime *= 2.5f;
     decayTime *= decayTime;
     logger.info() << "rays hit " << hit << "/" << rays << " decay-time: " << decayTime;

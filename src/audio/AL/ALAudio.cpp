@@ -792,6 +792,6 @@ void ALAudio::setAcoustics(Acoustics acoustics) {
     AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.14f));
     // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
     // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.5f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.99f));
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }
