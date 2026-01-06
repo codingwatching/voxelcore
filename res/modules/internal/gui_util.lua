@@ -161,7 +161,7 @@ function gui.show_input_dialog(text, actual_callback, validator, confirm_text)
         callback=callback,
         validator=validator or function() return #text > 0 end
     })
-    input.add_callback("key:escape", callback, gui.root[id])
+    input.add_callback("key:escape", function() gui.root[id]:destruct() end, gui.root[id])
     input.add_callback("key:enter", callback, gui.root[id])
     gui.root[id.."_input"].focused = true
 end
