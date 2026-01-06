@@ -35,6 +35,7 @@ local __vc__app_script_coroutine
 local function complete_app_lib(app)
     local __core_load_content = core.load_content
     local __core_reset_content = core.reset_content
+    local __core_reconfig_packs = core.reconfig_packs
     local __app_tick = coroutine.yield
     core.load_content = nil
     core.reset_content = nil
@@ -47,37 +48,36 @@ local function complete_app_lib(app)
     app.close_world = core.close_world
     app.reopen_world = core.reopen_world
     app.delete_world = core.delete_world
-    app.reconfig_packs = core.reconfig_packs
     app.get_setting = core.get_setting
     app.set_setting = core.set_setting
     app.tick = __app_tick
     app.get_version = core.get_version
     app.get_setting_info = core.get_setting_info
 
-    local function require_app_script_co()
+    local function call_in_app_script_co(func, ...)
         if coroutine.running() ~= __vc__app_script_coroutine then
             error("content must be reload in application script coroutine")
         end
+        func(...)
+        __app_tick()
     end
 
-    app.load_content = function()
-        require_app_script_co()
-        __core_load_content()
-        __app_tick()
+    app.reconfig_packs = function(...)
+        call_in_app_script_co(__core_reconfig_packs, ...)
     end
-    app.reset_content = function()
-        require_app_script_co()
-        __core_reset_content()
-        __app_tick()
+    app.load_content = function(...)
+        call_in_app_script_co(__core_load_content, ...)
+    end
+    app.reset_content = function(...)
+        call_in_app_script_co(__core_reset_content, ...)
     end
 
     app.is_content_loaded = core.is_content_loaded
-    app.set_title = core.set_title
-    
+
     function app.config_packs(packs_list)
         -- Check if packs are valid and add dependencies to the configuration
         packs_list = pack.assemble(packs_list)
-        
+
         local installed = pack.get_installed()
         local toremove = {}
         for _, packid in ipairs(installed) do

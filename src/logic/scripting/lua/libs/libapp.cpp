@@ -96,6 +96,12 @@ static int l_reset_content_sources(lua::State* L) {
     return 0;
 }
 
+static int l_set_title(lua::State* L) {
+    auto title = lua::require_string(L, 1);
+    engine->getWindow().setTitle(title);
+    return 0;
+}
+
 const luaL_Reg applib[] = {
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
@@ -103,6 +109,7 @@ const luaL_Reg applib[] = {
     {"get_content_sources", lua::wrap<l_get_content_sources>},
     {"set_content_sources", lua::wrap<l_set_content_sources>},
     {"reset_content_sources", lua::wrap<l_reset_content_sources>},
+    {"set_title", lua::wrap<l_set_title>},
     // for other functions see libcore.cpp and stdlib.lua
     {nullptr, nullptr}
 };
