@@ -1,4 +1,4 @@
-local enable_experimental = core.get_setting("debug.enable-experimental")
+local enable_experimental = __vc_app.get_setting("debug.enable-experimental")
 
 ------------------------------------------------
 ------ Extended kit of standard functions ------
@@ -24,12 +24,6 @@ function tb_frame_tostring(frame)
     return s
 end
 
-local core_set_setting = core.set_setting
-function core.set_setting(name, value, ...)
-    core_set_setting(name, value, ...)
-    events.emit("core:setting."..name..".set", value)
-end
-
 local __vc__app_script_coroutine
 
 local function complete_app_lib(app)
@@ -37,6 +31,7 @@ local function complete_app_lib(app)
     local __core_reset_content = core.reset_content
     local __core_reconfig_packs = core.reconfig_packs
     local __app_tick = coroutine.yield
+    local __app_set_setting = app.set_setting
     core.load_content = nil
     core.reset_content = nil
 
@@ -48,10 +43,12 @@ local function complete_app_lib(app)
     app.close_world = core.close_world
     app.reopen_world = core.reopen_world
     app.delete_world = core.delete_world
-    app.get_setting = core.get_setting
-    app.set_setting = core.set_setting
+
+    app.set_setting = function(name, value, ...)
+        __app_set_setting(name, value, ...)
+        events.emit("core:setting."..name..".set", value)
+    end
     app.tick = __app_tick
-    app.get_setting_info = core.get_setting_info
 
     local function call_in_app_script_co(func, ...)
         if coroutine.running() ~= __vc__app_script_coroutine then

@@ -1,6 +1,7 @@
 #include "api_lua.hpp"
 
 #include "io/io.hpp"
+#include "io/settings_io.hpp"
 #include "io/devices/MemoryDevice.hpp"
 #include "logic/scripting/scripting.hpp"
 #include "content/ContentControl.hpp"
@@ -113,6 +114,73 @@ static int l_set_title(lua::State* L) {
     return 0;
 }
 
+/// @brief Get a setting value
+/// @param name The name of the setting
+/// @return The value of the setting
+static int l_get_setting(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    const auto value = engine->getSettingsHandler().getValue(name);
+    return lua::pushvalue(L, value);
+}
+
+/// @brief Set a setting value
+/// @param name The name of the setting
+/// @param value The new value for the setting
+static int l_set_setting(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    const auto value = lua::tovalue(L, 2);
+    engine->getSettingsHandler().setValue(name, value);
+    return 0;
+}
+
+/// @brief Convert a setting value to a string
+/// @param name The name of the setting
+/// @return The string representation of the setting value
+static int l_str_setting(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    const auto string = engine->getSettingsHandler().toString(name);
+    return lua::pushstring(L, string);
+}
+
+/// @brief Get information about a setting
+/// @param name The name of the setting
+/// @return A table with information about the setting
+static int l_get_setting_info(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    auto setting = engine->getSettingsHandler().getSetting(name);
+    lua::createtable(L, 0, 1);
+    if (auto number = dynamic_cast<NumberSetting*>(setting)) {
+        lua::pushnumber(L, number->getMin());
+        lua::setfield(L, "min");
+        lua::pushnumber(L, number->getMax());
+        lua::setfield(L, "max");
+        lua::pushnumber(L, number->getDefault());
+        lua::setfield(L, "def");
+        return 1;
+    }
+    if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+        lua::pushinteger(L, integer->getMin());
+        lua::setfield(L, "min");
+        lua::pushinteger(L, integer->getMax());
+        lua::setfield(L, "max");
+        lua::pushinteger(L, integer->getDefault());
+        lua::setfield(L, "def");
+        return 1;
+    }
+    if (auto boolean = dynamic_cast<FlagSetting*>(setting)) {
+        lua::pushboolean(L, boolean->getDefault());
+        lua::setfield(L, "def");
+        return 1;
+    }
+    if (auto string = dynamic_cast<StringSetting*>(setting)) {
+        lua::pushstring(L, string->getDefault());
+        lua::setfield(L, "def");
+        return 1;
+    }
+    lua::pop(L);
+    throw std::runtime_error("unsupported setting type");
+}
+
 static int l_open_folder(lua::State* L) {
     platform::open_folder(io::resolve(lua::require_string(L, 1)));
     return 0;
@@ -147,6 +215,10 @@ const luaL_Reg applib[] = {
     {"set_title", lua::wrap<l_set_title>},
     {"open_folder", lua::wrap<l_open_folder>},
     {"open_url", lua::wrap<l_open_url>},
+    {"get_setting", lua::wrap<l_get_setting>},
+    {"set_setting", lua::wrap<l_set_setting>},
+    {"str_setting", lua::wrap<l_str_setting>},
+    {"get_setting_info", lua::wrap<l_get_setting_info>},
     // for other functions see libcore.cpp and stdlib.lua
     {nullptr, nullptr}
 };
