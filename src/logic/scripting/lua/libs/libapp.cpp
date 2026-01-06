@@ -9,7 +9,12 @@
 #include "devtools/Project.hpp"
 #include "network/Network.hpp"
 #include "util/platform.hpp"
+#include "util/stringutil.hpp"
 #include "window/Window.hpp"
+#include "frontend/locale.hpp"
+#include "graphics/ui/GUI.hpp"
+#include "graphics/ui/gui_util.hpp"
+#include "graphics/ui/elements/Menu.hpp"
 
 using namespace scripting;
 
@@ -102,6 +107,29 @@ static int l_set_title(lua::State* L) {
     return 0;
 }
 
+static int l_open_folder(lua::State* L) {
+    platform::open_folder(io::resolve(lua::require_string(L, 1)));
+    return 0;
+}
+
+static int l_open_url(lua::State* L) {
+    auto url = lua::require_string(L, 1);
+
+    std::wstring msg = langs::get(L"Are you sure you want to open the link:") +
+                       L"\n" + util::str2wstr_utf8(url) +
+                       std::wstring(L"?");
+
+    auto menu = engine->getGUI().getMenu();
+
+    guiutil::confirm(*engine, msg, [url, menu]() {
+        platform::open_url(url);
+        if (!menu->back()) {
+            menu->reset();
+        }
+    });
+    return 0;
+}
+
 const luaL_Reg applib[] = {
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
@@ -110,6 +138,8 @@ const luaL_Reg applib[] = {
     {"set_content_sources", lua::wrap<l_set_content_sources>},
     {"reset_content_sources", lua::wrap<l_reset_content_sources>},
     {"set_title", lua::wrap<l_set_title>},
+    {"open_folder", lua::wrap<l_open_folder>},
+    {"open_url", lua::wrap<l_open_url>},
     // for other functions see libcore.cpp and stdlib.lua
     {nullptr, nullptr}
 };
