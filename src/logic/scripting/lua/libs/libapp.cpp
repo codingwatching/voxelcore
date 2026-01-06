@@ -18,6 +18,12 @@
 
 using namespace scripting;
 
+static int l_get_version(lua::State* L) {
+    return lua::pushvec_stack(
+        L, glm::vec2(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR)
+    );
+}
+
 static int l_start_debug_instance(lua::State* L) {
     if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
         throw std::runtime_error("project has no debugging permission");
@@ -131,6 +137,7 @@ static int l_open_url(lua::State* L) {
 }
 
 const luaL_Reg applib[] = {
+    {"get_version", lua::wrap<l_get_version>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},

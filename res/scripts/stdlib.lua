@@ -51,7 +51,6 @@ local function complete_app_lib(app)
     app.get_setting = core.get_setting
     app.set_setting = core.set_setting
     app.tick = __app_tick
-    app.get_version = core.get_version
     app.get_setting_info = core.get_setting_info
 
     local function call_in_app_script_co(func, ...)
@@ -585,3 +584,5 @@ require "core:internal/deprecated"
 
 ffi = nil
 __vc_lock_internal_modules()
+
+debug.print(core)

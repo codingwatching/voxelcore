@@ -24,12 +24,6 @@
 
 using namespace scripting;
 
-static int l_get_version(lua::State* L) {
-    return lua::pushvec_stack(
-        L, glm::vec2(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR)
-    );
-}
-
 static int l_load_content(lua::State* L) {
     content_control->loadContent();
     return 0;
@@ -274,7 +268,6 @@ static int l_capture_output(lua::State* L) {
 
 const luaL_Reg corelib[] = {
     {"blank", lua::wrap<l_blank>},
-    {"get_version", lua::wrap<l_get_version>},
     {"load_content", lua::wrap<l_load_content>},
     {"reset_content", lua::wrap<l_reset_content>},
     {"is_content_loaded", lua::wrap<l_is_content_loaded>},
