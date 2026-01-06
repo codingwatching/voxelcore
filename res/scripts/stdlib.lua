@@ -30,6 +30,10 @@ function core.set_setting(name, value, ...)
     events.emit("core:setting."..name..".set", value)
 end
 
+local __vc__app_script_coroutine
+local __core_load_content = core.load_content
+core.load_content = nil
+
 local function complete_app_lib(app)
     app.sleep = sleep
     app.script = __VC_SCRIPT_NAME
@@ -45,11 +49,16 @@ local function complete_app_lib(app)
     app.tick = function()
         coroutine.yield()
     end
+
+    local __app_tick = app.tick
     app.get_version = core.get_version
     app.get_setting_info = core.get_setting_info
     app.load_content = function()
-        core.load_content()
-        app.tick()
+        if coroutine.running() ~= __vc__app_script_coroutine then
+            error("content must be reload in application script coroutine")
+        end
+        __core_load_content()
+        __app_tick()
     end
     app.reset_content = core.reset_content
     app.is_content_loaded = core.is_content_loaded
@@ -123,6 +132,66 @@ function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
 
+local __vc_coroutines = {}
+local __vc_named_coroutines = {}
+local __vc_next_coroutine = 1
+
+function __vc_start_coroutine(chunk)
+    local co = coroutine.create(chunk)
+    local id = __vc_next_coroutine
+    __vc_next_coroutine = __vc_next_coroutine + 1
+    __vc_coroutines[id] = co
+    return id
+end
+
+function __vc_resume_coroutine(id)
+    local co = __vc_coroutines[id]
+    if co then
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+            error(err)
+        end
+        return coroutine.status(co) ~= "dead"
+    end
+    return false
+end
+
+function __vc_stop_coroutine(id)
+    local co = __vc_coroutines[id]
+    if co then
+        if coroutine.close then
+            coroutine.close(co)
+        end
+        __vc_coroutines[id] = nil
+    end
+end
+
+function start_coroutine(chunk, name)
+    local co = coroutine.create(function()
+        local status, error = xpcall(chunk, function(err)
+            local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
+            
+            if hud then
+                gui.alert(fullmsg, function()
+                    if world.is_open() then
+                        __vc_app.close_world()
+                    else
+                        __vc_app.reset_content()
+                        menu:reset()
+                        menu.page = "main"
+                    end
+                end)
+            end
+            return fullmsg
+        end)
+        if not status then
+            debug.error(error)
+        end
+    end)
+    __vc_named_coroutines[name] = co
+end
+
 function __vc_start_app_script(path, name)
     debug.log("starting application script "..path)
 
@@ -134,9 +203,13 @@ function __vc_start_app_script(path, name)
     local script_env = setmetatable({app = app or __vc_app}, {__index=_G})
     chunk = setfenv(chunk, script_env)
     if name then
-        return start_coroutine(chunk, name)
+        start_coroutine(chunk, name)
+        __vc__app_script_coroutine = __vc_named_coroutines[name]
+        return
     else
-        return __vc_start_coroutine(chunk)
+        local id = __vc_start_coroutine(chunk)
+        __vc__app_script_coroutine = __vc_coroutines[id]
+        return id
     end
 end
 
@@ -433,66 +506,6 @@ function __vc_on_world_quit()
     gui_util:__reset_local()
     stdcomp.__reset()
     file.__close_all_descriptors()
-end
-
-local __vc_coroutines = {}
-local __vc_named_coroutines = {}
-local __vc_next_coroutine = 1
-
-function __vc_start_coroutine(chunk)
-    local co = coroutine.create(chunk)
-    local id = __vc_next_coroutine
-    __vc_next_coroutine = __vc_next_coroutine + 1
-    __vc_coroutines[id] = co
-    return id
-end
-
-function __vc_resume_coroutine(id)
-    local co = __vc_coroutines[id]
-    if co then
-        local success, err = coroutine.resume(co)
-        if not success then
-            debug.error(err)
-            error(err)
-        end
-        return coroutine.status(co) ~= "dead"
-    end
-    return false
-end
-
-function __vc_stop_coroutine(id)
-    local co = __vc_coroutines[id]
-    if co then
-        if coroutine.close then
-            coroutine.close(co)
-        end
-        __vc_coroutines[id] = nil
-    end
-end
-
-function start_coroutine(chunk, name)
-    local co = coroutine.create(function()
-        local status, error = xpcall(chunk, function(err)
-            local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            
-            if hud then
-                gui.alert(fullmsg, function()
-                    if world.is_open() then
-                        __vc_app.close_world()
-                    else
-                        __vc_app.reset_content()
-                        menu:reset()
-                        menu.page = "main"
-                    end
-                end)
-            end
-            return fullmsg
-        end)
-        if not status then
-            debug.error(error)
-        end
-    end)
-    __vc_named_coroutines[name] = co
 end
 
 local __post_runnables = {}
