@@ -68,8 +68,6 @@ local function complete_app_lib(app)
         call_in_app_script_co(__core_reset_content, ...)
     end
 
-    app.is_content_loaded = core.is_content_loaded
-
     function app.config_packs(packs_list)
         -- Check if packs are valid and add dependencies to the configuration
         packs_list = pack.assemble(packs_list)
@@ -581,5 +579,3 @@ require "core:internal/deprecated"
 
 ffi = nil
 __vc_lock_internal_modules()
-
-debug.print(core)

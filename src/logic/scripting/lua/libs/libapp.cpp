@@ -25,6 +25,10 @@ static int l_get_version(lua::State* L) {
     );
 }
 
+static int l_is_content_loaded(lua::State* L) {
+    return lua::pushboolean(L, content != nullptr);
+}
+
 static int l_start_debug_instance(lua::State* L) {
     if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
         throw std::runtime_error("project has no debugging permission");
@@ -206,6 +210,7 @@ static int l_open_url(lua::State* L) {
 
 const luaL_Reg applib[] = {
     {"get_version", lua::wrap<l_get_version>},
+    {"is_content_loaded", lua::wrap<l_is_content_loaded>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},
