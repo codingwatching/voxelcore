@@ -178,7 +178,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     scripting::initialize(this);
 
     if (!isHeadless()) {
-        gui->setPageLoader(scripting::create_page_loader());
+        gui->getMenu()->setPageLoader(scripting::create_page_loader());
     }
     keepAlive(settings.ui.language.observe([this](auto lang) {
         langs::setup(lang, paths->resPaths.collectRoots());
