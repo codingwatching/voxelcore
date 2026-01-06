@@ -34,7 +34,7 @@ function gui_util.load_page(query)
     local filename = file.find(string.format("layouts/pages/%s.xml", name))
     if filename then
         name = file.prefix(filename)..":pages/"..name
-        gui.load_document(filename, name, args)
+        gui.load_document(filename, name, args, { app = __vc_app })
         return name
     end
 end
