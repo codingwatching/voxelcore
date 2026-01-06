@@ -52,19 +52,21 @@ end
 
 -- class designed for simple UI-nodes access via properties syntax
 local Element = {}
+local __gui_getattr = gui.getattr
+local __gui_setattr = gui.setattr
 function Element.new(docname, name)
     return setmetatable({docname=docname, name=name}, {
         __index=function(self, k)
-            return gui.getattr(self.docname, self.name, k)
+            return __gui_getattr(self.docname, self.name, k)
         end,
         __newindex=function(self, k, v)
-            gui.setattr(self.docname, self.name, k, v)
+            __gui_setattr(self.docname, self.name, k, v)
         end,
         __ipairs=function(self)
             local i = 0
             return function()
                 i = i + 1
-                local elem = gui.getattr(self.docname, self.name, i)
+                local elem = __gui_getattr(self.docname, self.name, i)
                 if elem == nil then
                     return
                 end
@@ -102,8 +104,8 @@ function RadioGroup:set(key)
 end
 function RadioGroup:__call(elements, onset, default)
     local group = setmetatable({
-        elements=elements, 
-        callback=onset, 
+        elements=elements,
+        callback=onset,
         current=nil
     }, {__index=self})
     group:set(default)
