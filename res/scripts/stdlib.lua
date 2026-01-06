@@ -31,10 +31,14 @@ function core.set_setting(name, value, ...)
 end
 
 local __vc__app_script_coroutine
-local __core_load_content = core.load_content
-core.load_content = nil
 
 local function complete_app_lib(app)
+    local __core_load_content = core.load_content
+    local __core_reset_content = core.reset_content
+    local __app_tick = coroutine.yield
+    core.load_content = nil
+    core.reset_content = nil
+
     app.sleep = sleep
     app.script = __VC_SCRIPT_NAME
     app.new_world = core.new_world
@@ -46,21 +50,27 @@ local function complete_app_lib(app)
     app.reconfig_packs = core.reconfig_packs
     app.get_setting = core.get_setting
     app.set_setting = core.set_setting
-    app.tick = function()
-        coroutine.yield()
-    end
-
-    local __app_tick = app.tick
+    app.tick = __app_tick
     app.get_version = core.get_version
     app.get_setting_info = core.get_setting_info
-    app.load_content = function()
+
+    local function require_app_script_co()
         if coroutine.running() ~= __vc__app_script_coroutine then
             error("content must be reload in application script coroutine")
         end
+    end
+
+    app.load_content = function()
+        require_app_script_co()
         __core_load_content()
         __app_tick()
     end
-    app.reset_content = core.reset_content
+    app.reset_content = function()
+        require_app_script_co()
+        __core_reset_content()
+        __app_tick()
+    end
+
     app.is_content_loaded = core.is_content_loaded
     app.set_title = core.set_title
     
