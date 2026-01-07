@@ -4,6 +4,7 @@
 #include "io/settings_io.hpp"
 #include "io/devices/MemoryDevice.hpp"
 #include "logic/scripting/scripting.hpp"
+#include "logic/EngineController.hpp"
 #include "content/ContentControl.hpp"
 #include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
@@ -27,6 +28,63 @@ static int l_get_version(lua::State* L) {
 
 static int l_is_content_loaded(lua::State* L) {
     return lua::pushboolean(L, content != nullptr);
+}
+
+static int l_load_content(lua::State* L) {
+    content_control->loadContent();
+    return 0;
+}
+
+static int l_reset_content(lua::State* L) {
+    if (level != nullptr) {
+        throw std::runtime_error("world must be closed before");
+    }
+    std::vector<std::string> nonResetPacks;
+    if (lua::istable(L, 1)) {
+        int len = lua::objlen(L, 1);
+        for (int i = 0; i < len; i++) {
+            lua::rawgeti(L, i + 1, 1);
+            nonResetPacks.emplace_back(lua::require_lstring(L, -1));
+            lua::pop(L);
+        }
+    }
+    content_control->resetContent(std::move(nonResetPacks));
+    return 0;
+}
+
+/// @brief Reconfigure packs
+/// @param addPacks An array of packs to add
+/// @param remPacks An array of packs to remove
+static int l_reconfig_packs(lua::State* L) {
+    if (!lua::istable(L, 1)) {
+        throw std::runtime_error("strings array expected as the first argument");
+    }
+    if (!lua::istable(L, 2)) {
+        throw std::runtime_error("strings array expected as the second argument");
+    }
+    std::vector<std::string> addPacks;
+    int addLen = lua::objlen(L, 1);
+    for (int i = 0; i < addLen; i++) {
+        lua::rawgeti(L, i + 1, 1);
+        addPacks.emplace_back(lua::require_lstring(L, -1));
+        lua::pop(L);
+    }
+    std::vector<std::string> remPacks;
+    int remLen = lua::objlen(L, 2);
+    for (int i = 0; i < remLen; i++) {
+        lua::rawgeti(L, i + 1, 2);
+        remPacks.emplace_back(lua::require_lstring(L, -1));
+        lua::pop(L);
+    }
+    auto engineController = engine->getController();
+    try {
+        engineController->reconfigPacks(controller, addPacks, remPacks);
+    } catch (const contentpack_error& err) {
+        throw std::runtime_error(
+            std::string(err.what()) + " [" + err.getPackId() + " ]"
+        );
+    }
+    return 0;
 }
 
 static int l_start_debug_instance(lua::State* L) {
@@ -217,6 +275,9 @@ static int l_quit(lua::State*) {
 const luaL_Reg applib[] = {
     {"get_version", lua::wrap<l_get_version>},
     {"is_content_loaded", lua::wrap<l_is_content_loaded>},
+    {"load_content", lua::wrap<l_load_content>},
+    {"reset_content", lua::wrap<l_reset_content>},
+    {"reconfig_packs", lua::wrap<l_reconfig_packs>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},

@@ -27,14 +27,12 @@ end
 local __vc__app_script_coroutine
 
 local function complete_app_lib(app)
-    local __core_load_content = core.load_content
-    local __core_reset_content = core.reset_content
-    local __core_reconfig_packs = core.reconfig_packs
+    local __app_load_content = app.load_content
+    local __app_reset_content = app.reset_content
+    local __app_reconfig_packs = app.reconfig_packs
     local __app_tick = coroutine.yield
     local __app_set_setting = app.set_setting
     local __app_quit = app.quit
-    core.load_content = nil
-    core.reset_content = nil
 
     app.sleep = sleep
     app.script = __VC_SCRIPT_NAME
@@ -61,13 +59,13 @@ local function complete_app_lib(app)
     end
 
     app.reconfig_packs = function(...)
-        call_in_app_script_co(__core_reconfig_packs, ...)
+        call_in_app_script_co(__app_reconfig_packs, ...)
     end
     app.load_content = function(...)
-        call_in_app_script_co(__core_load_content, ...)
+        call_in_app_script_co(__app_load_content, ...)
     end
     app.reset_content = function(...)
-        call_in_app_script_co(__core_reset_content, ...)
+        call_in_app_script_co(__app_reset_content, ...)
     end
 
     function app.config_packs(packs_list)

@@ -23,28 +23,6 @@
 
 using namespace scripting;
 
-static int l_load_content(lua::State* L) {
-    content_control->loadContent();
-    return 0;
-}
-
-static int l_reset_content(lua::State* L) {
-    if (level != nullptr) {
-        throw std::runtime_error("world must be closed before");
-    }
-    std::vector<std::string> nonResetPacks;
-    if (lua::istable(L, 1)) {
-        int len = lua::objlen(L, 1);
-        for (int i = 0; i < len; i++) {
-            lua::rawgeti(L, i + 1, 1);
-            nonResetPacks.emplace_back(lua::require_lstring(L, -1));
-            lua::pop(L);
-        }
-    }
-    content_control->resetContent(std::move(nonResetPacks));
-    return 0;
-}
-
 /// @brief Creating new world
 /// @param name Name world
 /// @param seed Seed world
@@ -122,41 +100,6 @@ static int l_delete_world(lua::State* L) {
     return 0;
 }
 
-/// @brief Reconfigure packs
-/// @param addPacks An array of packs to add
-/// @param remPacks An array of packs to remove
-static int l_reconfig_packs(lua::State* L) {
-    if (!lua::istable(L, 1)) {
-        throw std::runtime_error("strings array expected as the first argument");
-    }
-    if (!lua::istable(L, 2)) {
-        throw std::runtime_error("strings array expected as the second argument");
-    }
-    std::vector<std::string> addPacks;
-    int addLen = lua::objlen(L, 1);
-    for (int i = 0; i < addLen; i++) {
-        lua::rawgeti(L, i + 1, 1);
-        addPacks.emplace_back(lua::require_lstring(L, -1));
-        lua::pop(L);
-    }
-    std::vector<std::string> remPacks;
-    int remLen = lua::objlen(L, 2);
-    for (int i = 0; i < remLen; i++) {
-        lua::rawgeti(L, i + 1, 2);
-        remPacks.emplace_back(lua::require_lstring(L, -1));
-        lua::pop(L);
-    }
-    auto engineController = engine->getController();
-    try {
-        engineController->reconfigPacks(controller, addPacks, remPacks);
-    } catch (const contentpack_error& err) {
-        throw std::runtime_error(
-            std::string(err.what()) + " [" + err.getPackId() + " ]"
-        );
-    }
-    return 0;
-}
-
 static int l_blank(lua::State*) {
     return 0;
 }
@@ -190,15 +133,12 @@ static int l_capture_output(lua::State* L) {
 
 const luaL_Reg corelib[] = {
     {"blank", lua::wrap<l_blank>},
-    {"load_content", lua::wrap<l_load_content>},
-    {"reset_content", lua::wrap<l_reset_content>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},
     {"save_world", lua::wrap<l_save_world>},
     {"close_world", lua::wrap<l_close_world>},
     {"delete_world", lua::wrap<l_delete_world>},
-    {"reconfig_packs", lua::wrap<l_reconfig_packs>},
     {"capture_output", lua::wrap<l_capture_output>},
     {nullptr, nullptr}
 };
