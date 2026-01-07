@@ -1,22 +1,24 @@
 #include "api_lua.hpp"
 
-#include "io/io.hpp"
-#include "io/settings_io.hpp"
-#include "io/devices/MemoryDevice.hpp"
-#include "logic/scripting/scripting.hpp"
-#include "logic/EngineController.hpp"
 #include "content/ContentControl.hpp"
+#include "devtools/Project.hpp"
 #include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
-#include "devtools/Project.hpp"
+#include "frontend/locale.hpp"
+#include "graphics/ui/elements/Menu.hpp"
+#include "graphics/ui/gui_util.hpp"
+#include "graphics/ui/GUI.hpp"
+#include "io/devices/MemoryDevice.hpp"
+#include "io/io.hpp"
+#include "io/settings_io.hpp"
+#include "logic/EngineController.hpp"
+#include "logic/LevelController.hpp"
+#include "logic/scripting/scripting.hpp"
 #include "network/Network.hpp"
 #include "util/platform.hpp"
 #include "util/stringutil.hpp"
 #include "window/Window.hpp"
-#include "frontend/locale.hpp"
-#include "graphics/ui/GUI.hpp"
-#include "graphics/ui/gui_util.hpp"
-#include "graphics/ui/elements/Menu.hpp"
+#include "world/Level.hpp"
 
 using namespace scripting;
 
@@ -266,6 +268,84 @@ static int l_open_url(lua::State* L) {
     return 0;
 }
 
+/// @brief Creating new world
+/// @param name Name world
+/// @param seed Seed world
+/// @param generator Type of generation
+static int l_new_world(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    auto seed = lua::require_string(L, 2);
+    auto generator = lua::require_string(L, 3);
+    int64_t localPlayer = 0;
+    if (lua::gettop(L) >= 4) {
+        localPlayer = lua::tointeger(L, 4);
+    }
+    if (level != nullptr) {
+        throw std::runtime_error("world must be closed before");
+    }
+    auto controller = engine->getController();
+    controller->setLocalPlayer(localPlayer);
+    controller->createWorld(name, seed, generator);
+    return 0;
+}
+
+/// @brief Open world
+/// @param name Name world
+static int l_open_world(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    if (level != nullptr) {
+        throw std::runtime_error("world must be closed before");
+    }
+    auto controller = engine->getController();
+    controller->setLocalPlayer(0);
+    controller->openWorld(name, false);
+    return 0;
+}
+
+/// @brief Reopen world
+static int l_reopen_world(lua::State*) {
+    auto controller = engine->getController();
+    if (level == nullptr) {
+        throw std::runtime_error("no world open");
+    }
+    controller->reopenWorld(level->getWorld());
+    return 0;
+}
+
+/// @brief Save world
+static int l_save_world(lua::State* L) {
+    if (controller == nullptr) {
+        throw std::runtime_error("no world open");
+    }
+    controller->saveWorld();
+    return 0;
+}
+
+/// @brief Close world
+/// @param flag Save world (bool)
+static int l_close_world(lua::State* L) {
+    if (controller == nullptr) {
+        throw std::runtime_error("no world open");
+    }
+    controller->processBeforeQuit();
+    bool save_world = lua::toboolean(L, 1);
+    if (save_world) {
+        controller->saveWorld();
+    }
+    engine->onWorldClosed();
+    return 0;
+}
+
+/// @brief Delete world
+/// @param name Name world
+static int l_delete_world(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    auto controller = engine->getController();
+    controller->deleteWorld(name);
+    return 0;
+}
+
+
 /// @brief Quit the game
 static int l_quit(lua::State*) {
     engine->quit();
@@ -291,6 +371,12 @@ const luaL_Reg applib[] = {
     {"set_setting", lua::wrap<l_set_setting>},
     {"str_setting", lua::wrap<l_str_setting>},
     {"get_setting_info", lua::wrap<l_get_setting_info>},
+    {"new_world", lua::wrap<l_new_world>},
+    {"open_world", lua::wrap<l_open_world>},
+    {"reopen_world", lua::wrap<l_reopen_world>},
+    {"save_world", lua::wrap<l_save_world>},
+    {"close_world", lua::wrap<l_close_world>},
+    {"delete_world", lua::wrap<l_delete_world>},
     {"quit", lua::wrap<l_quit>},
     // for other functions see libcore.cpp and stdlib.lua
     {nullptr, nullptr}
