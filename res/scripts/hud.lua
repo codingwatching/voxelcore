@@ -29,7 +29,7 @@ local function configure_SSAO()
     end
     events.on("core:setting.graphics.ssao.set", update_ssao_quality)
 
-    update_ssao_quality(core.get_setting("graphics.ssao"))
+    update_ssao_quality(__vc_app.get_setting("graphics.ssao"))
 end
 
 local function update_hand()

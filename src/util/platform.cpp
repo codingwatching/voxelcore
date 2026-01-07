@@ -281,6 +281,7 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
     ss << " >/dev/null &";
     
     auto command = ss.str();
+    logger.info() << command;
     if (int res = system(command.c_str())) {
         throw std::runtime_error(
             "starting an engine instance failed with code: " +
