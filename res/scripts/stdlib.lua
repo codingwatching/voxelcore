@@ -32,6 +32,7 @@ local function complete_app_lib(app)
     local __core_reconfig_packs = core.reconfig_packs
     local __app_tick = coroutine.yield
     local __app_set_setting = app.set_setting
+    local __app_quit = app.quit
     core.load_content = nil
     core.reset_content = nil
 
@@ -51,7 +52,8 @@ local function complete_app_lib(app)
     app.tick = __app_tick
 
     local function call_in_app_script_co(func, ...)
-        if coroutine.running() ~= __vc__app_script_coroutine then
+        local running = coroutine.running()
+        if not running or running ~= __vc__app_script_coroutine then
             error("content must be reload in application script coroutine")
         end
         func(...)
@@ -88,15 +90,16 @@ local function complete_app_lib(app)
         app.reconfig_packs(toadd, toremove)
     end
 
-    function app.quit()
-        local tb = debug.get_traceback(1)
-        local s = "app.quit() traceback:"
-        for i, frame in ipairs(tb) do
-            s = s .. "\n\t"..tb_frame_tostring(frame)
+    function app.quit(silent)
+        if not silent then
+            local tb = debug.get_traceback(1)
+            local s = "app.quit() traceback:"
+            for i, frame in ipairs(tb) do
+                s = s .. "\n\t"..tb_frame_tostring(frame)
+            end
+            debug.log(s)
         end
-        debug.log(s)
-        core.quit()
-        coroutine.yield()
+        __app_quit()
     end
 
     function app.sleep_until(predicate, max_ticks, max_time)

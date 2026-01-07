@@ -208,6 +208,12 @@ static int l_open_url(lua::State* L) {
     return 0;
 }
 
+/// @brief Quit the game
+static int l_quit(lua::State*) {
+    engine->quit();
+    return 0;
+}
+
 const luaL_Reg applib[] = {
     {"get_version", lua::wrap<l_get_version>},
     {"is_content_loaded", lua::wrap<l_is_content_loaded>},
@@ -224,6 +230,7 @@ const luaL_Reg applib[] = {
     {"set_setting", lua::wrap<l_set_setting>},
     {"str_setting", lua::wrap<l_str_setting>},
     {"get_setting_info", lua::wrap<l_get_setting_info>},
+    {"quit", lua::wrap<l_quit>},
     // for other functions see libcore.cpp and stdlib.lua
     {nullptr, nullptr}
 };

@@ -157,12 +157,6 @@ static int l_reconfig_packs(lua::State* L) {
     return 0;
 }
 
-/// @brief Quit the game
-static int l_quit(lua::State*) {
-    engine->quit();
-    return 0;
-}
-
 static int l_blank(lua::State*) {
     return 0;
 }
@@ -205,7 +199,6 @@ const luaL_Reg corelib[] = {
     {"close_world", lua::wrap<l_close_world>},
     {"delete_world", lua::wrap<l_delete_world>},
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},
-    {"quit", lua::wrap<l_quit>},
     {"capture_output", lua::wrap<l_capture_output>},
     {nullptr, nullptr}
 };
