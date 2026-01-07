@@ -22,21 +22,18 @@
 
 using namespace scripting;
 
-static int l_get_version(lua::State* L) {
-    return lua::pushvec_stack(
-        L, glm::vec2(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR)
-    );
-}
-
+/// @brief Check if content is loaded
 static int l_is_content_loaded(lua::State* L) {
     return lua::pushboolean(L, content != nullptr);
 }
 
+/// @brief Load content
 static int l_load_content(lua::State* L) {
     content_control->loadContent();
     return 0;
 }
 
+/// @brief Reset content, excluding specified packs modules
 static int l_reset_content(lua::State* L) {
     if (level != nullptr) {
         throw std::runtime_error("world must be closed before");
@@ -89,59 +86,7 @@ static int l_reconfig_packs(lua::State* L) {
     return 0;
 }
 
-static int l_start_debug_instance(lua::State* L) {
-    if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
-        throw std::runtime_error("project has no debugging permission");
-    }
-
-    int port = lua::tointeger(L, 1);
-    if (port == 0) {
-        auto network = engine->getNetwork();
-        if (network == nullptr) {
-            throw std::runtime_error("project has no network permission");
-        }
-        port = network->findFreePort();
-        if (port == -1) {
-            throw std::runtime_error("could not find free port");
-        }
-    }
-    auto projectPath = lua::isstring(L, 2) ? lua::require_lstring(L, 2) : "";
-    const auto& paths = engine->getPaths();
-
-    std::vector<std::string> args {
-        "--res", paths.getResourcesFolder().u8string(),
-        "--dir", paths.getUserFilesFolder().u8string(),
-        "--dbg-server",  "tcp:" + std::to_string(port),
-    };
-    if (!projectPath.empty()) {
-        args.emplace_back("--project");
-        args.emplace_back(io::resolve(std::string(projectPath)).string());
-    }
-
-    platform::new_engine_instance(std::move(args));
-    return lua::pushinteger(L, port);
-}
-
-static int l_focus(lua::State* L) {
-    engine->getWindow().focus();
-    return 0;
-}
-
-static int l_create_memory_device(lua::State* L) {
-    std::string name = lua::require_string(L, 1);
-    if (io::get_device(name)) {
-        throw std::runtime_error(
-            "entry-point '" + name + "' is already used"
-        );
-    }
-    if (name.find(':') != std::string::npos) {
-        throw std::runtime_error("invalid entry point name");
-    }
-    
-    io::set_device(name, std::make_unique<io::MemoryDevice>());
-    return 0;
-}
-
+/// @brief Get content sources list
 static int l_get_content_sources(lua::State* L) {
     const auto& sources = engine->getContentControl().getContentSources();
     lua::createtable(L, static_cast<int>(sources.size()), 0);
@@ -152,6 +97,7 @@ static int l_get_content_sources(lua::State* L) {
     return 1;
 }
 
+/// @brief Set content sources list
 static int l_set_content_sources(lua::State* L) {
     if (!lua::istable(L, 1)) {
         throw std::runtime_error("table expected as argument 1");
@@ -167,14 +113,9 @@ static int l_set_content_sources(lua::State* L) {
     return 0;
 }
 
+/// @brief Reset content sources to defaults
 static int l_reset_content_sources(lua::State* L) {
     engine->getContentControl().resetContentSources();
-    return 0;
-}
-
-static int l_set_title(lua::State* L) {
-    auto title = lua::require_string(L, 1);
-    engine->getWindow().setTitle(title);
     return 0;
 }
 
@@ -245,11 +186,13 @@ static int l_get_setting_info(lua::State* L) {
     throw std::runtime_error("unsupported setting type");
 }
 
+/// @brief Open folder in file explorer
 static int l_open_folder(lua::State* L) {
     platform::open_folder(io::resolve(lua::require_string(L, 1)));
     return 0;
 }
 
+/// @brief Open URL in default browser with confirmation dialog
 static int l_open_url(lua::State* L) {
     auto url = lua::require_string(L, 1);
 
@@ -265,6 +208,26 @@ static int l_open_url(lua::State* L) {
             menu->reset();
         }
     });
+    return 0;
+}
+
+
+/// @brief Bring application window to focus
+static int l_focus(lua::State* L) {
+    engine->getWindow().focus();
+    return 0;
+}
+
+/// @brief Set window title 
+static int l_set_title(lua::State* L) {
+    auto title = lua::require_string(L, 1);
+    engine->getWindow().setTitle(title);
+    return 0;
+}
+
+/// @brief Quit the game
+static int l_quit(lua::State*) {
+    engine->quit();
     return 0;
 }
 
@@ -345,39 +308,95 @@ static int l_delete_world(lua::State* L) {
     return 0;
 }
 
+/// @brief Get engine version
+/// @return major, minor 
+static int l_get_version(lua::State* L) {
+    return lua::pushvec_stack(
+        L, glm::vec2(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR)
+    );
+}
 
-/// @brief Quit the game
-static int l_quit(lua::State*) {
-    engine->quit();
+/// @brief Create in-memory named IO device
+static int l_create_memory_device(lua::State* L) {
+    std::string name = lua::require_string(L, 1);
+    if (io::get_device(name)) {
+        throw std::runtime_error(
+            "entry-point '" + name + "' is already used"
+        );
+    }
+    if (name.find(':') != std::string::npos) {
+        throw std::runtime_error("invalid entry point name");
+    }
+    
+    io::set_device(name, std::make_unique<io::MemoryDevice>());
     return 0;
 }
 
+/// @brief Start a new engine instance with debugging server
+static int l_start_debug_instance(lua::State* L) {
+    if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
+        throw std::runtime_error("project has no debugging permission");
+    }
+
+    int port = lua::tointeger(L, 1);
+    if (port == 0) {
+        auto network = engine->getNetwork();
+        if (network == nullptr) {
+            throw std::runtime_error("project has no network permission");
+        }
+        port = network->findFreePort();
+        if (port == -1) {
+            throw std::runtime_error("could not find free port");
+        }
+    }
+    auto projectPath = lua::isstring(L, 2) ? lua::require_lstring(L, 2) : "";
+    const auto& paths = engine->getPaths();
+
+    std::vector<std::string> args {
+        "--res", paths.getResourcesFolder().u8string(),
+        "--dir", paths.getUserFilesFolder().u8string(),
+        "--dbg-server",  "tcp:" + std::to_string(port),
+    };
+    if (!projectPath.empty()) {
+        args.emplace_back("--project");
+        args.emplace_back(io::resolve(std::string(projectPath)).string());
+    }
+
+    platform::new_engine_instance(std::move(args));
+    return lua::pushinteger(L, port);
+}
+
 const luaL_Reg applib[] = {
-    {"get_version", lua::wrap<l_get_version>},
+    /// content
     {"is_content_loaded", lua::wrap<l_is_content_loaded>},
     {"load_content", lua::wrap<l_load_content>},
     {"reset_content", lua::wrap<l_reset_content>},
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},
-    {"start_debug_instance", lua::wrap<l_start_debug_instance>},
-    {"focus", lua::wrap<l_focus>},
-    {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"get_content_sources", lua::wrap<l_get_content_sources>},
     {"set_content_sources", lua::wrap<l_set_content_sources>},
     {"reset_content_sources", lua::wrap<l_reset_content_sources>},
-    {"set_title", lua::wrap<l_set_title>},
-    {"open_folder", lua::wrap<l_open_folder>},
-    {"open_url", lua::wrap<l_open_url>},
+    /// settings
     {"get_setting", lua::wrap<l_get_setting>},
     {"set_setting", lua::wrap<l_set_setting>},
     {"str_setting", lua::wrap<l_str_setting>},
     {"get_setting_info", lua::wrap<l_get_setting_info>},
+    /// system applications
+    {"open_folder", lua::wrap<l_open_folder>},
+    {"open_url", lua::wrap<l_open_url>},
+    /// window
+    {"focus", lua::wrap<l_focus>},
+    {"set_title", lua::wrap<l_set_title>},
+    {"quit", lua::wrap<l_quit>},
+    /// world
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},
     {"save_world", lua::wrap<l_save_world>},
     {"close_world", lua::wrap<l_close_world>},
     {"delete_world", lua::wrap<l_delete_world>},
-    {"quit", lua::wrap<l_quit>},
-    // for other functions see libcore.cpp and stdlib.lua
+    /// other
+    {"get_version", lua::wrap<l_get_version>},
+    {"create_memory_device", lua::wrap<l_create_memory_device>},
+    {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {nullptr, nullptr}
 };
