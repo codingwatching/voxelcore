@@ -99,7 +99,7 @@ void Players::suspend(int64_t id) {
         }
         player->setSuspended(true);
         level.entities->despawn(player->getEntity());
-        player->setEntity(0);
+        player->setEntity(ENTITY_AUTO);
     }
 }
 
