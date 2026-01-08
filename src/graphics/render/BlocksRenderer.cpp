@@ -80,7 +80,7 @@ void BlocksRenderer::face(
     const glm::vec4(&lights)[4],
     const glm::vec4& tint
 ) {
-    if (vertexCount + 4 >= capacity) {
+    if (vertexCount + 4 >= capacity || indexCount + 6 >= capacity) {
         overflow = true;
         return;
     }
@@ -120,7 +120,7 @@ void BlocksRenderer::faceAO(
     const UVRegion& region,
     bool lights
 ) {
-    if (vertexCount + 4 >= capacity) {
+    if (vertexCount + 4 >= capacity || indexCount + 6 >= capacity) {
         overflow = true;
         return;
     }
@@ -159,7 +159,7 @@ void BlocksRenderer::face(
     glm::vec4 tint,
     bool lights
 ) {
-    if (vertexCount + 4 >= capacity) {
+    if (vertexCount + 4 >= capacity || indexCount + 6 >= capacity) {
         overflow = true;
         return;
     }
@@ -305,12 +305,15 @@ void BlocksRenderer::blockCustomModel(
 
     const auto& model = cache.getModel(block.rt.id, block.getVariantIndex(states.userbits));
     for (const auto& mesh : model.meshes) {
-        if (vertexCount + mesh.vertices.size() >= capacity) {
+        if (vertexCount + mesh.vertices.size() >= capacity
+            || indexCount + mesh.vertices.size() >= capacity) {
             overflow = true;
             return;
         }
         bool shading = mesh.shading && !block.shadeless;
-        for (int triangle = 0; triangle < mesh.vertices.size() / 3; triangle++) {
+
+        int trianglesCount = mesh.vertices.size() / 3;
+        for (int triangle = 0; triangle < trianglesCount; triangle++) {
             auto r = mesh.vertices[triangle * 3 + (triangle % 2) * 2].coord -
                      mesh.vertices[triangle * 3 + 1].coord;
             r = r.x * X + r.y * Y + r.z * Z;
@@ -778,6 +781,10 @@ ChunkMesh BlocksRenderer::render(
     const Chunk* chunk, const VoxelsVolume& volume
 ) {
     build(chunk, volume);
+    
+    assert(vertexCount <= capacity);
+    assert(indexCount <= capacity);
+    assert(denseIndexCount <= capacity);
 
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
         vertexBuffer.get(), vertexCount, 
