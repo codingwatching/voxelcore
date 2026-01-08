@@ -292,6 +292,34 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
     builder.pop();
 }
 
+static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
+    glm::mat4 tsf(1.0f);
+    if (root.has("move")) {
+        tsf = glm::translate(tsf, root.attr("move").asVec3());
+    }
+    if (root.has("rotate")) {
+        auto text = root.attr("rotate").getText();
+        if (std::count(text.begin(), text.end(), ',') == 3) {
+            auto quat = root.attr("rotate").asVec4();
+            tsf *= glm::mat4_cast(glm::quat(quat.w, quat.x, quat.y, quat.z));
+        } else {
+            auto rot = root.attr("rotate").asVec3();
+            tsf = glm::rotate(tsf, glm::radians(rot.x), glm::vec3(1, 0, 0));
+            tsf = glm::rotate(tsf, glm::radians(rot.y), glm::vec3(0, 1, 0));
+            tsf = glm::rotate(tsf, glm::radians(rot.z), glm::vec3(0, 0, 1));
+        }
+    }
+    if (root.has("scale")) {
+        tsf = glm::scale(tsf, root.attr("scale").asVec3());
+    }
+
+    builder.push(std::move(tsf));
+    for (const auto& elem : root.getElements()) {
+        perform_element(*elem, builder);
+    }
+    builder.pop();
+}
+
 static void perform_element(const xmlelement& root, ModelBuilder& builder) {
     auto tag = root.getTag();
 
@@ -301,6 +329,8 @@ static void perform_element(const xmlelement& root, ModelBuilder& builder) {
         perform_box(root, builder);
     } else if (tag == "tri") {
         perform_triangle(root, builder);
+    } else if (tag == "bone") {
+        perform_bone(root, builder);
     }
 }
 
