@@ -274,19 +274,6 @@ void BlocksRenderer::blockAABB(
     }
 }
 
-static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
-    if (std::abs(v.y) < e && std::abs(v.z) < e && std::abs(v.x) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.z) < e && std::abs(v.y) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.y) < e && std::abs(v.z) > e) {
-        return true;
-    }
-    return false;
-}
-
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord, const Block& block, blockstate states, bool lights, bool ao
 ) {
