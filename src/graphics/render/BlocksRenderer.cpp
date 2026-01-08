@@ -274,19 +274,6 @@ void BlocksRenderer::blockAABB(
     }
 }
 
-static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
-    if (std::abs(v.y) < e && std::abs(v.z) < e && std::abs(v.x) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.z) < e && std::abs(v.y) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.y) < e && std::abs(v.z) > e) {
-        return true;
-    }
-    return false;
-}
-
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord, const Block& block, blockstate states, bool lights, bool ao
 ) {
@@ -301,6 +288,23 @@ void BlocksRenderer::blockCustomModel(
         X = orient.axes[0];
         Y = orient.axes[1];
         Z = orient.axes[2];
+    }
+
+    if (!block.rt.extended) {
+        glm::ivec3 offsets[6] {
+            {-1, 0, 0}, {0, -1, 0}, {0, 0, -1},
+            {1, 0, 0}, {0, 1, 0}, {0, 0, 1},
+        };
+        bool culled = true;
+        for (int i = 0; i < 6; i++) {
+            if (isOpen(icoord + offsets[i], block, variant)) {
+                culled = false;
+                break;
+            }
+        }
+        if (culled) {
+            return;
+        }
     }
 
     const auto& model = cache.getModel(block.rt.id, block.getVariantIndex(states.userbits));
@@ -330,8 +334,7 @@ void BlocksRenderer::blockCustomModel(
             vp = vp.x * X + vp.y * Y + vp.z * Z;
 
             if (!block.rt.extended
-                && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)
-                && is_aligned(n)) {
+                && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)) {
                 continue;
             }
 

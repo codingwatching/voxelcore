@@ -125,9 +125,6 @@ Block::Block(std::string name, const std::string& texture)
 
 void Block::cloneTo(Block& dst) {
     dst.caption = caption;
-    for (int i = 0; i < 6; i++) {
-        dst.defaults = defaults;
-    }
     dst.defaults = defaults;
     if (variants) {
         dst.variants = std::make_unique<Variants>(*variants);
@@ -155,6 +152,7 @@ void Block::cloneTo(Block& dst) {
     dst.tickInterval = tickInterval;
     dst.overlayTexture = overlayTexture;
     dst.translucent = translucent;
+    dst.explictlySolid = explictlySolid;
     dst.tags = tags;
     if (particles) {
         dst.particles = std::make_unique<ParticlesPreset>(*particles);
