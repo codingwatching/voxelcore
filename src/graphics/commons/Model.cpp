@@ -1,6 +1,10 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "Model.hpp"
 
 #include <algorithm>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 using namespace model;
 
@@ -69,6 +73,39 @@ void Mesh::addRect(
     vertices.push_back({pos-right-up, {uv.u1, uv.v1}, norm});
     vertices.push_back({pos+right+up, {uv.u2, uv.v2}, norm});
     vertices.push_back({pos-right+up, {uv.u1, uv.v2}, norm});
+}
+
+static glm::mat4 extract_rotation(const glm::mat4& matrix) {
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+    return glm::mat4_cast(rotation);
+}
+
+void Mesh::addRect(
+    const glm::vec3& pos,
+    const glm::vec3& right,
+    const glm::vec3& up,
+    const glm::vec3& norm,
+    const UVRegion& uv,
+    const glm::mat4& transform
+) {
+    auto a = transform * glm::vec4(pos - right - up, 1.0f);
+    auto b = transform * glm::vec4(pos + right - up, 1.0f);
+    auto c = transform * glm::vec4(pos + right + up, 1.0f);
+    auto d = transform * glm::vec4(pos - right + up, 1.0f);
+    auto tsfnorm = extract_rotation(transform) * glm::vec4(norm, 1.0f);
+
+    vertices.push_back({a, {uv.u1, uv.v1}, tsfnorm});
+    vertices.push_back({b, {uv.u2, uv.v1}, tsfnorm});
+    vertices.push_back({c, {uv.u2, uv.v2}, tsfnorm});
+
+    vertices.push_back({a, {uv.u1, uv.v1}, tsfnorm});
+    vertices.push_back({c, {uv.u2, uv.v2}, tsfnorm});
+    vertices.push_back({d, {uv.u1, uv.v2}, tsfnorm});
 }
 
 void Mesh::addBox(const glm::vec3& pos, const glm::vec3& size) {

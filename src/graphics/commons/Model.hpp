@@ -40,6 +40,14 @@ namespace model {
             const glm::vec3& norm,
             const UVRegion& region
         ); 
+        void addRect(
+            const glm::vec3& pos,
+            const glm::vec3& right,
+            const glm::vec3& up,
+            const glm::vec3& norm,
+            const UVRegion& uv,
+            const glm::mat4& transform
+        );
         void addTriangle(
             const glm::vec3& a,
             const glm::vec3& b,
