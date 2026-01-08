@@ -34,11 +34,15 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
         if (def.variants) {
             for (auto& variant : def.variants->variants) {
-                variant.rt.solid = variant.model.type == BlockModelType::BLOCK;
+                variant.rt.solid =
+                    variant.model.type == BlockModelType::BLOCK ||
+                    def.explictlySolid;
             }
             def.defaults = def.variants->variants.at(0);
         } else {
-            def.defaults.rt.solid = def.defaults.model.type == BlockModelType::BLOCK;
+            def.defaults.rt.solid =
+                def.defaults.model.type == BlockModelType::BLOCK ||
+                def.explictlySolid;
         }
 
         const float EPSILON = 0.01f;
