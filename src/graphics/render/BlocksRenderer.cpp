@@ -290,6 +290,23 @@ void BlocksRenderer::blockCustomModel(
         Z = orient.axes[2];
     }
 
+    if (!block.rt.extended) {
+        glm::ivec3 offsets[6] {
+            {-1, 0, 0}, {0, -1, 0}, {0, 0, -1},
+            {1, 0, 0}, {0, 1, 0}, {0, 0, 1},
+        };
+        bool culled = true;
+        for (int i = 0; i < 6; i++) {
+            if (isOpen(icoord + offsets[i], block, variant)) {
+                culled = false;
+                break;
+            }
+        }
+        if (culled) {
+            return;
+        }
+    }
+
     const auto& model = cache.getModel(block.rt.id, block.getVariantIndex(states.userbits));
     for (const auto& mesh : model.meshes) {
         if (vertexCount + mesh.vertices.size() >= capacity
