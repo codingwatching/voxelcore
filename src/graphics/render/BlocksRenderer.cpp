@@ -330,8 +330,7 @@ void BlocksRenderer::blockCustomModel(
             vp = vp.x * X + vp.y * Y + vp.z * Z;
 
             if (!block.rt.extended
-                && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)
-                /*&& is_aligned(n)*/) {
+                && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)) {
                 continue;
             }
 
