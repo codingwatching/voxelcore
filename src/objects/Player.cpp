@@ -105,10 +105,8 @@ void Player::postUpdate() {
     if (flight && hitbox.grounded && !noclip) {
         flight = false;
     }
-    if (spawnpoint.y <= 0.1) {
-        for (int i = 0; i < SPAWN_ATTEMPTS_PER_UPDATE; i++) {
-            attemptToFindSpawnpoint();
-        }
+    for (int i = 0; i < SPAWN_ATTEMPTS_PER_UPDATE && std::isnan(spawnpoint.x); i++) {
+        attemptToFindSpawnpoint();
     }
 }
 
