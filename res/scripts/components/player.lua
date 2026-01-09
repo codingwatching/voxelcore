@@ -58,7 +58,15 @@ local function process_player_inputs(pid, rot, delta)
     end
 end
 
+local prepared = false
+body:set_enabled(false)
+
 function on_physics_update(delta)
+    if not prepared then
+        prepared = true
+        body:set_enabled(true)
+    end
+
     local pid = entity:get_player()
     if pid == -1 then
         return

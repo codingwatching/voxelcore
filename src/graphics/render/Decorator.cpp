@@ -53,6 +53,9 @@ Decorator::Decorator(
             addParticles(def, pos);
         }
     });
+    playerNamePreset.deserialize(engine.getResPaths().readCombinedObject(
+        "presets/text3d/player_name.toml"
+    ));
     for (const auto& [id, player] : *level.players) {
         if (id == this->player.getId()) {
             continue;
@@ -63,9 +66,6 @@ Decorator::Decorator(
             player->getPosition()
         ));
     }
-    playerNamePreset.deserialize(engine.getResPaths().readCombinedObject(
-        "presets/text3d/player_name.toml"
-    ));
 }
 
 void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
