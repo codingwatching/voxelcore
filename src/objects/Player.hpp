@@ -49,7 +49,7 @@ class Player : public Serializable {
     
     int chosenSlot;
     glm::vec3 position;
-    glm::vec3 spawnpoint {};
+    glm::vec3 spawnpoint {std::nanf(""), std::nanf(""), std::nanf("")};
     std::shared_ptr<Inventory> inventory;
     bool suspended = false;
     bool flight = false;
