@@ -41,6 +41,20 @@ void Mesh::addPlane(
     );
 }
 
+void Mesh::addTriangle(
+    const glm::vec3& a,
+    const glm::vec3& b,
+    const glm::vec3& c,
+    const glm::vec3& norm,
+    const glm::vec2& uvA,
+    const glm::vec2& uvB,
+    const glm::vec2& uvC
+) {
+    vertices.push_back({a, uvA, norm});
+    vertices.push_back({b, uvB, norm});
+    vertices.push_back({c, uvC, norm});
+}
+
 void Mesh::addRect(
     const glm::vec3& pos,
     const glm::vec3& right,

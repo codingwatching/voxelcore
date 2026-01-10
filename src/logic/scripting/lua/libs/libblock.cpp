@@ -476,8 +476,10 @@ static int l_raycast(lua::State* L) {
     auto start = lua::tovec<3>(L, 1);
     auto dir = lua::tovec<3>(L, 2);
     auto maxDistance = lua::tonumber(L, 3);
+    bool includeNonSelectable = false;
     std::set<blockid_t> filteredBlocks {};
-    if (lua::gettop(L) >= 5) {
+    const int luaStackSize = lua::gettop(L);
+    if (luaStackSize >= 5) {
         if (lua::istable(L, 5)) {
             int addLen = lua::objlen(L, 5);
             for (int i = 0; i < addLen; i++) {
@@ -493,6 +495,9 @@ static int l_raycast(lua::State* L) {
             throw std::runtime_error("table expected for filter");
         }
     }
+    if (luaStackSize >= 6) {
+        includeNonSelectable = lua::toboolean(L, 6);
+    }
     glm::vec3 end;
     glm::ivec3 normal;
     glm::ivec3 iend;
@@ -504,9 +509,10 @@ static int l_raycast(lua::State* L) {
             end,
             normal,
             iend,
-            filteredBlocks
+            filteredBlocks,
+            includeNonSelectable
         )) {
-        if (lua::gettop(L) >= 4 && !lua::isnil(L, 4)) {
+        if (luaStackSize >= 4 && !lua::isnil(L, 4)) {
             lua::pushvalue(L, 4);
         } else {
             lua::createtable(L, 0, 5);

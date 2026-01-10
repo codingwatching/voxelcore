@@ -21,7 +21,7 @@ function create_world()
     local seed = document.seed_box.text
     local generator = settings.generator
     session.reset_entry('new_world')
-    core.new_world(name, seed, generator)
+    app.new_world(name, seed, generator)
 end
 
 function world_name_placeholder()

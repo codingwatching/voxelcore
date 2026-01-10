@@ -136,7 +136,9 @@ Set specified bits.
 ## Raycast
 
 ```lua
-block.raycast(start: vec3, dir: vec3, max_distance: number, [optional] dest: table, [optional] filter: table) -> {
+block.raycast(start: vec3, dir: vec3, max_distance: number, [optional] dest: table, 
+    [optional] filter: table, [optional] include_non_selectable = false
+) -> {
     block: int, -- block id
     endpoint: vec3, -- point of the ray hit point
     iendpoint: vec3, -- position of the block hit by the ray
@@ -149,6 +151,9 @@ Casts a ray from the start point in the direction of *dir*. Max_distance specifi
 
 Argument `filter` can be used to tell ray what blocks can be skipped(passed through) during ray-casting.
 To use filter `dest` argument must be filled with some value(can be nil), it's done for backwards compatability 
+
+The `include_non_selectable` argument determines whether blocks that cannot be selected by the cursor will be included.
+Example - `base:water`
 
 The function returns a table with the results or nil if the ray does not hit any block.
 

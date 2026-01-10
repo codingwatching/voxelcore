@@ -113,7 +113,8 @@ public:
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter = {}
+        std::set<blockid_t> filter = {},
+        bool includeNonSelectable = false
     ) const;
 
     glm::vec3 rayCastToObstacle(

@@ -2,6 +2,7 @@
 #include "coders/json.hpp"
 #include "engine/Engine.hpp"
 #include "network/Network.hpp"
+#include "devtools/Project.hpp"
 
 #include <variant>
 #include <utility>
@@ -439,7 +440,7 @@ static int l_is_nodelay(lua::State* L, network::Network& network) {
     return lua::pushboolean(L, false);
 }
 
-static int l_pull_events(lua::State* L, network::Network& network) {
+static int l_pull_events(lua::State* L) {
     std::vector<NetworkEvent> local_queue;
     {
         std::lock_guard lock(events_queue_mutex);
@@ -528,7 +529,8 @@ int wrap(lua_State* L) {
     int result = 0;
     try {
         auto network = engine->getNetwork();
-        if (network == nullptr) {
+        const auto& permissions = engine->getProject().permissions;
+        if (network == nullptr || !permissions.has(Permissions::NETWORK)) {
             throw std::runtime_error(
                 "network subsystem is not available in the project"
             );
@@ -554,7 +556,7 @@ const luaL_Reg networklib[] = {
     {"get_total_download", wrap<l_get_total_download>},
     {"find_free_port", wrap<l_find_free_port>},
     {"is_available", lua::wrap<l_is_available>},
-    {"__pull_events", wrap<l_pull_events>},
+    {"__pull_events", lua::wrap<l_pull_events>},
     {"__open_tcp", wrap<l_open_tcp>},
     {"__open_udp", wrap<l_open_udp>},
     {"__closeserver", wrap<l_closeserver>},

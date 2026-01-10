@@ -402,7 +402,7 @@ namespace audio {
 
     /// @brief Initialize audio system or use no audio mode
     /// @param enabled try to initialize actual audio
-    void initialize(bool enabled, AudioSettings& settings);
+    void initialize(bool enabled, bool inputEnabled, AudioSettings& settings);
 
     /// @brief Load audio file info and PCM data
     /// @param file audio file

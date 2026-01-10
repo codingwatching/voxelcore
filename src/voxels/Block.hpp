@@ -230,6 +230,9 @@ public:
     /// @brief Block has semi-transparent texture
     bool translucent = false;
 
+    /// @brief Explicitly overriding 'solid' property if true assigned
+    bool explictlySolid = false;
+
     /// @brief Set of block physical hitboxes
     std::vector<AABB> hitboxes {AABB()};
 
