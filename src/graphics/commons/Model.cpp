@@ -156,6 +156,12 @@ void Mesh::scale(const glm::vec3& size) {
     }
 }
 
+void Mesh::transform(const glm::mat4& matrix) {
+    for (auto& vertex : vertices) {
+        vertex.coord = matrix * glm::vec4(vertex.coord, 1.0f);
+    }
+}
+
 void Model::clean() {
     meshes.erase(
         std::remove_if(meshes.begin(), meshes.end(), 
@@ -164,4 +170,21 @@ void Model::clean() {
         }),
         meshes.end()
     );
+}
+
+void Model::transform(const glm::mat4& matrix) {
+    for (auto& mesh : meshes) {
+        mesh.transform(matrix);
+    }
+}
+
+void Model::merge(const Model& source) {
+    for (const auto& srcMesh : source.meshes) {
+        auto& dstMesh = addMesh(srcMesh.texture, srcMesh.shading);
+        dstMesh.vertices.insert(
+            dstMesh.vertices.end(),
+            srcMesh.vertices.begin(),
+            srcMesh.vertices.end()
+        );
+    }
 }

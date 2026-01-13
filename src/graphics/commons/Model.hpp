@@ -72,6 +72,9 @@ namespace model {
             const glm::mat4& transform
         );
         void scale(const glm::vec3& size);
+
+        /// @brief Apply transformation matrix to vertices coordinates
+        void transform(const glm::mat4& matrix);
     };
 
     struct Model {
@@ -91,5 +94,12 @@ namespace model {
         }
         /// @brief Remove all empty meshes
         void clean();
+
+        /// @brief Apply transformation matrix to vertices coordinates
+        void transform(const glm::mat4& matrix);
+
+        /// @brief Copy or merge meshes from source model to this.
+        /// Does not remove duplicates
+        void merge(const Model& source);
     };
 }
