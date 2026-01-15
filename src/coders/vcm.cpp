@@ -2,7 +2,6 @@
 
 #include "xml.hpp"
 #include "util/stringutil.hpp"
-#include "objects/rigging.hpp"
 #include "io/io.hpp"
 
 #include <vector>
@@ -15,6 +14,45 @@ using namespace vcm;
 using namespace xml;
 using namespace model;
 using namespace rigging;
+
+static int calc_offsets(
+    const Bone& bone, std::vector<glm::vec3>& dst, int index, int depth, int parent
+) {
+    if (depth == 0) {
+        dst[0] = bone.getOffset();
+    } else {
+        dst[index] = dst[parent] + bone.getOffset();
+    }
+    const auto& subBones = bone.getSubnodes();
+
+    int subIndex = index + 1;
+    for (int i = 0; i < subBones.size(); i++) {
+        subIndex += calc_offsets(*subBones[i], dst, subIndex, depth + 1, index);
+    }
+    return subIndex - index;
+}
+
+model::Model& VcmModel::squash() {
+    std::vector<glm::vec3> fullOffsets(skeleton->getBones().size());
+    calc_offsets(*skeleton->getRoot(), fullOffsets, 0, 0, 0);
+
+    Model squashed;
+    for (auto& [name, model] : parts) {
+        if (auto bone = skeleton->find(name)) {
+            model.translate(fullOffsets[bone->getIndex()]);
+        } else {
+            throw std::runtime_error("invalid state: bones/parts mismatch");
+        }
+        squashed.merge(std::move(model));
+    }
+    parts = { {"", std::move(squashed)} };
+    skeleton.reset();
+    return parts.at("");
+}
+
+model::Model VcmModel::squashed() const {
+    return std::move(VcmModel {parts, std::nullopt}).squash();
+}
 
 static const std::unordered_map<std::string, int> side_indices {
     {"north", 0},
@@ -376,13 +414,13 @@ static VcmModel load_model(const xmlelement& root) {
     }
 
     vcmModel.parts["root"] = std::move(model);
-    vcmModel.skeleton = std::make_unique<SkeletonConfig>(
+    vcmModel.skeleton = SkeletonConfig(
         "", std::make_unique<Bone>(std::move(rootBone)), boneIndex
     );
     return vcmModel;
 }
 
-VcmModel vcm::parseFull(
+VcmModel vcm::parse(
     std::string_view file, std::string_view src, bool usexml
 ) {
     try {
@@ -398,42 +436,4 @@ VcmModel vcm::parseFull(
     } catch (const parsing_error& err) {
         throw std::runtime_error(err.errorLog());
     }
-}
-
-static int calc_offsets(
-    const Bone& bone, std::vector<glm::vec3>& dst, int index, int depth, int parent
-) {
-    if (depth == 0) {
-        dst[0] = bone.getOffset();
-    } else {
-        dst[index] = dst[parent] + bone.getOffset();
-    }
-    const auto& subBones = bone.getSubnodes();
-
-    int subIndex = index + 1;
-    for (int i = 0; i < subBones.size(); i++) {
-        subIndex += calc_offsets(*subBones[i], dst, subIndex, depth + 1, index);
-    }
-    return subIndex - index;
-}
-
-std::unique_ptr<model::Model> vcm::parse(
-    std::string_view file, std::string_view src, bool usexml
-) {
-    auto vcmModel = parseFull(file, src, usexml);
-
-    std::vector<glm::vec3> fullOffsets(vcmModel.skeleton->getBones().size());
-    calc_offsets(*vcmModel.skeleton->getRoot(), fullOffsets, 0, 0, 0);
-
-    Model fullModel;
-    for (auto& [name, model] : vcmModel.parts) {
-        if (auto bone = vcmModel.skeleton->find(name)) {
-            model.translate(fullOffsets[bone->getIndex()]);
-        } else {
-            throw std::runtime_error("invalid state: bones/parts mismatch");
-        }
-        fullModel.merge(std::move(model));
-    }
-
-    return std::make_unique<Model>(std::move(fullModel));
 }
