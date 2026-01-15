@@ -23,7 +23,7 @@ static int calc_offsets(
     } else {
         dst[index] = dst[parent] + bone.getOffset();
     }
-    const auto& subBones = bone.getSubnodes();
+    const auto& subBones = bone.getBones();
 
     int subIndex = index + 1;
     for (int i = 0; i < subBones.size(); i++) {
@@ -151,7 +151,7 @@ private:
 
 struct Context {
     VcmModel& vcmModel;
-    Bone& bone;
+    std::vector<std::unique_ptr<Bone>>& bones;
     size_t& boneIndex;
 };
 
@@ -372,16 +372,19 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context&
         builder.pop();
     } else {
         glm::vec3 origin = builder.getTransform() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        auto& bone = ctx.bone.addBone(
-            Bone(ctx.boneIndex++, name, name, {}, std::move(origin))
-        );
-        Context boneContext {ctx.vcmModel, bone, ctx.boneIndex};
+        size_t boneIndex = ctx.boneIndex++;
+
+        std::vector<std::unique_ptr<Bone>> bones;
+        Context boneContext {ctx.vcmModel, bones, ctx.boneIndex};
         Model boneModel;
         ModelBuilder boneModelBuilder(boneModel);
         boneModelBuilder.push(std::move(tsf));
         for (const auto& elem : root.getElements()) {
             perform_element(*elem, boneModelBuilder, boneContext);
         }
+        ctx.bones.push_back(std::make_unique<Bone>(
+            boneIndex, name, name, std::move(bones), std::move(origin)
+        ));
         ctx.vcmModel.parts[std::move(name)] = std::move(boneModel);
     }
 }
@@ -405,9 +408,9 @@ static VcmModel load_model(const xmlelement& root) {
     Model model;
     ModelBuilder builder(model);
 
-    size_t boneIndex = 0;
-    Bone rootBone(boneIndex++, "root", "root", {}, glm::vec3(0.0f));
-    Context ctx { vcmModel, rootBone, boneIndex };
+    size_t boneIndex = 1;
+    std::vector<std::unique_ptr<Bone>> bones;
+    Context ctx { vcmModel, bones, boneIndex };
 
     for (const auto& elem : root.getElements()) {
         perform_element(*elem, builder, ctx);
@@ -415,7 +418,11 @@ static VcmModel load_model(const xmlelement& root) {
 
     vcmModel.parts["root"] = std::move(model);
     vcmModel.skeleton = SkeletonConfig(
-        "", std::make_unique<Bone>(std::move(rootBone)), boneIndex
+        "",
+        std::make_unique<Bone>(
+            0, "root", "root", std::move(bones), glm::vec3(0.0f)
+        ),
+        boneIndex
     );
     return vcmModel;
 }

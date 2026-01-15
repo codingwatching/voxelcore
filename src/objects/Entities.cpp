@@ -333,7 +333,7 @@ static void debug_render_skeleton(
     const rigging::Skeleton& skeleton
 ) {
     size_t pindex = bone->getIndex();
-    for (auto& sub : bone->getSubnodes()) {
+    for (auto& sub : bone->getBones()) {
         size_t sindex = sub->getIndex();
         const auto& matrices = skeleton.calculated.matrices;
         batch.line(
