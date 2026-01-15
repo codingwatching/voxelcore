@@ -75,6 +75,9 @@ namespace model {
 
         /// @brief Apply transformation matrix to vertices coordinates
         void transform(const glm::mat4& matrix);
+
+        /// @brief Move vertices coordinates by offset
+        void translate(const glm::vec3& offset);
     };
 
     struct Model {
@@ -92,14 +95,22 @@ namespace model {
             meshes.push_back({texture, {}, shading});
             return meshes[meshes.size() - 1];
         }
+
         /// @brief Remove all empty meshes
         void clean();
 
         /// @brief Apply transformation matrix to vertices coordinates
         void transform(const glm::mat4& matrix);
 
+        /// @brief Move vertices coordinates by offset
+        void translate(const glm::vec3& offset);
+
         /// @brief Copy or merge meshes from source model to this.
         /// Does not remove duplicates
         void merge(const Model& source);
+
+        /// @brief Move or merge meshes from source model to this.
+        /// Does not remove duplicates
+        void merge(Model&& source);
     };
 }

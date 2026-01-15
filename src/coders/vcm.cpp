@@ -2,7 +2,7 @@
 
 #include "xml.hpp"
 #include "util/stringutil.hpp"
-#include "graphics/commons/Model.hpp"
+#include "objects/rigging.hpp"
 #include "io/io.hpp"
 
 #include <vector>
@@ -14,6 +14,7 @@
 using namespace vcm;
 using namespace xml;
 using namespace model;
+using namespace rigging;
 
 static const std::unordered_map<std::string, int> side_indices {
     {"north", 0},
@@ -40,6 +41,10 @@ public:
     void pop() {
         matrices.pop_back();
         calculateMatrix();
+    }
+
+    const glm::mat4& getTransform() const {
+        return combined;
     }
 
     void addBox(
@@ -106,7 +111,13 @@ private:
     glm::mat4 combined {1.0f};
 };
 
-static void perform_element(const xmlelement& root, ModelBuilder& builder);
+struct Context {
+    VcmModel& vcmModel;
+    Bone& bone;
+    size_t& boneIndex;
+};
+
+static void perform_element(const xmlelement& root, ModelBuilder& builder, Context& ctx);
 
 static void perform_rect(const xmlelement& root, ModelBuilder& builder) {
     auto from = root.attr("from").asVec3();
@@ -292,7 +303,9 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
     builder.pop();
 }
 
-static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
+static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context& ctx) {
+    std::string name = root.attr("name", "").getText();
+
     glm::mat4 tsf(1.0f);
     if (root.has("move")) {
         tsf = glm::translate(tsf, root.attr("move").asVec3());
@@ -313,14 +326,29 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
         tsf = glm::scale(tsf, root.attr("scale").asVec3());
     }
 
-    builder.push(std::move(tsf));
-    for (const auto& elem : root.getElements()) {
-        perform_element(*elem, builder);
+    if (name.empty()) {
+        builder.push(std::move(tsf));
+        for (const auto& elem : root.getElements()) {
+            perform_element(*elem, builder, ctx);
+        }
+        builder.pop();
+    } else {
+        glm::vec3 origin = builder.getTransform() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        auto& bone = ctx.bone.addBone(
+            Bone(ctx.boneIndex++, name, name, {}, std::move(origin))
+        );
+        Context boneContext {ctx.vcmModel, bone, ctx.boneIndex};
+        Model boneModel;
+        ModelBuilder boneModelBuilder(boneModel);
+        boneModelBuilder.push(std::move(tsf));
+        for (const auto& elem : root.getElements()) {
+            perform_element(*elem, boneModelBuilder, boneContext);
+        }
+        ctx.vcmModel.parts[std::move(name)] = std::move(boneModel);
     }
-    builder.pop();
 }
 
-static void perform_element(const xmlelement& root, ModelBuilder& builder) {
+static void perform_element(const xmlelement& root, ModelBuilder& builder, Context& ctx) {
     auto tag = root.getTag();
 
     if (tag == "rect") {
@@ -330,22 +358,31 @@ static void perform_element(const xmlelement& root, ModelBuilder& builder) {
     } else if (tag == "tri") {
         perform_triangle(root, builder);
     } else if (tag == "bone") {
-        perform_bone(root, builder);
+        perform_bone(root, builder, ctx);
     }
 }
 
-static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
+static VcmModel load_model(const xmlelement& root) {
+    VcmModel vcmModel {};
     Model model;
     ModelBuilder builder(model);
 
+    size_t boneIndex = 0;
+    Bone rootBone(boneIndex++, "root", "root", {}, glm::vec3(0.0f));
+    Context ctx { vcmModel, rootBone, boneIndex };
+
     for (const auto& elem : root.getElements()) {
-        perform_element(*elem, builder);
+        perform_element(*elem, builder, ctx);
     }
 
-    return std::make_unique<model::Model>(std::move(model));
+    vcmModel.parts["root"] = std::move(model);
+    vcmModel.skeleton = std::make_unique<SkeletonConfig>(
+        "", std::make_unique<Bone>(std::move(rootBone)), boneIndex
+    );
+    return vcmModel;
 }
 
-std::unique_ptr<model::Model> vcm::parse(
+VcmModel vcm::parseFull(
     std::string_view file, std::string_view src, bool usexml
 ) {
     try {
@@ -361,4 +398,42 @@ std::unique_ptr<model::Model> vcm::parse(
     } catch (const parsing_error& err) {
         throw std::runtime_error(err.errorLog());
     }
+}
+
+static int calc_offsets(
+    const Bone& bone, std::vector<glm::vec3>& dst, int index, int depth, int parent
+) {
+    if (depth == 0) {
+        dst[0] = bone.getOffset();
+    } else {
+        dst[index] = dst[parent] + bone.getOffset();
+    }
+    const auto& subBones = bone.getSubnodes();
+
+    int subIndex = index + 1;
+    for (int i = 0; i < subBones.size(); i++) {
+        subIndex += calc_offsets(*subBones[i], dst, subIndex, depth + 1, index);
+    }
+    return subIndex - index;
+}
+
+std::unique_ptr<model::Model> vcm::parse(
+    std::string_view file, std::string_view src, bool usexml
+) {
+    auto vcmModel = parseFull(file, src, usexml);
+
+    std::vector<glm::vec3> fullOffsets(vcmModel.skeleton->getBones().size());
+    calc_offsets(*vcmModel.skeleton->getRoot(), fullOffsets, 0, 0, 0);
+
+    Model fullModel;
+    for (auto& [name, model] : vcmModel.parts) {
+        if (auto bone = vcmModel.skeleton->find(name)) {
+            model.translate(fullOffsets[bone->getIndex()]);
+        } else {
+            throw std::runtime_error("invalid state: bones/parts mismatch");
+        }
+        fullModel.merge(std::move(model));
+    }
+
+    return std::make_unique<Model>(std::move(fullModel));
 }

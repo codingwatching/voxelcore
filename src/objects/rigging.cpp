@@ -32,6 +32,11 @@ Bone::Bone(
       model({model, nullptr, true}) {
 }
 
+Bone& Bone::addBone(Bone&& bone) {
+    bones.push_back(std::make_unique<Bone>(std::move(bone)));
+    return *bones[bones.size() - 1];
+}
+
 void Bone::setModel(const std::string& name) {
     if (model.name == name) {
         return;

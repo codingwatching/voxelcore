@@ -54,6 +54,8 @@ namespace rigging {
             const glm::vec3& offset
         );
 
+        Bone& addBone(Bone&& bone);
+
         void setModel(const std::string& name);
 
         const std::string& getName() const {
