@@ -36,6 +36,7 @@ AssetsLoader::AssetsLoader(Engine& engine, Assets& assets, const ResPaths& paths
     addLoader(AssetType::SOUND, assetload::sound);
     addLoader(AssetType::MODEL, assetload::model);
     addLoader(AssetType::POST_EFFECT, assetload::posteffect);
+    addLoader(AssetType::SKELETON, assetload::skeleton);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
@@ -141,6 +142,8 @@ static std::string assets_def_folder(AssetType tag) {
             return MODELS_FOLDER;
         case AssetType::POST_EFFECT:
             return POST_EFFECTS_FOLDER;
+        case AssetType::SKELETON:
+            return SKELETONS_FOLDER;
     }
     return "<error>";
 }
@@ -263,21 +266,20 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             add_layouts(pack->getEnvironment(), info.id, folder, loader);
         }
 
-        for (auto& entry : content->getSkeletons()) {
-            auto& skeleton = *entry.second;
-            for (auto& bone : skeleton.getBones()) {
-                std::string model = bone->model.name;
-                size_t pos = model.rfind('.');
-                if (pos != std::string::npos) {
-                    model = model.substr(0, pos);
-                }
-                if (!model.empty()) {
-                    loader.add(
-                        AssetType::MODEL, MODELS_FOLDER + "/" + model, model
-                    );
-                }
+        for (const auto& entry : content->getPacks()) {
+            io::path skeletonsDir = entry.first + ":skeletons";
+            if (!io::is_directory(skeletonsDir)) {
+                continue;
+            }
+            for (const auto& file : io::directory_iterator(skeletonsDir)) {
+                loader.add(
+                    AssetType::SKELETON,
+                    file.string(),
+                    entry.first + ":" + file.stem()
+                );
             }
         }
+
         for (const auto& [_, def] : content->blocks.getDefs()) {
             if (def->variants) {
                 for (const auto& variant : def->variants->variants) {

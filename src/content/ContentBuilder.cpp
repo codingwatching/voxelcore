@@ -1,15 +1,9 @@
 #include "ContentBuilder.hpp"
 
-#include "objects/rigging.hpp"
-
 ContentBuilder::~ContentBuilder() = default;
 
 void ContentBuilder::add(std::unique_ptr<ContentPackRuntime> pack) {
     packs[pack->getId()] = std::move(pack);
-}
-
-void ContentBuilder::add(std::unique_ptr<rigging::SkeletonConfig> skeleton) {
-    skeletons[skeleton->getName()] = std::move(skeleton);
 }
 
 BlockMaterial& ContentBuilder::createBlockMaterial(const std::string& id) {
@@ -98,7 +92,6 @@ std::unique_ptr<Content> ContentBuilder::build() {
         generators.build(),
         std::move(packs),
         std::move(blockMaterials),
-        std::move(skeletons),
         std::move(resourceIndices),
         std::move(defaults),
         std::move(tags.map)

@@ -393,6 +393,32 @@ assetload::postfunc assetload::model(
     }
 }
 
+assetload::postfunc assetload::skeleton(
+    AssetsLoader* loader,
+    const ResPaths& paths,
+    const std::string& file,
+    const std::string& name,
+    const std::shared_ptr<AssetCfg>& settings
+) {
+    return [=](auto assets) {
+        std::string text = io::read_string(file);
+        auto skeleton = rigging::SkeletonConfig::parse(text, file, name);
+        for (auto& bone : skeleton->getBones()) {
+            std::string model = bone->model.name;
+            size_t pos = model.rfind('.');
+            if (pos != std::string::npos) {
+                model = model.substr(0, pos);
+            }
+            if (!model.empty()) {
+                loader->add(
+                    AssetType::MODEL, MODELS_FOLDER + "/" + model, model
+                );
+            }
+        }
+        assets->store(std::move(skeleton), name);
+    };
+}
+
 static void read_anim_file(
     const std::string& animFile,
     std::vector<std::pair<std::string, int>>& frameList

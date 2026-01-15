@@ -23,6 +23,7 @@
 #include "maths/voxmaths.hpp"
 #include "objects/Entities.hpp"
 #include "objects/Player.hpp"
+#include "objects/rigging.hpp"
 #include "settings.hpp"
 #include "voxels/Block.hpp"
 #include "voxels/Chunk.hpp"
@@ -110,7 +111,7 @@ WorldRenderer::WorldRenderer(
 
     const auto& content = level.content;
     skeletons = std::make_unique<NamedSkeletons>();
-    const auto& skeletonConfig = content.requireSkeleton(
+    const auto& skeletonConfig = assets->require<rigging::SkeletonConfig>(
         content.getDefaults()["hand-skeleton"].asString()
     );
     hands = std::make_unique<HandsRenderer>(

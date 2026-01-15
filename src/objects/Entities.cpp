@@ -1,6 +1,7 @@
 #define VC_ENABLE_REFLECTION
 #include "Entities.hpp"
 
+#include <entt/entity/registry.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <sstream>
 
@@ -25,15 +26,22 @@
 static debug::Logger logger("entities");
 
 Entities::Entities(Level& level)
-    : level(level),
+    : registry(std::make_unique<entt::registry>()),
+      level(level),
       sensorsTickClock(20, 3),
       updateTickClock(20, 3) {
 }
 
+Entities::~Entities() = default;
+
+void Entities::setAssets(Assets& assets) {
+    this->assets = &assets;
+}
+
 std::optional<Entity> Entities::get(entityid_t id) {
     const auto& found = entities.find(id);
-    if (found != entities.end() && registry.valid(found->second)) {
-        return Entity(*this, id, registry, found->second);
+    if (found != entities.end() && registry->valid(found->second)) {
+        return Entity(*this, id, *registry, found->second);
     }
     return std::nullopt;
 }
@@ -45,9 +53,12 @@ entityid_t Entities::spawn(
     dv::value saved,
     entityid_t uid
 ) {
-    auto skeleton = level.content.getSkeleton(def.skeletonName);
-    if (skeleton == nullptr) {
-        throw std::runtime_error("skeleton " + def.skeletonName + " not found");
+    rigging::SkeletonConfig* skeleton = nullptr;
+    if (assets) {
+        skeleton = assets->get<rigging::SkeletonConfig>(def.skeletonName);
+        if (skeleton == nullptr) {
+            throw std::runtime_error("skeleton " + def.skeletonName + " not found");
+        }
     }
     entityid_t id;
     if (uid == 0) {
@@ -64,12 +75,12 @@ entityid_t Entities::spawn(
             throw std::runtime_error(ss.str());
         }
     }
-    auto entity = registry.create();
+    auto entity = registry->create();
     entities[id] = entity;
     uids[entity] = id;
 
-    registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
-    const auto& tsf = registry.emplace<Transform>(
+    registry->emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
+    const auto& tsf = registry->emplace<Transform>(
         entity,
         position,
         glm::vec3(1.0f),
@@ -77,7 +88,7 @@ entityid_t Entities::spawn(
         glm::mat4(1.0f),
         true
     );
-    auto& body = registry.emplace<Rigidbody>(
+    auto& body = registry->emplace<Rigidbody>(
         entity,
         true,
         Hitbox {def.bodyType, position, def.hitbox * 0.5f},
@@ -85,8 +96,10 @@ entityid_t Entities::spawn(
     );
     body.initialize(def, id, *this);
 
-    auto& scripting = registry.emplace<ScriptComponents>(entity);
-    registry.emplace<rigging::Skeleton>(entity, skeleton->instance());
+    auto& scripting = registry->emplace<ScriptComponents>(entity);
+    if (assets) {
+        registry->emplace<rigging::Skeleton>(entity, skeleton->instance());
+    }
 
     for (auto& instance : def.components) {
         auto component = std::make_unique<UserComponent>(
@@ -126,7 +139,7 @@ void Entities::loadEntity(const dv::value& map) {
 void Entities::loadEntity(const dv::value& map, Entity entity) {
     auto& transform = entity.getTransform();
     auto& body = entity.getRigidbody();
-    auto& skeleton = entity.getSkeleton();
+    auto skeleton = entity.getSkeleton();
 
     if (map.has(COMP_RIGIDBODY)) {
         body.deserialize(map[COMP_RIGIDBODY]);
@@ -134,13 +147,16 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
     if (map.has(COMP_TRANSFORM)) {
         transform.deserialize(map[COMP_TRANSFORM]);
     }
-    std::string skeletonName = skeleton.config->getName();
+    if (skeleton == nullptr) {
+        return;
+    }
+    std::string skeletonName = skeleton->config->getName();
     map.at("skeleton").get(skeletonName);
-    if (skeletonName != skeleton.config->getName()) {
-        skeleton.config = level.content.getSkeleton(skeletonName);
+    if (skeletonName != skeleton->config->getName()) {
+        skeleton->config = assets->get<rigging::SkeletonConfig>(skeletonName);
     }
     if (auto foundSkeleton = map.at(COMP_SKELETON)) {
-        skeleton.deserialize(*foundSkeleton);
+        skeleton->deserialize(*foundSkeleton);
     }
 }
 
@@ -148,7 +164,7 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::vec3 start, glm::vec3 dir, float maxDistance, entityid_t ignore
 ) {
     Ray ray(start, dir);
-    auto view = registry.view<EntityId, Transform, Rigidbody>();
+    auto view = registry->view<EntityId, Transform, Rigidbody>();
 
     entityid_t foundUID = 0;
     glm::ivec3 foundNormal;
@@ -214,17 +230,17 @@ void Entities::despawn(std::vector<Entity> entities) {
 
 void Entities::clean() {
     for (auto it = entities.begin(); it != entities.end();) {
-        if (!registry.get<EntityId>(it->second).destroyFlag) {
+        if (!registry->get<EntityId>(it->second).destroyFlag) {
             ++it;
         } else {
-            auto& rigidbody = registry.get<Rigidbody>(it->second);
+            auto& rigidbody = registry->get<Rigidbody>(it->second);
             // todo: refactor
             auto physics = level.physics.get();
             for (auto& sensor : rigidbody.sensors) {
                 physics->removeSensor(&sensor);
             }
             uids.erase(it->second);
-            registry.destroy(it->second);
+            registry->destroy(it->second);
             it = entities.erase(it);
         }
     }
@@ -266,7 +282,7 @@ void Entities::preparePhysics(float delta) {
         auto part = sensorsTickClock.getPart();
         auto parts = sensorsTickClock.getParts();
 
-        auto view = registry.view<EntityId, Transform, Rigidbody>();
+        auto view = registry->view<EntityId, Transform, Rigidbody>();
         auto physics = level.physics.get();
         std::vector<Sensor*> sensors;
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
@@ -285,7 +301,7 @@ void Entities::preparePhysics(float delta) {
 void Entities::updatePhysics(float delta) {
     preparePhysics(delta);
 
-    auto view = registry.view<EntityId, Transform, Rigidbody>();
+    auto view = registry->view<EntityId, Transform, Rigidbody>();
     auto physics = level.physics.get();
     for (auto [entity, eid, transform, rigidbody] : view.each()) {
         if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::STATIC) {
@@ -351,7 +367,7 @@ void Entities::renderDebug(
     {
         auto ctx = pctx.sub(&batch);
         ctx.setLineWidth(1);
-        auto view = registry.view<Transform, Rigidbody>();
+        auto view = registry->view<Transform, Rigidbody>();
         for (auto [entity, transform, rigidbody] : view.each()) {
             const auto& hitbox = rigidbody.hitbox;
             const auto& pos = transform.pos;
@@ -374,7 +390,7 @@ void Entities::renderDebug(
         }
     }
     {
-        auto view = registry.view<Transform, rigging::Skeleton>();
+        auto view = registry->view<Transform, rigging::Skeleton>();
         auto ctx = pctx.sub(&batch);
         ctx.setDepthTest(false);
         ctx.setDepthMask(false);
@@ -400,7 +416,7 @@ void Entities::render(
     bool pause,
     entityid_t fpsEntity
 ) {
-    auto view = registry.view<EntityId, Transform, rigging::Skeleton>();
+    auto view = registry->view<EntityId, Transform, rigging::Skeleton>();
     for (auto [entity, eid, transform, skeleton] : view.each()) {
         if (eid.uid == fpsEntity) {
             continue;
@@ -425,7 +441,7 @@ void Entities::render(
 }
 
 bool Entities::hasBlockingInside(AABB aabb) {
-    auto view = registry.view<EntityId, Rigidbody>();
+    auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, body] : view.each()) {
         if (eid.def.blocking && aabb.intersect(body.hitbox.getAABB(), -0.05f)) {
             return true;
@@ -436,7 +452,7 @@ bool Entities::hasBlockingInside(AABB aabb) {
 
 std::vector<Entity> Entities::getAllInside(AABB aabb) {
     std::vector<Entity> collected;
-    auto view = registry.view<EntityId, Transform>();
+    auto view = registry->view<EntityId, Transform>();
     for (auto [entity, eid, transform] : view.each()) {
         if (!eid.destroyFlag && aabb.contains(transform.pos)) {
             const auto& found = uids.find(entity);
@@ -453,7 +469,7 @@ std::vector<Entity> Entities::getAllInside(AABB aabb) {
 
 std::vector<Entity> Entities::getAllInRadius(glm::vec3 center, float radius) {
     std::vector<Entity> collected;
-    auto view = registry.view<Transform>();
+    auto view = registry->view<Transform>();
     for (auto [entity, transform] : view.each()) {
         if (glm::distance2(transform.pos, center) <= radius * radius) {
             const auto& found = uids.find(entity);
