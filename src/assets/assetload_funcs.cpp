@@ -333,7 +333,23 @@ assetload::postfunc assetload::model(
     if (io::exists(path)) {
         auto bytes = io::read_bytes_buffer(path);
         auto modelVEC3 = std::make_shared<vec3::File>(vec3::load(path.string(), bytes));
-        return [loader, name, modelVEC3=std::move(modelVEC3)](Assets* assets) {
+        return [loader, name, cfg, modelVEC3=std::move(modelVEC3)](Assets* assets) {
+            if (cfg && cfg->squashed) {
+                model::Model fullModel;
+                for (auto& entry : modelVEC3->models) {
+                    auto& vec3model = entry.second;
+                    auto& model = vec3model.model;
+                    model.translate(vec3model.origin);
+                    fullModel.merge(std::move(model));
+                }
+                request_textures(loader, fullModel);
+                assets->store(
+                    std::make_unique<model::Model>(fullModel),
+                    name
+                );
+                logger.info() << "store model " << util::quote(name);
+                return;
+            }
             for (auto& [modelName, model] : modelVEC3->models) {
                 request_textures(loader, model.model);
                 std::string fullName = name;
