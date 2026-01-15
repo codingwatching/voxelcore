@@ -325,8 +325,10 @@ assetload::postfunc assetload::model(
     const ResPaths& paths,
     const std::string& file,
     const std::string& name,
-    const std::shared_ptr<AssetCfg>&
+    const std::shared_ptr<AssetCfg>& config
 ) {
+    auto cfg = std::dynamic_pointer_cast<ModelCfg>(config);
+
     auto path = paths.find(file + ".vec3");
     if (io::exists(path)) {
         auto bytes = io::read_bytes_buffer(path);
@@ -382,11 +384,40 @@ assetload::postfunc assetload::model(
     auto text = io::read_string(path);
     try {
         auto vcmModel = vcm::parse(path.string(), text, path.extension() == ".xml");
-        auto model = std::make_unique<model::Model>(std::move(vcmModel.squash())).release();
-        return [=](Assets* assets) {
-            request_textures(loader, *model);
-            assets->store(std::unique_ptr<model::Model>(model), name);
-        };
+
+        assert(vcmModel.parts.size() > 0);
+
+        if (vcmModel.parts.size() == 1 || (cfg && cfg->squashed)) {
+            auto modelPtr = std::make_unique<model::Model>(std::move(vcmModel.squash())).release();
+            return [=](Assets* assets) {
+                auto model = std::unique_ptr<model::Model>(modelPtr);
+                request_textures(loader, *model);
+                assets->store(std::move(model), name);
+                logger.info() << "store model " << util::quote(name);
+            };
+        } else {
+            auto vcmModelPtr = std::make_unique<vcm::VcmModel>(std::move(vcmModel)).release();
+            return [=](Assets* assets) {
+                auto vcmModel = std::unique_ptr<vcm::VcmModel>(vcmModelPtr);
+                for (auto& [partName, model] : vcmModel->parts) {
+                    auto fullName = name + "." + partName;
+                    logger.info()
+                        << "store model part " << util::quote(partName)
+                        << " as " << util::quote(fullName);
+                    assets->store(
+                        std::make_unique<model::Model>(std::move(model)),
+                        fullName
+                    );
+                }
+                logger.info() << "store skeleton " << util::quote(name);
+                assets->store<rigging::SkeletonConfig>(
+                    std::make_unique<rigging::SkeletonConfig>(
+                        std::move(*vcmModel->skeleton)
+                    ),
+                    name
+                );
+            };
+        }
     } catch (const parsing_error& err) {
         std::cerr << err.errorLog() << std::endl;
         throw;

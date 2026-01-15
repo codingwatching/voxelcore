@@ -181,6 +181,12 @@ void AssetsLoader::processPreload(
             config = std::make_shared<PostEffectCfg>(advanced);
             break;
         }
+        case AssetType::MODEL: {
+            bool squashed = false;
+            map.at("squash").get(squashed);
+            config = std::make_shared<ModelCfg>(squashed);
+            break;
+        }
         default:
             break;
     }
@@ -214,6 +220,7 @@ void AssetsLoader::processPreloadConfig(const io::path& file) {
     processPreloadList(AssetType::SOUND, root["sounds"]);
     processPreloadList(AssetType::MODEL, root["models"]);
     processPreloadList(AssetType::POST_EFFECT, root["post-effects"]);
+    processPreloadList(AssetType::SKELETON, root["skeletons"]);
     // layouts are loaded automatically
 }
 
