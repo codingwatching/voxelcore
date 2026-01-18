@@ -147,7 +147,7 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
     if (map.has(COMP_TRANSFORM)) {
         transform.deserialize(map[COMP_TRANSFORM]);
     }
-    if (skeleton == nullptr) {
+    if (skeleton == nullptr || skeleton->config == nullptr) {
         return;
     }
     std::string skeletonName = skeleton->config->getName();
@@ -397,6 +397,9 @@ void Entities::renderDebug(
         ctx.setLineWidth(2);
         for (auto [entity, transform, skeleton] : view.each()) {
             auto config = skeleton.config;
+            if (config == nullptr) {
+                continue;
+            }
             const auto& pos = transform.pos;
             const auto& size = transform.size;
             if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) {
@@ -434,9 +437,11 @@ void Entities::render(
         }
 
         const auto* rigConfig = skeleton.config;
-        rigConfig->render(
-            assets, batch, skeleton, transform.rot, pos, size
-        );
+        if (rigConfig) {
+            rigConfig->render(
+                assets, batch, skeleton, transform.rot, pos, size
+            );
+        }
     }
 }
 

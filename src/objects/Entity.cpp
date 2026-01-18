@@ -64,7 +64,7 @@ dv::value Entity::serialize() const {
     root[COMP_RIGIDBODY] =
         rigidbody.serialize(def.save.body.velocity, def.save.body.settings);
 
-    if (skeleton != nullptr) {
+    if (skeleton != nullptr && skeleton->config != nullptr) {
         if (skeleton->config->getName() != def.skeletonName) {
             root["skeleton-name"] = skeleton->config->getName();
         }
