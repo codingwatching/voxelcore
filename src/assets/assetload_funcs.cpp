@@ -325,13 +325,31 @@ assetload::postfunc assetload::model(
     const ResPaths& paths,
     const std::string& file,
     const std::string& name,
-    const std::shared_ptr<AssetCfg>&
+    const std::shared_ptr<AssetCfg>& config
 ) {
+    auto cfg = std::dynamic_pointer_cast<ModelCfg>(config);
+
     auto path = paths.find(file + ".vec3");
     if (io::exists(path)) {
         auto bytes = io::read_bytes_buffer(path);
         auto modelVEC3 = std::make_shared<vec3::File>(vec3::load(path.string(), bytes));
-        return [loader, name, modelVEC3=std::move(modelVEC3)](Assets* assets) {
+        return [loader, name, cfg, modelVEC3=std::move(modelVEC3)](Assets* assets) {
+            if (cfg && cfg->squashed) {
+                model::Model fullModel;
+                for (auto& entry : modelVEC3->models) {
+                    auto& vec3model = entry.second;
+                    auto& model = vec3model.model;
+                    model.translate(vec3model.origin);
+                    fullModel.merge(std::move(model));
+                }
+                request_textures(loader, fullModel);
+                assets->store(
+                    std::make_unique<model::Model>(fullModel),
+                    name
+                );
+                logger.info() << "store model " << util::quote(name);
+                return;
+            }
             for (auto& [modelName, model] : modelVEC3->models) {
                 request_textures(loader, model.model);
                 std::string fullName = name;
@@ -381,16 +399,74 @@ assetload::postfunc assetload::model(
 
     auto text = io::read_string(path);
     try {
-        auto model = vcm::parse(path.string(), text, path.extension() == ".xml")
-                         .release();
-        return [=](Assets* assets) {
-            request_textures(loader, *model);
-            assets->store(std::unique_ptr<model::Model>(model), name);
-        };
+        auto vcmModel = vcm::parse(path.string(), text, path.extension() == ".xml");
+
+        assert(vcmModel.parts.size() > 0);
+
+        if (vcmModel.parts.size() == 1 || (cfg && cfg->squashed)) {
+            auto modelPtr = std::make_unique<model::Model>(std::move(vcmModel.squash())).release();
+            return [=](Assets* assets) {
+                auto model = std::unique_ptr<model::Model>(modelPtr);
+                request_textures(loader, *model);
+                assets->store(std::move(model), name);
+                logger.info() << "store model " << util::quote(name);
+            };
+        } else {
+            auto vcmModelPtr = std::make_unique<vcm::VcmModel>(std::move(vcmModel)).release();
+            return [=](Assets* assets) {
+                auto vcmModel = std::unique_ptr<vcm::VcmModel>(vcmModelPtr);
+                for (auto& [partName, model] : vcmModel->parts) {
+                    auto fullName = name + "." + partName;
+                    logger.info()
+                        << "store model part " << util::quote(partName)
+                        << " as " << util::quote(fullName);
+                    assets->store(
+                        std::make_unique<model::Model>(std::move(model)),
+                        fullName
+                    );
+                }
+                for (auto& bone : vcmModel->skeleton->getBones()) {
+                    bone->setModel(name + "." + bone->model.name);
+                }
+                logger.info() << "store skeleton " << util::quote(name);
+                assets->store<rigging::SkeletonConfig>(
+                    std::make_unique<rigging::SkeletonConfig>(
+                        std::move(*vcmModel->skeleton)
+                    ),
+                    name
+                );
+            };
+        }
     } catch (const parsing_error& err) {
         std::cerr << err.errorLog() << std::endl;
         throw;
     }
+}
+
+assetload::postfunc assetload::skeleton(
+    AssetsLoader* loader,
+    const ResPaths& paths,
+    const std::string& file,
+    const std::string& name,
+    const std::shared_ptr<AssetCfg>& settings
+) {
+    return [=](auto assets) {
+        std::string text = io::read_string(file);
+        auto skeleton = rigging::SkeletonConfig::parse(text, file, name);
+        for (auto& bone : skeleton->getBones()) {
+            std::string model = bone->model.name;
+            size_t pos = model.rfind('.');
+            if (pos != std::string::npos) {
+                model = model.substr(0, pos);
+            }
+            if (!model.empty()) {
+                loader->add(
+                    AssetType::MODEL, MODELS_FOLDER + "/" + model, model
+                );
+            }
+        }
+        assets->store(std::move(skeleton), name);
+    };
 }
 
 static void read_anim_file(

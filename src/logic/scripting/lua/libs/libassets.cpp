@@ -57,11 +57,14 @@ static int l_parse_model(lua::State* L) {
     auto name = lua::require_string(L, 3);
     
     if (format == "xml" || format == "vcm") {
+        auto vcmModel = vcm::parse(name, string, format == "xml");
         engine->getAssets()->store(
-            vcm::parse(name, string, format == "xml"), name
+            std::make_unique<model::Model>(std::move(vcmModel.squash())), name
         );
     } else {
-        throw std::runtime_error("unknown format " + util::quote(std::string(format)));
+        throw std::runtime_error(
+            "unknown format " + util::quote(std::string(format))
+        );
     }
     return 0;
 }

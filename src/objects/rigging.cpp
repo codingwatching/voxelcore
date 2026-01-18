@@ -88,7 +88,7 @@ void Skeleton::deserialize(const dv::value& root) {
 
 static void get_all_nodes(std::vector<Bone*>& nodes, Bone* node) {
     nodes[node->getIndex()] = node;
-    for (auto& subnode : node->getSubnodes()) {
+    for (auto& subnode : node->getBones()) {
         get_all_nodes(nodes, subnode.get());
     }
 }
@@ -111,7 +111,7 @@ size_t SkeletonConfig::update(
     }
     skeleton.calculated.matrices[index] = matrix * baseMatrix * boneMatrix;
     size_t count = 1;
-    for (auto& subnode : node->getSubnodes()) {
+    for (auto& subnode : node->getBones()) {
         count += update(
             index + count,
             skeleton,
@@ -187,7 +187,7 @@ void SkeletonConfig::render(
     }
 }
 
-Bone* SkeletonConfig::find(std::string_view str) const {
+const Bone* SkeletonConfig::find(std::string_view str) const {
     for (size_t i = 0; i < nodes.size(); i++) {
         auto* node = nodes[i];
         if (node->getName() == str) {

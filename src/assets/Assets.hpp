@@ -24,7 +24,8 @@ enum class AssetType {
     LAYOUT,
     SOUND,
     MODEL,
-    POST_EFFECT
+    POST_EFFECT,
+    SKELETON
 };
 
 namespace assetload {

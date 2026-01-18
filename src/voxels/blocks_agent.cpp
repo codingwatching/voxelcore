@@ -41,7 +41,9 @@ static void on_chunk_register_event(
         if ((bits & 0x80) == 0) {
             const auto& def = indices.blocks.require(id);
             bits = get_events_bits(def);
-            flagsCache[id] = bits | 0x80;
+            if (id < sizeof(flagsCache)) {
+                flagsCache[id] = bits | 0x80;
+            }
         }
         bits &= 0x7F;
         if (bits == 0) {
