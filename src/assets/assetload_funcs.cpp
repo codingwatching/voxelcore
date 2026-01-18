@@ -425,6 +425,9 @@ assetload::postfunc assetload::model(
                         fullName
                     );
                 }
+                for (auto& bone : vcmModel->skeleton->getBones()) {
+                    bone->setModel(name + "." + bone->model.name);
+                }
                 logger.info() << "store skeleton " << util::quote(name);
                 assets->store<rigging::SkeletonConfig>(
                     std::make_unique<rigging::SkeletonConfig>(
