@@ -1,6 +1,7 @@
 #include "objects/rigging.hpp"
 #include "libentity.hpp"
 
+#include "engine/Engine.hpp"
 #include "graphics/render/WorldRenderer.hpp"
 #include "graphics/render/NamedSkeletons.hpp"
 
@@ -21,11 +22,14 @@ static int index_range_check(
 }
 
 static rigging::Skeleton* get_skeleton(lua::State* L) {
+    if (scripting::engine->isHeadless()) {
+        return nullptr;
+    }
     if (lua::isstring(L, 1)) {
         return scripting::renderer->skeletons->getSkeleton(lua::tostring(L, 1));
     }
     if (auto entity = get_entity(L, 1)) {
-        return &entity->getSkeleton();
+        return entity->getSkeleton();
     }
     return nullptr;
 }

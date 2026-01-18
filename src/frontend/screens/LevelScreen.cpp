@@ -26,6 +26,7 @@
 #include "logic/scripting/scripting_hud.hpp"
 #include "maths/voxmaths.hpp"
 #include "objects/Players.hpp"
+#include "objects/Entities.hpp"
 #include "physics/Hitbox.hpp"
 #include "util/stringutil.hpp"
 #include "voxels/Chunks.hpp"
@@ -49,6 +50,7 @@ LevelScreen::LevelScreen(
       gui(engine.getGUI()),
       input(engine.getInput()) {
     Level* level = levelPtr.get();
+    level->entities->setAssets(*engine.getAssets());
 
     auto& settings = engine.getSettings();
     auto& assets = *engine.getAssets();

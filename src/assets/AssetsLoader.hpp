@@ -59,6 +59,12 @@ struct PostEffectCfg : AssetCfg {
     PostEffectCfg(bool advanced) : advanced(advanced) {}
 };
 
+struct ModelCfg : AssetCfg {
+    bool squashed;
+
+    ModelCfg(bool squashed) : squashed(squashed) {}
+};
+
 using aloader_func = std::function<
     assetload::
         postfunc(AssetsLoader*, const ResPaths&, const std::string&, const std::string&, std::shared_ptr<AssetCfg>)>;

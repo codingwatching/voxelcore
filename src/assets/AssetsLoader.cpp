@@ -1,26 +1,26 @@
 #include "AssetsLoader.hpp"
 
-#include <iostream>
-#include <memory>
-#include <utility>
-
-#include "coders/imageio.hpp"
+#include "assetload_funcs.hpp"
+#include "Assets.hpp"
 #include "coders/commons.hpp"
+#include "coders/imageio.hpp"
 #include "constants.hpp"
 #include "content/Content.hpp"
 #include "content/ContentPack.hpp"
 #include "debug/Logger.hpp"
+#include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
-#include "io/io.hpp"
 #include "graphics/core/Texture.hpp"
+#include "io/io.hpp"
+#include "items/ItemDef.hpp"
 #include "logic/scripting/scripting.hpp"
+#include "objects/EntityDef.hpp"
 #include "objects/rigging.hpp"
 #include "util/ThreadPool.hpp"
 #include "voxels/Block.hpp"
-#include "items/ItemDef.hpp"
-#include "Assets.hpp"
-#include "assetload_funcs.hpp"
-#include "engine/Engine.hpp"
+
+#include <memory>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -36,6 +36,7 @@ AssetsLoader::AssetsLoader(Engine& engine, Assets& assets, const ResPaths& paths
     addLoader(AssetType::SOUND, assetload::sound);
     addLoader(AssetType::MODEL, assetload::model);
     addLoader(AssetType::POST_EFFECT, assetload::posteffect);
+    addLoader(AssetType::SKELETON, assetload::skeleton);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
@@ -141,6 +142,8 @@ static std::string assets_def_folder(AssetType tag) {
             return MODELS_FOLDER;
         case AssetType::POST_EFFECT:
             return POST_EFFECTS_FOLDER;
+        case AssetType::SKELETON:
+            return SKELETONS_FOLDER;
     }
     return "<error>";
 }
@@ -178,6 +181,12 @@ void AssetsLoader::processPreload(
             config = std::make_shared<PostEffectCfg>(advanced);
             break;
         }
+        case AssetType::MODEL: {
+            bool squashed = false;
+            map.at("squash").get(squashed);
+            config = std::make_shared<ModelCfg>(squashed);
+            break;
+        }
         default:
             break;
     }
@@ -211,6 +220,7 @@ void AssetsLoader::processPreloadConfig(const io::path& file) {
     processPreloadList(AssetType::SOUND, root["sounds"]);
     processPreloadList(AssetType::MODEL, root["models"]);
     processPreloadList(AssetType::POST_EFFECT, root["post-effects"]);
+    processPreloadList(AssetType::SKELETON, root["skeletons"]);
     // layouts are loaded automatically
 }
 
@@ -263,21 +273,20 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             add_layouts(pack->getEnvironment(), info.id, folder, loader);
         }
 
-        for (auto& entry : content->getSkeletons()) {
-            auto& skeleton = *entry.second;
-            for (auto& bone : skeleton.getBones()) {
-                std::string model = bone->model.name;
-                size_t pos = model.rfind('.');
-                if (pos != std::string::npos) {
-                    model = model.substr(0, pos);
-                }
-                if (!model.empty()) {
-                    loader.add(
-                        AssetType::MODEL, MODELS_FOLDER + "/" + model, model
-                    );
-                }
+        for (const auto& entry : content->getPacks()) {
+            io::path skeletonsDir = entry.first + ":skeletons";
+            if (!io::is_directory(skeletonsDir)) {
+                continue;
+            }
+            for (const auto& file : io::directory_iterator(skeletonsDir)) {
+                loader.add(
+                    AssetType::SKELETON,
+                    file.string(),
+                    entry.first + ":" + file.stem()
+                );
             }
         }
+
         for (const auto& [_, def] : content->blocks.getDefs()) {
             if (def->variants) {
                 for (const auto& variant : def->variants->variants) {
@@ -293,6 +302,16 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
                     AssetType::MODEL,
                     MODELS_FOLDER + "/" + def->modelName,
                     def->modelName
+                );
+            }
+        }
+        for (const auto& [_, def] : content->entities.getDefs()) {
+            if (def->skeletonName.find(':') == std::string::npos) {
+                // expecting a VCM with skeleton
+                loader.add(
+                    AssetType::MODEL,
+                    MODELS_FOLDER + "/" + def->skeletonName,
+                    def->skeletonName
                 );
             }
         }

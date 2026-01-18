@@ -68,7 +68,7 @@ namespace rigging {
             return offset;
         }
 
-        const auto& getSubnodes() const {
+        const auto& getBones() const {
             return bones;
         }
     };
@@ -138,7 +138,7 @@ namespace rigging {
             return Skeleton(this);
         }
 
-        Bone* find(std::string_view str) const;
+        const Bone* find(std::string_view str) const;
 
         static std::unique_ptr<SkeletonConfig> parse(
             std::string_view src, std::string_view file, std::string_view name

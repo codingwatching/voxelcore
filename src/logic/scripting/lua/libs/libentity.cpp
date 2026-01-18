@@ -1,5 +1,6 @@
 #include "libentity.hpp"
 
+#include "assets/Assets.hpp"
 #include "content/Content.hpp"
 #include "content/ContentPack.hpp"
 #include "engine/Engine.hpp"
@@ -82,7 +83,11 @@ static int l_despawn(lua::State* L) {
 
 static int l_get_skeleton(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        return lua::pushstring(L, entity->getSkeleton().config->getName());
+        auto skeleton = entity->getSkeleton();
+        if (skeleton == nullptr) {
+            return 0;
+        }
+        return lua::pushstring(L, skeleton->config->getName());
     }
     return 0;
 }
@@ -97,9 +102,13 @@ static int l_get_player(lua::State* L) {
 }
 
 static int l_set_skeleton(lua::State* L) {
+    auto assets = engine->getAssets();
+    if (assets == nullptr) {
+        return 0;
+    }
     if (auto entity = get_entity(L, 1)) {
         std::string skeletonName = lua::require_string(L, 2);
-        auto rigConfig = content->getSkeleton(skeletonName);
+        auto rigConfig = assets->get<rigging::SkeletonConfig>(skeletonName);
         if (rigConfig == nullptr) {
             throw std::runtime_error(
                 "skeleton not found '" + skeletonName + "'"
