@@ -1,26 +1,26 @@
 #include "AssetsLoader.hpp"
 
-#include <iostream>
-#include <memory>
-#include <utility>
-
-#include "coders/imageio.hpp"
+#include "assetload_funcs.hpp"
+#include "Assets.hpp"
 #include "coders/commons.hpp"
+#include "coders/imageio.hpp"
 #include "constants.hpp"
 #include "content/Content.hpp"
 #include "content/ContentPack.hpp"
 #include "debug/Logger.hpp"
+#include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
-#include "io/io.hpp"
 #include "graphics/core/Texture.hpp"
+#include "io/io.hpp"
+#include "items/ItemDef.hpp"
 #include "logic/scripting/scripting.hpp"
+#include "objects/EntityDef.hpp"
 #include "objects/rigging.hpp"
 #include "util/ThreadPool.hpp"
 #include "voxels/Block.hpp"
-#include "items/ItemDef.hpp"
-#include "Assets.hpp"
-#include "assetload_funcs.hpp"
-#include "engine/Engine.hpp"
+
+#include <memory>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -302,6 +302,16 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
                     AssetType::MODEL,
                     MODELS_FOLDER + "/" + def->modelName,
                     def->modelName
+                );
+            }
+        }
+        for (const auto& [_, def] : content->entities.getDefs()) {
+            if (def->skeletonName.find(':') == std::string::npos) {
+                // expecting a VCM with skeleton
+                loader.add(
+                    AssetType::MODEL,
+                    MODELS_FOLDER + "/" + def->skeletonName,
+                    def->skeletonName
                 );
             }
         }
