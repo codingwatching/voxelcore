@@ -66,7 +66,7 @@ dv::value Entity::serialize() const {
 
     if (skeleton != nullptr) {
         if (skeleton->config->getName() != def.skeletonName) {
-            root["skeleton"] = skeleton->config->getName();
+            root["skeleton-name"] = skeleton->config->getName();
         }
         if (def.save.skeleton.pose || def.save.skeleton.textures) {
             root[COMP_SKELETON] = skeleton->serialize(

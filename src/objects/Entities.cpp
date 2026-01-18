@@ -151,7 +151,7 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
         return;
     }
     std::string skeletonName = skeleton->config->getName();
-    map.at("skeleton").get(skeletonName);
+    map.at("skeleton-name").get(skeletonName);
     if (skeletonName != skeleton->config->getName()) {
         skeleton->config = assets->get<rigging::SkeletonConfig>(skeletonName);
     }
