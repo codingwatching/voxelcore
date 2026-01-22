@@ -750,7 +750,7 @@ void BlocksRenderer::build(const Chunk* chunk, const VoxelsVolume& volume) {
     size_t endIndex = indexCount;
     
     denseRender = true;
-    densePass = true;
+    densePass = settings.graphics.denseRender.get();
     render(voxels, beginEnds);
 
     denseIndexCount = indexCount;
