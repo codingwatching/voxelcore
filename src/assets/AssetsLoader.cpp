@@ -319,26 +319,25 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 }
 
 bool AssetsLoader::loadExternalTexture(
-    Assets* assets,
+    AssetsLoader& loader,
     const std::string& name,
     const std::vector<io::path>& alternatives
 ) {
-    if (assets->get<Texture>(name) != nullptr) {
+    if (loader.getAssets().get<Texture>(name) != nullptr) {
         return true;
     }
     for (auto& path : alternatives) {
-        if (io::exists(path)) {
-            try {
-                auto image = imageio::read(path);
-                assets->store(Texture::from(image.get()), name);
-                return true;
-            } catch (const std::exception& err) {
-                logger.error() << "error while loading external "
-                               << path.string() << ": " << err.what();
-            }
+        logger.info() << (path.string() + ".png");
+        if (io::exists(path.string() + ".png")) {
+            loader.add(AssetType::TEXTURE, path.string(), name, nullptr);
+            return true; // TODO: fallbacks support
         }
     }
     return false;
+}
+
+Assets& AssetsLoader::getAssets() {
+    return assets;
 }
 
 Engine& AssetsLoader::getEngine() {
@@ -376,6 +375,15 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
             [this](const assetload::postfunc& func) { func(&assets); }
         );
     pool->setOnComplete(std::move(onDone));
+    pool->setJobsSource([this]() -> std::optional<aloader_entry> {
+        if (entries.empty()) {
+            return std::nullopt;
+        }
+        aloader_entry entry = std::move(entries.front());
+        entries.pop();
+        return entry;
+    });
+
     while (!entries.empty()) {
         aloader_entry entry = std::move(entries.front());
         entries.pop();

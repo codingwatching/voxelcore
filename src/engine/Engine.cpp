@@ -4,48 +4,45 @@
 #define GLEW_STATIC
 #endif
 
-#include "debug/Logger.hpp"
-#include "assets/AssetsLoader.hpp"
+#include "AssetsManagement.hpp"
 #include "audio/audio.hpp"
+#include "coders/commons.hpp"
 #include "coders/GLSLExtension.hpp"
 #include "coders/toml.hpp"
-#include "coders/commons.hpp"
-#include "devtools/Editor.hpp"
-#include "devtools/Project.hpp"
-#include "devtools/DebuggingServer.hpp"
 #include "content/ContentControl.hpp"
 #include "core_defs.hpp"
-#include "io/io.hpp"
-#include "io/settings_io.hpp"
+#include "debug/Logger.hpp"
+#include "devtools/DebuggingServer.hpp"
+#include "devtools/Editor.hpp"
+#include "devtools/Project.hpp"
+#include "EnginePaths.hpp"
 #include "frontend/locale.hpp"
 #include "frontend/menu.hpp"
 #include "frontend/screens/Screen.hpp"
-#include "graphics/render/ModelsGenerator.hpp"
 #include "graphics/core/DrawContext.hpp"
 #include "graphics/core/Shader.hpp"
-#include "graphics/ui/GUI.hpp"
 #include "graphics/ui/elements/Menu.hpp"
-#include "logic/EngineController.hpp"
+#include "graphics/ui/GUI.hpp"
+#include "io/io.hpp"
+#include "io/settings_io.hpp"
 #include "logic/CommandsInterpreter.hpp"
-#include "logic/scripting/scripting.hpp"
+#include "logic/EngineController.hpp"
 #include "logic/scripting/scripting_hud.hpp"
+#include "logic/scripting/scripting.hpp"
+#include "Mainloop.hpp"
 #include "network/Network.hpp"
+#include "ServerMainloop.hpp"
 #include "util/platform.hpp"
+#include "util/stringutil.hpp"
 #include "window/input.hpp"
 #include "window/Window.hpp"
-#include "world/Level.hpp"
-#include "AssetsManagement.hpp"
-#include "Mainloop.hpp"
-#include "ServerMainloop.hpp"
 #include "WindowControl.hpp"
-#include "EnginePaths.hpp"
+#include "world/Level.hpp"
 
-#include <iostream>
 #include <assert.h>
 #include <glm/glm.hpp>
 #include <unordered_set>
 #include <functional>
-#include <utility>
 
 static debug::Logger logger("engine");
 
@@ -266,6 +263,7 @@ void Engine::applicationTick() {
 
 void Engine::updateFrontend() {
     double delta = time.getDelta();
+    assets->update();
     updateHotkeys();
     audio::update(delta);
     gui->act(delta, window->getSize());
@@ -419,6 +417,10 @@ EngineSettings& Engine::getSettings() {
 
 Assets* Engine::getAssets() {
     return assets->getStorage();
+}
+
+AssetsLoader& Engine::acquireBackgroundLoader() {
+    return assets->acquireBackgroundLoader();
 }
 
 EnginePaths& Engine::getPaths() {

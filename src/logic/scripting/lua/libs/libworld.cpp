@@ -56,13 +56,12 @@ static int l_get_list(lua::State* L) {
         lua::pushstring(L, name);
         lua::setfield(L, "name");
 
-        auto assets = engine->getAssets();
         std::string icon = "world#" + name + ".icon";
         if (!engine->isHeadless() && !AssetsLoader::loadExternalTexture(
-                assets,
+                engine->acquireBackgroundLoader(),
                 icon,
-                {worlds[i] / "icon.png",
-                 worlds[i] / "preview.png"}
+                {worlds[i] / "icon",
+                 worlds[i] / "preview"}
             )) {
             icon = "gui/no_world_icon";
         }

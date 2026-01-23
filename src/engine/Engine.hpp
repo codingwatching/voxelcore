@@ -10,6 +10,7 @@
 #include <string>
 
 class Assets;
+class AssetsLoader;
 class AssetsManagement;
 class ContentControl;
 class EngineController;
@@ -109,6 +110,8 @@ public:
     
     /// @brief Get active assets storage instance
     Assets* getAssets();
+
+    AssetsLoader& acquireBackgroundLoader();
 
     /// @brief Get writeable engine settings structure instance
     EngineSettings& getSettings();

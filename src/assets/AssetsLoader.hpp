@@ -124,10 +124,11 @@ public:
     static void addDefaults(AssetsLoader& loader, const Content* content);
 
     static bool loadExternalTexture(
-        Assets* assets,
+        AssetsLoader& loader,
         const std::string& name,
         const std::vector<io::path>& alternatives
     );
 
+    Assets& getAssets();
     Engine& getEngine();
 };
