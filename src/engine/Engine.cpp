@@ -34,6 +34,7 @@
 #include "window/input.hpp"
 #include "window/Window.hpp"
 #include "world/Level.hpp"
+#include "AssetsManagement.hpp"
 #include "Mainloop.hpp"
 #include "ServerMainloop.hpp"
 #include "WindowControl.hpp"
@@ -84,6 +85,7 @@ void Engine::onContentLoad() {
 }
 
 void Engine::initializeClient() {
+    assets = std::make_unique<AssetsManagement>(*this);
     windowControl = std::make_unique<WindowControl>(*this);
     auto [window, input] = windowControl->initialize();
 
@@ -305,7 +307,7 @@ void Engine::renderFrame() {
     screen->draw(time.getDelta());
 
     DrawContext ctx(nullptr, *window, nullptr);
-    gui->draw(ctx, *assets);
+    gui->draw(ctx, *assets->getStorage());
 }
 
 void Engine::saveSettings() {
@@ -363,33 +365,7 @@ void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
 }
 
 void Engine::loadAssets() {
-    logger.info() << "loading assets";
-    Shader::preprocessor->setPaths(&paths->resPaths);
-
-    auto content = this->content->get();
-
-    auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(*this, *new_assets, paths->resPaths);
-    AssetsLoader::addDefaults(loader, content);
-
-    // no need
-    // correct log messages order is more useful
-    // todo: before setting to true, check if GLSLExtension thread safe
-    bool threading = false; // look at three upper lines
-    if (threading) {
-        auto task = loader.startTask([=](){});
-        task->waitForEnd();
-    } else {
-        while (loader.hasNext()) {
-            loader.loadNext();
-        }
-    }
-    assets = std::move(new_assets);
-    if (content) {
-        ModelsGenerator::prepare(*content, *assets);
-    }
-    assets->setup();
-    gui->onAssetsLoad(assets.get());
+    assets->loadAssets(content->get());
 }
 
 void Engine::loadProject() {
@@ -442,7 +418,7 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-    return assets.get();
+    return assets->getStorage();
 }
 
 EnginePaths& Engine::getPaths() {
