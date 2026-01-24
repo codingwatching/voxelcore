@@ -25,6 +25,7 @@ function tb_frame_tostring(frame)
 end
 
 local __vc__app_script_coroutine
+local __vc__is_post_runnable = false
 
 local function complete_app_lib(app)
     local __app_load_content = app.load_content
@@ -44,6 +45,10 @@ local function complete_app_lib(app)
     app.tick = __app_tick
 
     local function call_in_app_script_co(func, ...)
+        if __vc__is_post_runnable then
+            func(...)
+            return
+        end
         local running = coroutine.running()
         if not running or running ~= __vc__app_script_coroutine then
             error("content must be reload in application script coroutine")
@@ -513,7 +518,7 @@ local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
-function __process_post_runnables()
+local function __vc__process_post_runnables()
     if #__post_runnables then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __vc__error)
@@ -545,6 +550,15 @@ function __process_post_runnables()
         block.__process_register_events()
         block.__perform_ticks(time.delta())
     end
+end
+
+function __process_post_runnables()
+    __vc__is_post_runnable = true
+    local success, err = pcall(__vc__process_post_runnables)
+    if not success then
+        debug.error("an error ocurred while processing post-runnables: ".. err)
+    end
+    __vc__is_post_runnable = false
 end
 
 function time.post_runnable(runnable)

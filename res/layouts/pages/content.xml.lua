@@ -28,7 +28,9 @@ local function include(id, is_include)
 end
 
 function apply()
-    core.reconfig_packs(add_packs, rem_packs)
+    time.post_runnable(function ()
+        app.reconfig_packs(add_packs, rem_packs)
+    end)
     if mode ~= "world" then
         menu:back()
     end
