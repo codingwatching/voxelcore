@@ -276,8 +276,8 @@ void EngineController::createWorld(
     auto folder = paths.getWorldsFolder() / name;
 
     call(engine, [this, &paths, folder]() {
-        engine.getContentControl().loadContent();
         paths.setCurrentWorldFolder(folder);
+        engine.getContentControl().loadContent();
     });
 
     auto& contentControl = engine.getContentControl();
