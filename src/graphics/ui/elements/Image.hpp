@@ -14,7 +14,6 @@ namespace gui {
         std::string fallback;
         UVRegion region {};
         bool autoresize = false;
-        bool isFallback = false;
 
         util::TextureRegion refreshTexture(const Assets& assets);
     public:
