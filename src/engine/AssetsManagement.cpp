@@ -12,7 +12,9 @@
 
 static debug::Logger logger("assets-management");
 
-AssetsManagement::AssetsManagement(Engine& engine) : engine(engine) {}
+AssetsManagement::AssetsManagement(Engine& engine)
+    : engine(engine), settings(engine.getSettings()) {
+}
 
 AssetsManagement::~AssetsManagement() {
     finishBackgroundLoader();
@@ -36,7 +38,9 @@ AssetsLoader& AssetsManagement::acquireBackgroundLoader() {
     backgroundLoader = std::make_unique<AssetsLoader>(
         engine, *assets, engine.getResPaths()
     );
-    backgroundLoaderTask = backgroundLoader->startTask(nullptr);
+    backgroundLoaderTask = backgroundLoader->startTask(
+        nullptr, settings.system.maxBgAssetLoaders.get()
+    );
     return *backgroundLoader;
 }
 
@@ -56,7 +60,9 @@ void AssetsManagement::loadAssets(Content* content) {
     // todo: before setting to true, check if GLSLExtension thread safe 
     bool threading = false; // look at three upper lines
     if (threading) {
-        auto task = loader.startTask([=](){});
+        auto task = loader.startTask(
+            [=]() {}, 0
+        );
         task->waitForEnd();
     } else {
         while (loader.hasNext()) {

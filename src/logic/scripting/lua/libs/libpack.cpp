@@ -90,7 +90,7 @@ static int l_pack_get_info(
         auto& assetsLoader = engine->acquireBackgroundLoader();
         std::string icon = pack.id + ".icon";
         if (!AssetsLoader::loadExternalTexture(
-                assetsLoader, icon, {pack.folder / "icon"}
+                assetsLoader, icon, {pack.folder / "icon.png"}
             )) {
             icon = "gui/no_icon";
         }

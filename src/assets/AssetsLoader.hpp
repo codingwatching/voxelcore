@@ -113,7 +113,7 @@ public:
     /// @throws assetload::error
     void loadNext();
 
-    std::shared_ptr<Task> startTask(runnable onDone);
+    std::shared_ptr<Task> startTask(runnable onDone, int maxWorkers);
 
     const ResPaths& getPaths() const;
     aloader_func getLoader(AssetType tag);

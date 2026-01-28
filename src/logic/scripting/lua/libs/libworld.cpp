@@ -60,8 +60,8 @@ static int l_get_list(lua::State* L) {
         if (!engine->isHeadless() && !AssetsLoader::loadExternalTexture(
                 engine->acquireBackgroundLoader(),
                 icon,
-                {worlds[i] / "icon",
-                 worlds[i] / "preview"}
+                {worlds[i] / "icon.png",
+                 worlds[i] / "preview.png"}
             )) {
             icon = "gui/no_world_icon";
         }

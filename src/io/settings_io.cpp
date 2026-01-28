@@ -94,6 +94,9 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
     builder.add("do-write-lights", &settings.debug.doWriteLights);
     builder.add("do-trace-shaders", &settings.debug.doTraceShaders);
     builder.add("enable-experimental", &settings.debug.enableExperimental);
+
+    builder.addSection("system");
+    builder.add("max-bg-asset-loaders", &settings.system.maxBgAssetLoaders);
 }
 
 dv::value SettingsHandler::getValue(const std::string& name) const {

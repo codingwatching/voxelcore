@@ -371,12 +371,13 @@ public:
     }
 };
 
-std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
+std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone, int maxWorkers) {
     auto pool =
         std::make_shared<util::ThreadPool<aloader_entry, assetload::postfunc>>(
             "assets-loader-pool",
             [=]() { return std::make_shared<LoaderWorker>(this); },
-            [this](const assetload::postfunc& func) { func(&assets); }
+            [this](const assetload::postfunc& func) { func(&assets); },
+            maxWorkers
         );
     pool->setOnComplete(std::move(onDone));
     pool->setJobsSource([this]() -> std::optional<aloader_entry> {

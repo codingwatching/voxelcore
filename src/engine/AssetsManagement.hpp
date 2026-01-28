@@ -8,6 +8,7 @@ class AssetsLoader;
 class Engine;
 class Content;
 class Task;
+struct EngineSettings;
 
 class AssetsManagement final {
 public:
@@ -25,6 +26,7 @@ private:
     void finishBackgroundLoader();
 
     Engine& engine;
+    const EngineSettings& settings;
     std::unique_ptr<Assets> assets;
     std::unique_ptr<AssetsLoader> backgroundLoader;
     std::shared_ptr<Task> backgroundLoaderTask;
