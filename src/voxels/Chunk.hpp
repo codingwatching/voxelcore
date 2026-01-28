@@ -40,6 +40,8 @@ public:
         bool dirtyHeights : 1;
     } flags {};
 
+    uint64_t lastRandomTickId = -1;
+
     /// @brief Block inventories map where key is index of block in voxels array
     ChunkInventoriesMap inventories;
     /// @brief Blocks metadata heap
