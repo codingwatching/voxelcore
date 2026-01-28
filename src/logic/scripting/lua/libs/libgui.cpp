@@ -397,6 +397,13 @@ static int p_get_src(UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_fallback(UINode* node, lua::State* L) {
+    if (auto image = dynamic_cast<Image*>(node)) {
+        return lua::pushstring(L, image->getFallback());
+    }
+    return 0;
+}
+
 static int p_get_region(UINode* node, lua::State* L) {
     if (auto image = dynamic_cast<Image*>(node)) {
         const auto& region = image->getRegion();
@@ -663,6 +670,7 @@ static int l_gui_getattr(lua::State* L) {
             {"syntax", p_get_syntax},
             {"markup", p_get_markup},
             {"src", p_get_src},
+            {"fallback", p_get_fallback},
             {"value", p_get_value},
             {"min", p_get_min},
             {"max", p_get_max},
@@ -788,6 +796,11 @@ static void p_set_src(UINode* node, lua::State* L, int idx) {
         iframe->setSrc(lua::require_string(L, idx));
     } else if (auto modelviewer = dynamic_cast<ModelViewer*>(node)) {
         modelviewer->setModel(lua::require_string(L, idx));
+    }
+}
+static void p_set_fallback(UINode* node, lua::State* L, int idx) {
+    if (auto image = dynamic_cast<Image*>(node)) {
+        image->setFallback(lua::require_string(L, idx));
     }
 }
 static void p_set_region(UINode* node, lua::State* L, int idx) {
@@ -962,6 +975,7 @@ static int l_gui_setattr(lua::State* L) {
             {"syntax", p_set_syntax},
             {"markup", p_set_markup},
             {"src", p_set_src},
+            {"fallback", p_set_fallback},
             {"caret", p_set_caret},
             {"value", p_set_value},
             {"min", p_set_min},

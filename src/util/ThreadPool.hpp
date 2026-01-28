@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <optional>
 #include <condition_variable>
 #include <functional>
 #include <iostream>
@@ -48,6 +49,7 @@ namespace util {
         std::atomic<int> busyWorkers = 0;
         std::atomic<uint> jobsDone = 0;
         std::atomic<bool> working = true;
+        supplier<std::optional<T>> jobsSource = nullptr;
         bool failed = false;
         bool standaloneResults = true;
         bool stopOnFail = true;
@@ -151,6 +153,10 @@ namespace util {
             return working;
         }
 
+        void setJobsSource(supplier<std::optional<T>>&& source) {
+            jobsSource = std::move(source);
+        }
+
         void terminate() override {
             if (!working) {
                 return;
@@ -219,6 +225,22 @@ namespace util {
                         onComplete();
                         complete = true;
                     }
+                }
+            }
+            if (jobsSource) {
+                bool jobsAdded = false;
+                std::lock_guard<std::mutex> jobsLock(jobsMutex);
+                while (true) {
+                    auto job = jobsSource();
+                    if (job.has_value()) {
+                        jobs.push(std::move(job.value()));
+                        jobsAdded = true;
+                    } else {
+                        break;
+                    }
+                }
+                if (jobsAdded) {
+                    jobsMutexCondition.notify_one();
                 }
             }
             if (failed) {

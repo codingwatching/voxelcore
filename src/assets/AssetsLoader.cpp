@@ -319,26 +319,29 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 }
 
 bool AssetsLoader::loadExternalTexture(
-    Assets* assets,
+    AssetsLoader& loader,
     const std::string& name,
     const std::vector<io::path>& alternatives
 ) {
-    if (assets->get<Texture>(name) != nullptr) {
+    if (loader.getAssets().get<Texture>(name) != nullptr) {
         return true;
     }
     for (auto& path : alternatives) {
         if (io::exists(path)) {
-            try {
-                auto image = imageio::read(path);
-                assets->store(Texture::from(image.get()), name);
-                return true;
-            } catch (const std::exception& err) {
-                logger.error() << "error while loading external "
-                               << path.string() << ": " << err.what();
-            }
+            loader.add(
+                AssetType::TEXTURE,
+                (path.parent() / path.stem()).string(),
+                name,
+                nullptr
+            );
+            return true;
         }
     }
     return false;
+}
+
+Assets& AssetsLoader::getAssets() {
+    return assets;
 }
 
 Engine& AssetsLoader::getEngine() {
@@ -368,14 +371,24 @@ public:
     }
 };
 
-std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
+std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone, int maxWorkers) {
     auto pool =
         std::make_shared<util::ThreadPool<aloader_entry, assetload::postfunc>>(
             "assets-loader-pool",
             [=]() { return std::make_shared<LoaderWorker>(this); },
-            [this](const assetload::postfunc& func) { func(&assets); }
+            [this](const assetload::postfunc& func) { func(&assets); },
+            maxWorkers
         );
     pool->setOnComplete(std::move(onDone));
+    pool->setJobsSource([this]() -> std::optional<aloader_entry> {
+        if (entries.empty()) {
+            return std::nullopt;
+        }
+        aloader_entry entry = std::move(entries.front());
+        entries.pop();
+        return entry;
+    });
+
     while (!entries.empty()) {
         aloader_entry entry = std::move(entries.front());
         entries.pop();

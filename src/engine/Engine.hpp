@@ -10,6 +10,8 @@
 #include <string>
 
 class Assets;
+class AssetsLoader;
+class AssetsManagement;
 class ContentControl;
 class EngineController;
 class EnginePaths;
@@ -52,7 +54,7 @@ class Engine : public util::ObjectsKeeper {
     std::unique_ptr<EnginePaths> paths;
     std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
-    std::unique_ptr<Assets> assets;
+    std::unique_ptr<AssetsManagement> assets;
     std::shared_ptr<Screen> screen;
     std::unique_ptr<ContentControl> content;
     std::unique_ptr<EngineController> controller;
@@ -108,6 +110,8 @@ public:
     
     /// @brief Get active assets storage instance
     Assets* getAssets();
+
+    AssetsLoader& acquireBackgroundLoader();
 
     /// @brief Get writeable engine settings structure instance
     EngineSettings& getSettings();

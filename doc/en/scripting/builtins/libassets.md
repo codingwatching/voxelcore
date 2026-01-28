@@ -5,6 +5,13 @@ A library for working with audio/visual assets.
 ## Functions
 
 ```lua
+-- Requests background texture loading
+assets.request_texture(
+    -- Image file
+    filename: string,
+    -- Texture name after loading
+    name: string,
+)
 -- Loads a texture
 assets.load_texture(
     -- Array of bytes of an image file

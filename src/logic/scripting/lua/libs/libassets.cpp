@@ -1,6 +1,7 @@
 #include "api_lua.hpp"
 
 #include "assets/Assets.hpp"
+#include "assets/AssetsLoader.hpp"
 #include "coders/png.hpp"
 #include "coders/vcm.hpp"
 #include "debug/Logger.hpp"
@@ -22,6 +23,14 @@ static void load_texture(
         debug::Logger logger("lua.assetslib");
         logger.error() << err.what();
     }
+}
+
+static int l_request_texture(lua::State* L) {
+    std::string filename = lua::require_string(L, 1);
+    std::string alias = lua::require_string(L, 2);
+    auto& loader = engine->acquireBackgroundLoader();
+    loader.add(AssetType::TEXTURE, filename, alias);
+    return 0;
 }
 
 static int l_load_texture(lua::State* L) {
@@ -108,6 +117,7 @@ static int l_to_canvas(lua::State* L) {
 }
 
 const luaL_Reg assetslib[] = {
+    {"request_texture", lua::wrap<l_request_texture>},
     {"load_texture", lua::wrap<l_load_texture>},
     {"parse_model", lua::wrap<l_parse_model>},
     {"to_canvas", lua::wrap<l_to_canvas>},

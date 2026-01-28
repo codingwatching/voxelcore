@@ -115,6 +115,10 @@ struct UiSettings {
 struct NetworkSettings {
 };
 
+struct SystemSettings {
+    IntegerSetting maxBgAssetLoaders {3, -4, 16};
+};
+
 struct EngineSettings {
     AudioSettings audio;
     DisplaySettings display;
@@ -125,4 +129,5 @@ struct EngineSettings {
     UiSettings ui;
     NetworkSettings network;
     PathfindingSettings pathfinding;
+    SystemSettings system;
 };
