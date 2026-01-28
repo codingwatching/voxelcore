@@ -327,10 +327,14 @@ bool AssetsLoader::loadExternalTexture(
         return true;
     }
     for (auto& path : alternatives) {
-        logger.info() << (path.string() + ".png");
-        if (io::exists(path.string() + ".png")) {
-            loader.add(AssetType::TEXTURE, path.string(), name, nullptr);
-            return true; // TODO: fallbacks support
+        if (io::exists(path)) {
+            loader.add(
+                AssetType::TEXTURE,
+                (path.parent() / path.stem()).string(),
+                name,
+                nullptr
+            );
+            return true;
         }
     }
     return false;
