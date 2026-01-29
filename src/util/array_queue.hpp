@@ -9,19 +9,20 @@ namespace util {
     class array_queue {
     public:
         array_queue(size_t initCapacity = 8)
-        : _capacity(initCapacity),
-            _size(0),
-            _front(0),
-            _back(0),
-            _data(new T[_capacity]) {
+            : _capacity(initCapacity),
+              _size(0),
+              _front(0),
+              _back(0),
+              _data(std::make_unique<T[]>(_capacity)) {
             if (initCapacity == 0 || (initCapacity & (initCapacity - 1)) != 0) {
                 throw std::invalid_argument("initCapacity must be positive power of 2");
             }
         }
 
         ~array_queue() {
-            // todo
-            delete[] _data;
+            while (!empty()) {
+                pop();
+            }
         }
 
         void push(T&& value) {
@@ -56,20 +57,19 @@ namespace util {
         size_t _size;
         size_t _front;
         size_t _back;
-        T* _data;
+        std::unique_ptr<T[]> _data;
 
         void grow() {
             size_t newCapacity = _capacity * 2;
-            T* newData = new T[newCapacity];
+            auto newData = std::make_unique<T[]>(newCapacity);
 
-            std::move(_data + _front, _data + _capacity, newData);
-            std::move(_data, _data + _front, newData + (_capacity - _front));
+            std::move(_data.get() + _front, _data.get() + _capacity, newData.get());
+            std::move(_data.get(), _data.get() + _front, newData.get() + (_capacity - _front));
 
             _back = _size;
             _front = 0;
 
-            delete[] _data;
-            _data = newData;
+            _data.reset(newData.release());
             _capacity = newCapacity;
         }
     };
