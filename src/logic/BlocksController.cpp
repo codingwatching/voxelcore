@@ -1,7 +1,5 @@
 #include "BlocksController.hpp"
 
-#include <set>
-
 #include "content/Content.hpp"
 #include "items/Inventories.hpp"
 #include "items/Inventory.hpp"
@@ -175,12 +173,8 @@ void BlocksController::randomTick(
 void BlocksController::randomTick(int tickid, int parts, uint padding) {
     auto indices = level.content.getIndices();
 
-    std::set<uint64_t> chunksIterated;
-
     for (const auto& [pid, player] : *level.players) {
         const auto& chunks = *player->chunks;
-        int offsetX = chunks.getOffsetX();
-        int offsetY = chunks.getOffsetY();
         int width = chunks.getWidth();
         int height = chunks.getHeight();
         int segments = 4;
@@ -195,20 +189,15 @@ void BlocksController::randomTick(int tickid, int parts, uint padding) {
                 if (chunk == nullptr || !chunk->flags.lighted) {
                     continue;
                 }
-                union {
-                    int32_t pos[2];
-                    uint64_t key;
-                } posU;
-                posU.pos[0] = x + offsetX;
-                posU.pos[1] = z + offsetY;
-                if (chunksIterated.find(posU.key) != chunksIterated.end()) {
+                if (chunk->lastRandomTickId == randomTickId) {
                     continue;
                 }
-                chunksIterated.insert(posU.key);
+                chunk->lastRandomTickId = randomTickId;
                 randomTick(*chunk, segments, indices);
             }
         }
     }
+    randomTickId++;
 }
 
 int64_t BlocksController::createBlockInventory(int x, int y, int z) {

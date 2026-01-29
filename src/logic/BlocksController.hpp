@@ -33,6 +33,7 @@ class BlocksController {
     util::Clock worldTickClock;
     FastRandom random {};
     std::vector<on_block_interaction> blockInteractionCallbacks;
+    uint64_t randomTickId = 0;
 public:
     BlocksController(const Level& level, Lighting* lighting);
 

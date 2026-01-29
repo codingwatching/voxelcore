@@ -741,7 +741,7 @@ void BlocksRenderer::build(
     size_t endIndex = indexCount;
     
     denseRender = true;
-    densePass = true;
+    densePass = settings.graphics.denseRender.get();
     render(voxels, beginEnds);
 
     denseIndexCount = indexCount;

@@ -120,6 +120,7 @@ Inner text is a button text.
 
 - `src` - name of an image stored in textures folder. Extension is not specified. Type: string.
   Example: *gui/error*
+- `fallback` - a fallback texture displayed when the main texture is missing / loading.
 - `region` - image region x1, y1, x2, y2 from 0.0, 0.0 (upper left corner), 1.0, 1.0 (lower right corner)
 
 ## *canvas*

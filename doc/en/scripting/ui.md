@@ -167,10 +167,11 @@ Properties:
 
 Properties:
 
-| Name   | Type   | Read | Write | Description      |
-| ------ | ------ | ---- | ----- | ---------------- |
-| src    | string | yes  | yes   | texture name     |
-| region | vec4   | yes  | yes   | image sub-region |
+| Name     | Type   | Read | Write | Description      |
+| -------- | ------ | ---- | ----- | ---------------- |
+| src      | string | yes  | yes   | texture name     |
+| fallback | string | yes  | yes   | fallback texture |
+| region   | vec4   | yes  | yes   | image sub-region |
 
 ## Canvas
 
