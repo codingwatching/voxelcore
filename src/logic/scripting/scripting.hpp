@@ -23,7 +23,9 @@ struct ItemDef;
 class Inventory;
 class UiDocument;
 struct BlockFuncsSet;
+struct BlockFuncNamesCache;
 struct ItemFuncsSet;
+struct ItemFuncNamesCache;
 struct WorldFuncsSet;
 struct UserComponent;
 struct uidocscript;
@@ -168,7 +170,8 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        BlockFuncsSet& funcsset
+        BlockFuncsSet& funcsset,
+        BlockFuncNamesCache& namesCache
     );
 
     /// @brief Load script associated with an Item
@@ -182,7 +185,8 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        ItemFuncsSet& funcsset
+        ItemFuncsSet& funcsset,
+        ItemFuncNamesCache& namesCache
     );
 
     /// @brief Load component script

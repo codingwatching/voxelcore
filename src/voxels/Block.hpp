@@ -54,6 +54,11 @@ struct BlockFuncsSet {
     bool onblockremoved : 1;
 };
 
+struct BlockFuncNamesCache {
+    std::string update;
+    std::string randomUpdate;
+};
+
 struct CoordSystem {
     std::array<glm::ivec3, 3> axes;
     /// @brief Grid 3d position fix offset (for negative vectors)
@@ -296,6 +301,8 @@ public:
         blockid_t surfaceReplacement = 0;
 
         std::set<int> tags;
+
+        BlockFuncNamesCache eventNames;
     } rt {};
 
     Block(const std::string& name);

@@ -40,6 +40,8 @@ public:
         bool dirtyHeights : 1;
     } flags {};
 
+    uint64_t lastRandomTickId = -1;
+
     /// @brief Block inventories map where key is index of block in voxels array
     ChunkInventoriesMap inventories;
     /// @brief Blocks metadata heap
@@ -80,5 +82,11 @@ public:
             glm::vec3(x * CHUNK_W, -INFINITY, z * CHUNK_D),
             glm::vec3((x + 1) * CHUNK_W, INFINITY, (z + 1) * CHUNK_D)
         );
+    }
+
+    bool isBlockInside(int x, int z) const {
+        x -= this->x * CHUNK_W;
+        z -= this->z * CHUNK_D;
+        return x >= 0 && z >= 0 && x < CHUNK_W && z < CHUNK_D;
     }
 };

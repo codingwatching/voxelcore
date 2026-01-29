@@ -441,7 +441,8 @@ static void load_script(const Content& content, T& def) {
             def.name,
             scriptfile,
             def.scriptFile,
-            def.rt.funcsset
+            def.rt.funcsset,
+            def.rt.eventNames
         );
     }
 }
