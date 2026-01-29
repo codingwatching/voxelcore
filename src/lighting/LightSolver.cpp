@@ -1,6 +1,3 @@
-#include <iostream>
-#include <assert.h>
-
 #include "LightSolver.hpp"
 #include "Lightmap.hpp"
 #include "content/Content.hpp"
@@ -8,6 +5,8 @@
 #include "voxels/Chunk.hpp"
 #include "voxels/voxel.hpp"
 #include "voxels/Block.hpp"
+
+#include <assert.h>
 
 LightSolver::LightSolver(const ContentIndices& contentIds, Chunks& chunks, int channel) 
     : blockDefs(contentIds.blocks.getDefs()),
@@ -55,7 +54,7 @@ void LightSolver::remove(int x, int y, int z) {
     lightmap.set(x-chunk->x*CHUNK_W, y, z-chunk->z*CHUNK_D, channel, 0);
 }
 
-void LightSolver::solve() {
+void LightSolver::solve(Chunk* prevailingChunk) {
     const int coords[] = {
             0, 0, 1,
             0, 0,-1,
@@ -75,10 +74,16 @@ void LightSolver::solve() {
             int y = entry.y+coords[imul3+1];
             int z = entry.z+coords[imul3+2];
             
-            Chunk* chunk = chunks.getChunkByVoxel(x,y,z);
-            if (chunk == nullptr) {
+            Chunk* chunk = prevailingChunk;
+            if (chunk == nullptr || !chunk->isBlockInside(x, z)) {
+                chunk = chunks.getChunkByVoxel(x,y,z);
+                if (chunk == nullptr) {
+                    continue;
+                }
+            } else if (y < 0 || y >= CHUNK_H) {
                 continue;
             }
+
             int lx = x - chunk->x * CHUNK_W;
             int lz = z - chunk->z * CHUNK_D;
             chunk->flags.modified = true;
@@ -116,10 +121,16 @@ void LightSolver::solve() {
             int y = entry.y+coords[imul3+1];
             int z = entry.z+coords[imul3+2];
 
-            Chunk* chunk = chunks.getChunkByVoxel(x,y,z);
-            if (chunk == nullptr) {
+            Chunk* chunk = prevailingChunk;
+            if (chunk == nullptr || !chunk->isBlockInside(x, z)) {
+                chunk = chunks.getChunkByVoxel(x,y,z);
+                if (chunk == nullptr) {
+                    continue;
+                }
+            } else if (y < 0 || y >= CHUNK_H) {
                 continue;
             }
+
             assert(chunk->lightmap != nullptr);
             auto& lightmap = *chunk->lightmap;
             int lx = x - chunk->x * CHUNK_W;

@@ -83,4 +83,10 @@ public:
             glm::vec3((x + 1) * CHUNK_W, INFINITY, (z + 1) * CHUNK_D)
         );
     }
+
+    bool isBlockInside(int x, int z) const {
+        x -= this->x * CHUNK_W;
+        z -= this->z * CHUNK_D;
+        return x >= 0 && z >= 0 && x < CHUNK_W && z < CHUNK_D;
+    }
 };

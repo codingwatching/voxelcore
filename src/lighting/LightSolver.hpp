@@ -2,6 +2,7 @@
 
 #include "util/array_queue.hpp"
 
+class Chunk;
 class Chunks;
 class ContentIndices;
 class Block;
@@ -25,5 +26,5 @@ public:
     void add(int x, int y, int z);
     void add(int x, int y, int z, int emission);
     void remove(int x, int y, int z);
-    void solve();
+    void solve(Chunk* prevailingChunk = nullptr);
 };
