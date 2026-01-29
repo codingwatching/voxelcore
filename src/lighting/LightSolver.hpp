@@ -1,6 +1,6 @@
 #pragma once
 
-#include <queue>
+#include "util/array_queue.hpp"
 
 class Chunks;
 class ContentIndices;
@@ -14,8 +14,8 @@ struct lightentry {
 };
 
 class LightSolver {
-    std::queue<lightentry> addqueue;
-    std::queue<lightentry> remqueue;
+    util::array_queue<lightentry> addqueue;
+    util::array_queue<lightentry> remqueue;
     const Block* const* blockDefs;
     Chunks& chunks;
     int channel;
