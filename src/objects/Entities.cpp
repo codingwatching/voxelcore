@@ -341,6 +341,16 @@ void Entities::update(float delta) {
     }
     updatePhysics(delta);
     scripting::on_entities_physics_update(delta);
+
+    auto view = registry->view<Transform, rigging::Skeleton>();
+    for (auto [entity, transform, skeleton] : view.each()) {
+        if (transform.dirty) {
+            transform.refresh();
+        }
+        if (skeleton.interpolation.isEnabled()) {
+            skeleton.interpolation.updateTimer(delta);
+        }
+    }
 }
 
 static void debug_render_skeleton(
@@ -415,20 +425,12 @@ void Entities::render(
     const Assets& assets,
     ModelBatch& batch,
     const Frustum* frustum,
-    float delta,
-    bool pause,
     entityid_t fpsEntity
 ) {
     auto view = registry->view<EntityId, Transform, rigging::Skeleton>();
     for (auto [entity, eid, transform, skeleton] : view.each()) {
         if (eid.uid == fpsEntity) {
             continue;
-        }
-        if (transform.dirty) {
-            transform.refresh();
-        }
-        if (skeleton.interpolation.isEnabled()) {
-            skeleton.interpolation.updateTimer(delta);
         }
         const auto& pos = transform.pos;
         const auto& size = transform.size;

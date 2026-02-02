@@ -69,8 +69,6 @@ public:
         const Assets& assets,
         ModelBatch& batch,
         const Frustum* frustum,
-        float delta,
-        bool pause,
         entityid_t fpsEntity
     );
 

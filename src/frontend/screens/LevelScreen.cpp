@@ -184,7 +184,7 @@ void LevelScreen::saveWorldPreview() {
              static_cast<uint>(previewSize)}
         );
 
-        renderer->renderFrame(ctx, camera, false, true, 0.0f, *postProcessing);
+        renderer->renderFrame(ctx, camera, false, *postProcessing);
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write("world:preview.png", image.get());
@@ -271,9 +271,11 @@ void LevelScreen::draw(float delta) {
     if (!hud->isPause()) {
         scripting::on_entities_render(engine.getTime().getDelta());
     }
-    renderer->renderFrame(
-        ctx, *camera, hudVisible, hud->isPause(), delta, *postProcessing
-    );
+    renderer->update(*camera, delta * !hud->isPause());
+    renderer->renderFrame(ctx, *camera, hudVisible, *postProcessing);
+    if (!hud->isPause()) {
+        scripting::on_frontend_render();
+    }
 
     if (hudVisible) {
         hud->draw(ctx);

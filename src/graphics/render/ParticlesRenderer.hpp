@@ -25,7 +25,10 @@ class ParticlesRenderer {
     std::unordered_map<u64id_t, std::unique_ptr<Emitter>> emitters;
     u64id_t nextEmitter = 1;
 
-    void renderParticles(const Camera& camera, float delta);
+    void renderParticle(
+        Particle& particle, const Camera& camera, bool backlight
+    );
+    void updateParticles(float delta);
 public:
     ParticlesRenderer(
         const Assets& assets,
@@ -35,7 +38,8 @@ public:
     );
     ~ParticlesRenderer();
 
-    void render(const Camera& camera, float delta);
+    void update(const Camera& camera, float delta);
+    void render(const Camera& camera);
 
     u64id_t add(std::unique_ptr<Emitter> emitter);
 

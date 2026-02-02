@@ -1,9 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <algorithm>
-#include <string>
+#include "commons.hpp"
 
 #include "typedefs.hpp"
 
@@ -11,30 +8,35 @@
 #include "world/Weather.hpp"
 #include "window/Camera.hpp"
 
-class Level;
-class Player;
-class Camera;
-class Batch3D;
-class LineBatch;
-class ChunksRenderer;
-class ParticlesRenderer;
-class BlockWrapsRenderer;
-class PrecipitationRenderer;
-class HandsRenderer;
-class NamedSkeletons;
-class TextsRenderer;
-class Shader;
-class Frustum;
-class Engine;
-class LevelFrontend;
-class Skybox;
-class PostProcessing;
-class DrawContext;
-class ModelBatch;
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <string>
+
 class Assets;
-class Shadows;
-class GBuffer;
+class Batch3D;
+class BlockWrapsRenderer;
+class Camera;
+class ChunksRenderer;
 class DebugLinesRenderer;
+class DrawContext;
+class Engine;
+class Frustum;
+class GBuffer;
+class HandsRenderer;
+class Level;
+class LevelFrontend;
+class LineBatch;
+class ModelBatch;
+class NamedSkeletons;
+class ParticlesRenderer;
+class Player;
+class PostProcessing;
+class PrecipitationRenderer;
+class Shader;
+class Shadows;
+class Skybox;
+class TextsRenderer;
 struct EngineSettings;
 
 struct CompileTimeShaderSettings {
@@ -93,10 +95,10 @@ class WorldRenderer {
         const DrawContext& context, 
         const Camera& camera, 
         const EngineSettings& settings,
-        float delta,
-        bool pause,
         bool hudVisible
     );
+
+    void refreshSettings(Shader** shaders);
 public:
     std::unique_ptr<ParticlesRenderer> particles;
     std::unique_ptr<TextsRenderer> texts;
@@ -110,12 +112,12 @@ public:
     WorldRenderer(Engine& engine, LevelFrontend& frontend, Player& player);
     ~WorldRenderer();
 
+    void update(const Camera& camera, float delta);
+
     void renderFrame(
         const DrawContext& context, 
         Camera& camera, 
         bool hudVisible,
-        bool pause,
-        float delta,
         PostProcessing& postProcessing
     );
 

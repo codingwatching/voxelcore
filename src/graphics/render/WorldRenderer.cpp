@@ -1,12 +1,5 @@
 #include "WorldRenderer.hpp"
 
-#include <assert.h>
-
-#include <algorithm>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <memory>
-
 #include "assets/Assets.hpp"
 #include "assets/assets_util.hpp"
 #include "content/Content.hpp"
@@ -18,7 +11,6 @@
 #include "items/ItemDef.hpp"
 #include "items/ItemStack.hpp"
 #include "logic/PlayerController.hpp"
-#include "logic/scripting/scripting_hud.hpp"
 #include "maths/FrustumCulling.hpp"
 #include "maths/voxmaths.hpp"
 #include "objects/Entities.hpp"
@@ -59,6 +51,12 @@
 #include "Emitter.hpp"
 #include "TextNote.hpp"
 
+#include <assert.h>
+#include <algorithm>
+#include <glm/ext.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <memory>
+
 using namespace advanced_pipeline;
 
 inline constexpr size_t BATCH3D_CAPACITY = 4096;
@@ -81,7 +79,7 @@ WorldRenderer::WorldRenderer(
           MODEL_BATCH_CAPACITY, assets, *player.chunks, engine.getSettings()
       )),
       chunksRenderer(std::make_unique<ChunksRenderer>(
-          &level,
+          level,
           *player.chunks,
           assets,
           *frustumCulling,
@@ -103,19 +101,18 @@ WorldRenderer::WorldRenderer(
         LevelEventType::CHUNK_HIDDEN,
         [this](LevelEventType, Chunk* chunk) { chunksRenderer->unload(chunk); }
     );
-    auto assets = engine.getAssets();
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(),
-        assets->require<Shader>("skybox_gen")
+        assets.require<Shader>("skybox_gen")
     );
 
     const auto& content = level.content;
     skeletons = std::make_unique<NamedSkeletons>();
-    const auto& skeletonConfig = assets->require<rigging::SkeletonConfig>(
+    const auto& skeletonConfig = assets.require<rigging::SkeletonConfig>(
         content.getDefaults()["hand-skeleton"].asString()
     );
     hands = std::make_unique<HandsRenderer>(
-        *assets, *modelBatch, skeletons->createSkeleton("hand", &skeletonConfig)
+        assets, *modelBatch, skeletons->createSkeleton("hand", &skeletonConfig)
     );
     shadowMapping = std::make_unique<Shadows>(level);
     debugLines = std::make_unique<DebugLinesRenderer>(level);
@@ -179,8 +176,6 @@ void WorldRenderer::renderOpaque(
     const DrawContext& ctx,
     const Camera& camera,
     const EngineSettings& settings,
-    float delta,
-    bool pause,
     bool hudVisible
 ) {
     texts->render(ctx, camera, settings, hudVisible, false);
@@ -203,13 +198,11 @@ void WorldRenderer::renderOpaque(
         assets,
         *modelBatch,
         culling ? frustumCulling.get() : nullptr,
-        delta,
-        pause,
         player.currentCamera.get() == player.fpCamera.get() ? player.getEntity()
                                                             : 0
     );
     modelBatch->render();
-    particles->render(camera, delta * !pause);
+    particles->render(camera);
 
     auto& shader = assets.require<Shader>("main");
     auto& linesShader = assets.require<Shader>("lines");
@@ -221,10 +214,6 @@ void WorldRenderer::renderOpaque(
 
     if (hudVisible) {
         renderLines(camera, linesShader, ctx);
-    }
-
-    if (!pause) {
-        scripting::on_frontend_render();
     }
     skybox->unbind();
 }
@@ -275,45 +264,17 @@ void WorldRenderer::renderLines(
     }
 }
 
-void WorldRenderer::renderFrame(
-    const DrawContext& pctx,
-    Camera& camera,
-    bool hudVisible,
-    bool pause,
-    float uiDelta,
-    PostProcessing& postProcessing
-) {
-    // TODO: REFACTOR WHOLE RENDER ENGINE
+void WorldRenderer::refreshSettings(Shader** shaders) {
+    const auto& graphics = engine.getSettings().graphics;
+    gbufferPipeline = graphics.advancedRender.get();
 
-    auto projView = camera.getProjView();
-
-    float delta = uiDelta * !pause;
-    timer += delta;
-    weather.update(delta);
-
-    auto world = level.getWorld();
-
-    const auto& vp = pctx.getViewport();
-    camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
-
-    auto& mainShader = assets.require<Shader>("main");
-    auto& entityShader = assets.require<Shader>("entity");
-    auto& translucentShader = assets.require<Shader>("translucent");
-    auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
-    const auto& settings = engine.getSettings();
-
-    Shader* affectedShaders[] {
-        &mainShader, &entityShader, &translucentShader, &deferredShader
-    };
-
-    gbufferPipeline = settings.graphics.advancedRender.get();
-    int shadowsQuality = settings.graphics.shadowsQuality.get() * gbufferPipeline;
+    int shadowsQuality = graphics.shadowsQuality.get() * gbufferPipeline;
     shadowMapping->setQuality(shadowsQuality);
-
+    
     CompileTimeShaderSettings currentSettings {
         gbufferPipeline,
         shadowsQuality != 0,
-        settings.graphics.ssao.get() && gbufferPipeline
+        graphics.ssao.get() && gbufferPipeline
     };
     if (
         prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
@@ -325,11 +286,44 @@ void WorldRenderer::renderFrame(
         if (currentSettings.ssao) defines.emplace_back("ENABLE_SSAO");
         if (currentSettings.advancedRender) defines.emplace_back("ADVANCED_RENDER");
 
-        for (auto shader : affectedShaders) {
-            shader->recompile(defines);
+        for (size_t i = 0; shaders[i]; i++) {
+            shaders[i]->recompile(defines);
         }
         prevCTShaderSettings = currentSettings;
     }
+}
+
+void WorldRenderer::update(const Camera& camera, float delta) {
+    timer += delta;
+    weather.update(delta);
+    precipitation->update(delta);
+    particles->update(camera, delta);
+}
+
+void WorldRenderer::renderFrame(
+    const DrawContext& pctx,
+    Camera& camera,
+    bool hudVisible,
+    PostProcessing& postProcessing
+) {
+    auto projView = camera.getProjView();
+    auto world = level.getWorld();
+
+    const auto& vp = pctx.getViewport();
+    camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
+
+    auto& mainShader = assets.require<Shader>("main");
+    auto& entityShader = assets.require<Shader>("entity");
+    auto& translucentShader = assets.require<Shader>("translucent");
+    auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
+
+    const auto& settings = engine.getSettings();
+
+    Shader* affectedShaders[] {
+        &mainShader, &entityShader, &translucentShader, &deferredShader, nullptr
+    };
+
+    refreshSettings(affectedShaders);
 
     const auto& worldInfo = world->getInfo();
     
@@ -356,7 +350,7 @@ void WorldRenderer::renderFrame(
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
-            renderOpaque(ctx, camera, settings, uiDelta, pause, hudVisible);
+            renderOpaque(ctx, camera, settings, hudVisible);
         }
         texts->render(pctx, camera, settings, hudVisible, true);
     }
@@ -415,7 +409,7 @@ void WorldRenderer::renderFrame(
             entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
             entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
             if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
-                precipitation->render(camera, pause ? 0.0f : delta, *weather);
+                precipitation->render(camera, *weather);
             }
         }
 
@@ -434,7 +428,7 @@ void WorldRenderer::renderFrame(
         hudcam.setFov(0.9f);
         hudcam.position = {};
         
-        hands->renderHands(camera, delta);
+        hands->render(camera);
 
         display::clearDepth();
         setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
