@@ -87,7 +87,7 @@ WorldRenderer::WorldRenderer(
           engine.getSettings()
       )),
       particles(std::make_unique<ParticlesRenderer>(
-        assets, level, *player.chunks, &engine.getSettings().graphics
+        assets, level, *player.chunks, engine.getSettings().graphics
       )),
       texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
       blockWraps(

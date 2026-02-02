@@ -22,7 +22,6 @@ class DebugLinesRenderer;
 class DrawContext;
 class Engine;
 class Frustum;
-class GBuffer;
 class HandsRenderer;
 class Level;
 class LevelFrontend;

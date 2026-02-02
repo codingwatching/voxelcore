@@ -19,12 +19,12 @@ ParticlesRenderer::ParticlesRenderer(
     const Assets& assets,
     const Level& level,
     const Chunks& chunks,
-    const GraphicsSettings* settings
+    const GraphicsSettings& settings
 )
     : chunks(chunks),
       assets(assets),
       settings(settings),
-      batch(std::make_unique<MainBatch>(4096)) {
+      batch(std::make_unique<MainBatch>(settings.particlesBatchVertices.get())) {
 }
 
 ParticlesRenderer::~ParticlesRenderer() = default;
@@ -188,7 +188,7 @@ void ParticlesRenderer::render(const Camera& camera) {
     aliveEmitters = emitters.size();
     visibleParticles = 0;
 
-    bool backlight = settings->backlight.get();
+    bool backlight = settings.backlight.get();
 
     batch->begin();
     for (auto& [texture, vec] : particles) {
