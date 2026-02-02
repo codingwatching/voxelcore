@@ -120,22 +120,6 @@ std::shared_ptr<VoxelsRenderVolume> ChunksRenderer::prepareVoxelsVolume(
     return voxelsBuffer;
 }
 
-std::shared_ptr<VoxelsVolume> ChunksRenderer::prepareVoxelsVolumeDynamic(
-    const Chunk& chunk, int padding
-) {
-    auto voxelsBuffer = std::make_unique<VoxelsVolume>(
-        CHUNK_W + padding * 2, CHUNK_H, CHUNK_D + padding * 2
-    );
-    voxelsBuffer->setPosition(
-        chunk.x * CHUNK_W - padding, 0,
-        chunk.z * CHUNK_D - padding
-    );
-    chunks.getVoxels(
-        *voxelsBuffer, settings.graphics.backlight.get(), chunk.top + 3
-    );
-    return voxelsBuffer;
-}
-
 const Mesh<ChunkVertex>* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
