@@ -125,7 +125,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
 ) {
     glm::ivec2 key(chunk->x, chunk->z);
     chunk->flags.modified = false;
-    if (!important) {
+    if (important) {
         ChunkMesh mesh {};
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
