@@ -126,6 +126,8 @@ function on_hud_open()
     configure_SSAO()
 
     hud.default_hand_controller = update_hand
+
+    gui.root.root:add("<frame size='16' color='#FF0000'><label>Hello, World</label></frame>")
 end
 
 function on_hud_render()

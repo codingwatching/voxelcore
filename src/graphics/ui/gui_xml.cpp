@@ -8,6 +8,7 @@
 #include "elements/Button.hpp"
 #include "elements/Canvas.hpp"
 #include "elements/CheckBox.hpp"
+#include "elements/Frame.hpp"
 #include "elements/Image.hpp"
 #include "elements/InlineFrame.hpp"
 #include "elements/InputBindBox.hpp"
@@ -850,6 +851,15 @@ static std::shared_ptr<UINode> read_page_box(
     return menu;
 }
 
+static std::shared_ptr<UINode> read_frame(
+    UiXmlReader& reader, const xml::xmlelement& element
+) {
+    auto& gui = reader.getGUI();
+    auto frame = std::make_shared<Frame>(gui);
+    read_container_impl(reader, element, *frame, true);
+    return frame;
+}
+
 static std::shared_ptr<UINode> read_iframe(
     UiXmlReader& reader, const xml::xmlelement& element
 ) {
@@ -867,6 +877,7 @@ UiXmlReader::UiXmlReader(gui::GUI& gui, scriptenv&& env)
     contextStack.emplace("");
     add("image", read_image);
     add("canvas", read_canvas);
+    add("frame", read_frame);
     add("iframe", read_iframe);
     add("label", read_label);
     add("panel", read_panel);
