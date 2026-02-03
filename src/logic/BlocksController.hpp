@@ -20,7 +20,7 @@ class ContentIndices;
 enum class BlockInteraction { step, destruction, placing };
 
 /// @brief Player argument is nullable
-using on_block_interaction = std::function<
+using OnBlockInteraction = std::function<
     void(Player*, const glm::ivec3&, const Block&, BlockInteraction)>;
 
 /// BlocksController manages block updates and data (inventories, metadata)
@@ -32,7 +32,7 @@ class BlocksController {
     util::Clock blocksTickClock;
     util::Clock worldTickClock;
     FastRandom random {};
-    std::vector<on_block_interaction> blockInteractionCallbacks;
+    std::vector<OnBlockInteraction> blockInteractionCallbacks;
     uint64_t randomTickId = 0;
 public:
     BlocksController(const Level& level, Lighting* lighting);
@@ -61,5 +61,5 @@ public:
     );
 
     /// @brief Add block interaction callback
-    void listenBlockInteraction(const on_block_interaction& callback);
+    void listenBlockInteraction(const OnBlockInteraction& callback);
 };

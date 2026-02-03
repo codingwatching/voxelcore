@@ -4,6 +4,7 @@
 
 #include "debug/Logger.hpp"
 #include "engine/Engine.hpp"
+#include "engine/EnginePaths.hpp"
 #include "world/files/WorldFiles.hpp"
 #include "maths/voxmaths.hpp"
 #include "objects/Entities.hpp"
@@ -22,9 +23,10 @@
 static debug::Logger logger("level-control");
 
 LevelController::LevelController(
-    Engine* engine, std::unique_ptr<Level> levelPtr, Player* clientPlayer
+    Engine& engine, std::unique_ptr<Level> levelPtr, Player* clientPlayer
 )
-    : settings(engine->getSettings()),
+    : engine(engine),
+      settings(engine.getSettings()),
       level(std::move(levelPtr)),
       chunks(std::make_unique<ChunksController>(*level)),
       playerTickClock(20, 3) {
@@ -147,6 +149,7 @@ void LevelController::saveWorld() {
 
 void LevelController::onWorldQuit() {
     scripting::on_world_quit();
+    engine.getPaths().setCurrentWorldFolder("");
 }
 
 Level* LevelController::getLevel() {

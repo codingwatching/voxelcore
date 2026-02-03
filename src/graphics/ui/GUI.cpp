@@ -59,7 +59,7 @@ GUI::GUI(Engine& engine)
 
     rootDocument = std::make_unique<UiDocument>(
         "core:root",
-        uidocscript {},
+        UiDocScript {},
         std::dynamic_pointer_cast<gui::UINode>(container),
         nullptr
     );

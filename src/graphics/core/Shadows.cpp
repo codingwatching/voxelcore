@@ -96,40 +96,54 @@ void Shadows::setQuality(int quality) {
 }
 
 void Shadows::setup(Shader& shader, const Weather& weather) {
-    if (shadows) {
-        const auto& worldInfo = level.getWorld()->getInfo();
-        float cloudsIntensity = glm::max(worldInfo.fog, weather.clouds());
-        float shadowsOpacity = 1.0f - cloudsIntensity;
-        shadowsOpacity *= glm::sqrt(glm::abs(
-            glm::mod((worldInfo.daytime + 0.5f) * 2.0f, 1.0f) * 2.0f - 1.0f
-        ));
-        shader.uniform1i("u_screen", 0);
-        shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
-        shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
-        shader.uniform3f("u_sunDir", shadowCamera.front);
-        shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
-        shader.uniform1f("u_shadowsOpacity", shadowsOpacity); // TODO: make it configurable
-        shader.uniform1f("u_shadowsSoftness", 1.0f + cloudsIntensity * 4); // TODO: make it configurable
-
-        glActiveTexture(GL_TEXTURE0 + TARGET_SHADOWS0);
-        shader.uniform1i("u_shadows[0]", TARGET_SHADOWS0);
-        glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
-
-        glActiveTexture(GL_TEXTURE0 + TARGET_SHADOWS1);
-        shader.uniform1i("u_shadows[1]", TARGET_SHADOWS1);
-        glBindTexture(GL_TEXTURE_2D, wideShadowMap->getDepthMap());
-
-        glActiveTexture(TEXTURE_MAIN);
+    if (!shadows) {
+        return;
     }
+    const auto& worldInfo = level.getWorld()->getInfo();
+    float cloudsIntensity = glm::max(worldInfo.fog, weather.clouds());
+    float shadowsOpacity = 1.0f - cloudsIntensity;
+    shadowsOpacity *= glm::sqrt(glm::abs(
+        glm::mod((worldInfo.daytime + 0.5f) * 2.0f, 1.0f) * 2.0f - 1.0f
+    ));
+    shader.uniform1i("u_screen", 0);
+    shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
+    shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
+    shader.uniform3f("u_sunDir", shadowCamera.front);
+    shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
+    shader.uniform1f("u_shadowsOpacity", shadowsOpacity); // TODO: make it configurable
+    shader.uniform1f("u_shadowsSoftness", 1.0f + cloudsIntensity * 4); // TODO: make it configurable
+
+    glActiveTexture(GL_TEXTURE0 + TARGET_SHADOWS0);
+    shader.uniform1i("u_shadows[0]", TARGET_SHADOWS0);
+    glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
+
+    glActiveTexture(GL_TEXTURE0 + TARGET_SHADOWS1);
+    shader.uniform1i("u_shadows[1]", TARGET_SHADOWS1);
+    glBindTexture(GL_TEXTURE_2D, wideShadowMap->getDepthMap());
+
+    glActiveTexture(TEXTURE_MAIN);
 }
 
-void Shadows::refresh(const Camera& camera, const DrawContext& pctx, std::function<void(Camera&)> renderShadowPass) {
+void Shadows::refresh(
+    const Camera& camera,
+    const DrawContext& pctx,
+    const std::function<void(Camera&)>& renderShadowPass
+) {
     static int frameid = 0;
     if (shadows) {
         if (frameid % 2 == 0) {
-            generateShadowsMap(camera, pctx, *shadowMap, shadowCamera, 1.0f, renderShadowPass);
+            generateShadowsMap(
+                camera, pctx, *shadowMap, shadowCamera, 1.0f, renderShadowPass
+            );
         } else {
-            generateShadowsMap(camera, pctx, *wideShadowMap, wideShadowCamera, 3.0f, renderShadowPass);
+            generateShadowsMap(
+                camera,
+                pctx,
+                *wideShadowMap,
+                wideShadowCamera,
+                3.0f,
+                renderShadowPass
+            );
         }
     }
     frameid++;
@@ -141,7 +155,7 @@ void Shadows::generateShadowsMap(
     ShadowMap& shadowMap,
     Camera& shadowCamera,
     float scale,
-    std::function<void(Camera&)> renderShadowPass
+    const std::function<void(Camera&)>& renderShadowPass
 ) {
     auto world = level.getWorld();
     const auto& worldInfo = world->getInfo();

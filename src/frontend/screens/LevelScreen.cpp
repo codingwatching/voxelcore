@@ -61,7 +61,7 @@ LevelScreen::LevelScreen(
     assert(player != nullptr);
 
     controller =
-        std::make_unique<LevelController>(&engine, std::move(levelPtr), player);
+        std::make_unique<LevelController>(engine, std::move(levelPtr), player);
     playerController = std::make_unique<PlayerController>(
         settings, *level, *player, *controller->getBlocksController()
     );
@@ -112,11 +112,10 @@ LevelScreen::~LevelScreen() {
         saveDecorations();
     }
     scripting::on_frontend_close();
-    // unblock all bindings
     input.getBindings().enableAll();
     playerController->getPlayer()->chunks->saveAndClear();
     controller->onWorldQuit();
-    engine.getPaths().setCurrentWorldFolder("");
+
 }
 
 void LevelScreen::onOpen() {

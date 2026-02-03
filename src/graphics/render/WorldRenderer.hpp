@@ -1,7 +1,6 @@
 #pragma once
 
 #include "commons.hpp"
-
 #include "typedefs.hpp"
 
 #include "presets/WeatherPreset.hpp"
@@ -16,7 +15,6 @@
 class Assets;
 class Batch3D;
 class BlockWrapsRenderer;
-class Camera;
 class ChunksRenderer;
 class DebugLinesRenderer;
 class DrawContext;
@@ -58,6 +56,7 @@ class WorldRenderer {
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<Shadows> shadowMapping;
     std::unique_ptr<DebugLinesRenderer> debugLines;
+    std::unique_ptr<PrecipitationRenderer> precipitation;
     Weather weather {};
     
     float timer = 0.0f;
@@ -102,7 +101,6 @@ public:
     std::unique_ptr<ParticlesRenderer> particles;
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
-    std::unique_ptr<PrecipitationRenderer> precipitation;
     std::unique_ptr<NamedSkeletons> skeletons;
 
     static bool showChunkBorders;

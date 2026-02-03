@@ -86,16 +86,16 @@ WorldRenderer::WorldRenderer(
           frontend.getContentGfxCache(),
           engine.getSettings()
       )),
+      precipitation(std::make_unique<PrecipitationRenderer>(
+          assets, level, *player.chunks, &engine.getSettings().graphics
+      )),
       particles(std::make_unique<ParticlesRenderer>(
         assets, level, *player.chunks, engine.getSettings().graphics
       )),
       texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
       blockWraps(
           std::make_unique<BlockWrapsRenderer>(assets, level, *player.chunks)
-      ),
-      precipitation(std::make_unique<PrecipitationRenderer>(
-          assets, level, *player.chunks, &engine.getSettings().graphics
-      )) {
+      ) {
     auto& settings = engine.getSettings();
     level.events->listen(
         LevelEventType::CHUNK_HIDDEN,

@@ -241,7 +241,7 @@ void ChunksRenderer::drawShadowsPass(
             continue;
         }
         glm::ivec2 pos {chunk->x, chunk->z};
-        const auto& found = meshes.find({chunk->x, chunk->z});
+        const auto& found = meshes.find(pos);
         if (found == meshes.end()) {
             continue;
         }
@@ -250,11 +250,11 @@ void ChunksRenderer::drawShadowsPass(
             pos.x * CHUNK_W + 0.5f, 0.5f, pos.y * CHUNK_D + 0.5f
         );
 
-        glm::vec3 min(chunk->x * CHUNK_W, chunk->bottom, chunk->z * CHUNK_D);
+        glm::vec3 min(pos.x * CHUNK_W, chunk->bottom, pos.y * CHUNK_D);
         glm::vec3 max(
-            chunk->x * CHUNK_W + CHUNK_W,
+            pos.x * CHUNK_W + CHUNK_W,
             chunk->top,
-            chunk->z * CHUNK_D + CHUNK_D
+            pos.y * CHUNK_D + CHUNK_D
         );
 
         if (!frustum.isBoxVisible(min, max)) {
