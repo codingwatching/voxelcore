@@ -305,6 +305,7 @@ void Engine::renderFrame() {
     screen->draw(time.getDelta());
 
     DrawContext ctx(nullptr, *window, nullptr);
+    gui->renderFrames(ctx, *assets->getStorage());
     gui->draw(ctx, *assets->getStorage());
 }
 

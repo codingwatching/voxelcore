@@ -16,6 +16,7 @@
 #include "graphics/ui/elements/TrackBar.hpp"
 #include "graphics/ui/elements/InlineFrame.hpp"
 #include "graphics/ui/elements/ModelViewer.hpp"
+#include "graphics/ui/elements/Frame.hpp"
 #include "graphics/ui/gui_util.hpp"
 #include "graphics/ui/markdown.hpp"
 #include "graphics/core/Font.hpp"
@@ -1149,6 +1150,25 @@ static int l_set_syntax_styles(lua::State* L) {
     return 0;
 }
 
+static int l_create_frame(lua::State* L) {
+    if (engine->isHeadless()) {
+        return 0;
+    }
+    std::string outputTexture = lua::require_string(L, 1);
+    auto size = lua::tovec2(L, 2);
+
+    auto& gui = engine->getGUI();
+    auto frame = std::make_shared<gui::Frame>(gui, outputTexture);
+    frame->setSize(std::move(size));
+    auto& assets = *engine->getAssets();
+    auto document = std::make_shared<UiDocument>(
+        outputTexture, UiDocScript {}, frame, nullptr
+    );
+    assets.store(document, document->getId());
+    gui.addFrame(std::move(frame));
+    return 0;
+}
+
 const luaL_Reg guilib[] = {
     {"get_viewport", lua::wrap<l_gui_getviewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
@@ -1162,6 +1182,7 @@ const luaL_Reg guilib[] = {
     {"alert", lua::wrap<l_gui_alert>},
     {"load_document", lua::wrap<l_gui_load_document>},
     {"set_syntax_styles", lua::wrap<l_set_syntax_styles>},
+    {"create_frame", lua::wrap<l_create_frame>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {nullptr, nullptr}
 };

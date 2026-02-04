@@ -61,6 +61,7 @@ namespace gui {
     class UINode;
     class Container;
     class Menu;
+    class Frame;
 
     /// @brief The main UI controller
     class GUI {
@@ -80,6 +81,7 @@ namespace gui {
         std::shared_ptr<Menu> menu;
         std::queue<runnable> postRunnables;
         std::vector<std::weak_ptr<UINode>> mouseOver;
+        std::unordered_map<std::string, std::shared_ptr<Frame>> frames;
 
         float tooltipTimer = 0.0f;
         float doubleClickTimer = 0.0f;
@@ -112,6 +114,8 @@ namespace gui {
         /// @param viewport window size
         void act(float delta, const glm::uvec2& viewport);
 
+        void renderFrames(const DrawContext& pctx, Assets& assets);
+
         /// @brief Draw all visible elements on main container 
         /// @param pctx parent graphics context
         /// @param assets active assets storage
@@ -122,6 +126,8 @@ namespace gui {
         /// @brief Add element to the main container
         /// @param node UI element
         void add(std::shared_ptr<UINode> node);
+
+        void addFrame(std::shared_ptr<Frame> frame);
 
         /// @brief Remove node from the main container
         void remove(UINode* node) noexcept;

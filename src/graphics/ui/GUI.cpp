@@ -8,6 +8,7 @@
 #include "elements/Label.hpp"
 #include "elements/Menu.hpp"
 #include "elements/Panel.hpp"
+#include "elements/Frame.hpp"
 #include "elements/UINode.hpp"
 #include "engine/Engine.hpp"
 #include "frontend/UiDocument.hpp"
@@ -262,6 +263,21 @@ void GUI::postAct() {
     }
 }
 
+void GUI::renderFrames(const DrawContext& pctx, Assets& assets) {
+    auto ctx = pctx.sub(batch2D.get());
+
+    auto uishader = assets.get<Shader>("ui");
+    uishader->use();
+    uishader->uniformMatrix("u_projview", uicamera->getProjView());
+
+    batch2D->begin();
+    for (auto& [outputTexture, frame] : frames) {
+        frame->updateOutput(assets);
+        frame->draw(ctx, assets);
+    }
+    batch2D->flush();
+}
+
 void GUI::draw(const DrawContext& pctx, const Assets& assets) {
     auto ctx = pctx.sub(batch2D.get());
 
@@ -335,6 +351,10 @@ bool GUI::isFocusCaught() const {
 void GUI::add(std::shared_ptr<UINode> node) {
     rootDocument->pushIndices(node);
     container->add(std::move(node));
+}
+
+void GUI::addFrame(std::shared_ptr<Frame> frame) {
+    frames[frame->getOutputTexture()] = std::move(frame);
 }
 
 void GUI::remove(UINode* node) noexcept {
