@@ -128,11 +128,13 @@ function on_hud_open()
     hud.default_hand_controller = update_hand
 
     local name = "misc/moon"
-    gui.create_frame(name, name, {128, 128})
+    local frame = gui.create_frame(name, name, {128, 128})
+    frame:add("<button>Hello, World</button>")
+    frame.color = {255, 0, 0, 255}
 
-    local document = Document.new(name)
-    document.root:add("<button>Hello, World</button>")
-    document.root.color = {255, 0, 0, 255}
+    input.add_callback('key:y', function ()
+        gui.set_active_frame(name)
+    end)
 end
 
 function on_hud_render()

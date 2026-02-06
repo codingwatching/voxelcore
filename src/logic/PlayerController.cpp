@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <glm/gtc/constants.hpp>
 
 #include "BlocksController.hpp"
 #include "content/Content.hpp"
@@ -28,17 +29,19 @@
 #include "window/input.hpp"
 #include "world/Level.hpp"
 
-const float INTERACTION_RELOAD = 0.160f;
-const float STEPS_SPEED = 2.2f;
-const float CAM_SHAKE_OFFSET = 0.0075f;
-const float CAM_SHAKE_OFFSET_Y = 0.031f;
-const float CAM_SHAKE_SPEED = STEPS_SPEED;
-const float CAM_SHAKE_DELTA_K = 10.0f;
-const float ZOOM_SPEED = 16.0f;
-const float CROUCH_ZOOM = 0.9f;
-const float RUN_ZOOM = 1.1f;
-const float C_ZOOM = 0.1f;
-const float CROUCH_SHIFT_Y = -0.2f;
+namespace {
+    const float INTERACTION_RELOAD = 0.160f;
+    const float STEPS_SPEED = 2.2f;
+    const float CAM_SHAKE_OFFSET = 0.0075f;
+    const float CAM_SHAKE_OFFSET_Y = 0.031f;
+    const float CAM_SHAKE_SPEED = STEPS_SPEED;
+    const float CAM_SHAKE_DELTA_K = 10.0f;
+    const float ZOOM_SPEED = 16.0f;
+    const float CROUCH_ZOOM = 0.9f;
+    const float RUN_ZOOM = 1.1f;
+    const float C_ZOOM = 0.1f;
+    const float CROUCH_SHIFT_Y = -0.2f;
+}
 
 CameraControl::CameraControl(Player& player, const CameraSettings& settings)
     : player(player),
@@ -249,17 +252,18 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
 }
 
 void PlayerController::updateFootsteps(float delta) {
+    const float pi = glm::pi<float>();
     auto hitbox = player.getHitbox();
     if (hitbox && hitbox->grounded) {
         const glm::vec3& vel = hitbox->velocity;
         float f = glm::length(glm::vec2(vel.x, vel.z));
         stepsTimer += delta * f * STEPS_SPEED;
-        if (stepsTimer >= M_PI) {
-            stepsTimer = fmod(stepsTimer, M_PI);
+        if (stepsTimer >= pi) {
+            stepsTimer = fmod(stepsTimer, pi);
             onFootstep(*hitbox);
         }
     } else {
-        stepsTimer = M_PI;
+        stepsTimer = pi;
     }
 }
 

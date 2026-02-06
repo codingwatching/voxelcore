@@ -129,7 +129,7 @@ void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
     doubleClicked = false;
     doubleClickTimer += delta + mouseDelta * 0.1f;
 
-    auto hover = container->getAt(cursor.pos);
+    auto hover = frame.getAt(cursor.pos);
     if (this->hover && this->hover != hover) {
         this->hover->setMouseEnter(false);
     }
@@ -289,8 +289,8 @@ void GUI::draw(const DrawContext& pctx, Assets& assets) {
     uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
     auto uishader = assets.get<Shader>("ui");
-    uishader->use();
     uishader->uniformMatrix("u_projview", uicamera->getProjView());
+    uishader->use();
 
     batch2D->begin();
     for (auto& [outputTexture, frame] : frames) {

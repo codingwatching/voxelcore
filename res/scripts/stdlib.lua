@@ -234,6 +234,14 @@ menu = _MENU
 gui.root = _GUI_ROOT
 gui.main_frame_id = "core:main"
 
+local __gui_create_frame = gui.create_frame
+function gui.create_frame(id, output, size)
+    __gui_create_frame(id, output, size)
+
+    local document = Document.new(id)
+    return document.root, document
+end
+
 do
     local status, err = pcall(function()
         local default_styles = toml.parse(file.read(
@@ -440,6 +448,8 @@ function __vc_on_hud_open()
             end
         elseif hud.is_inventory_open() then
             hud.close_inventory()
+        elseif gui.get_active_frame() then
+            gui.set_active_frame("")
         else
             hud.pause()
         end
