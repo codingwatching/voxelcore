@@ -62,7 +62,3 @@ const std::string& gui::Frame::getOutputTexture() const {
 const std::string& gui::Frame::getFrameId() const {
     return frameId;
 }
-
-gui::Frame::State& gui::Frame::getState() {
-    return state;
-}
