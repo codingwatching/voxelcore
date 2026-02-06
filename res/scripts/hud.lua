@@ -130,10 +130,11 @@ function on_hud_open()
     local name = "misc/moon"
     local frame = gui.create_frame(name, name, {128, 128})
     frame:add("<button>Hello, World</button>")
-    frame.color = {255, 0, 0, 255}
 
     input.add_callback('key:y', function ()
-        gui.set_active_frame(name)
+        gui.set_active_frame(name, function()
+            return input.get_mouse_pos()
+        end)
     end)
 end
 

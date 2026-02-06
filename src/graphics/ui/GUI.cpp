@@ -123,13 +123,18 @@ void GUI::updateTooltip(float delta) {
 
 /// @brief Mouse related input and logic handling
 void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
-    auto& state = frame.getState();
-
     float mouseDelta = glm::length(cursor.delta);
     doubleClicked = false;
     doubleClickTimer += delta + mouseDelta * 0.1f;
 
-    auto hover = frame.getAt(cursor.pos);
+    auto cursorPos = cursor.pos;
+    if (cursorLocator) {
+        cursorPos = cursorLocator();
+        if (activeFrame) {
+            cursorPos.y += activeFrame->getPos().y;
+        }
+    }
+    auto hover = frame.getAt(cursorPos);
     if (this->hover && this->hover != hover) {
         this->hover->setMouseEnter(false);
     }
@@ -166,7 +171,7 @@ void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
     for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
         auto mouseOverNode = it->lock();
         if (mouseOverNode) {
-            if (mouseOverNode->isInside(cursor.pos)) {
+            if (mouseOverNode->isInside(cursorPos)) {
                 ++it;
                 continue;
             }
@@ -179,10 +184,10 @@ void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             if (doubleClickTimer < doubleClickDelay) {
-                pressed->doubleClick(cursor.pos.x, cursor.pos.y);
+                pressed->doubleClick(cursorPos.x, cursorPos.y);
                 doubleClicked = true;
             } else {
-                pressed->click(cursor.pos.x, cursor.pos.y);
+                pressed->click(cursorPos.x, cursorPos.y);
             }
             doubleClickTimer = 0.0f;
             if (focus && focus != pressed) {
@@ -199,7 +204,7 @@ void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
             focus = nullptr;
         }
     } else if (!input.clicked(Mousecode::BUTTON_1) && pressed) {
-        pressed->mouseRelease(cursor.pos.x, cursor.pos.y);
+        pressed->mouseRelease(cursorPos.x, cursorPos.y);
         pressed = nullptr;
     }
 
@@ -354,7 +359,8 @@ void GUI::addFrame(std::shared_ptr<Frame> frame) {
     frames[id] = std::move(frame);
 }
 
-void GUI::setActiveFrame(const std::string& id) {
+void GUI::setActiveFrame(const std::string& id, vec2supplier cursorLocator) {
+    this->cursorLocator = std::move(cursorLocator);
     if (id.empty()) {
         activeFrame = nullptr;
         return;

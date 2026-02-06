@@ -83,6 +83,7 @@ namespace gui {
         std::queue<runnable> postRunnables;
         std::vector<std::weak_ptr<UINode>> mouseOver;
         std::unordered_map<std::string, std::shared_ptr<Frame>> frames;
+        vec2supplier cursorLocator;
 
         float tooltipTimer = 0.0f;
         float doubleClickTimer = 0.0f;
@@ -129,7 +130,9 @@ namespace gui {
 
         void addFrame(std::shared_ptr<Frame> frame);
 
-        void setActiveFrame(const std::string& id);
+        void setActiveFrame(
+            const std::string& id, vec2supplier cursorLocator = nullptr
+        );
 
         std::shared_ptr<Frame> getActiveFrame() const;
 

@@ -1175,8 +1175,22 @@ static int l_set_active_frame(lua::State* L) {
         return 0;
     }
     std::string id = lua::require_string(L, 1);
+    vec2supplier cursorLocator = nullptr;
+    if (lua::isfunction(L, 2)) {
+        auto lambda = lua::create_lambda(L);
+        cursorLocator = [lambda]() -> glm::vec2 {
+            auto table = lambda({});
+            if (!table.isList()) {
+                throw std::runtime_error("invalid value returned from locator");
+            }
+            glm::vec2 pos {};
+            table.at(0).get(pos.x);
+            table.at(1).get(pos.y);
+            return pos;
+        };
+    }
     auto& gui = engine->getGUI();
-    gui.setActiveFrame(id);
+    gui.setActiveFrame(id, std::move(cursorLocator));
     return 0;
 }
 
