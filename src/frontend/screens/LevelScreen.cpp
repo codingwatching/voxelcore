@@ -56,6 +56,7 @@ LevelScreen::LevelScreen(
     auto& assets = *engine.getAssets();
     auto menu = engine.getGUI().getMenu();
     menu->reset();
+    gui.setActiveFrame("");
 
     auto player = level->players->get(localPlayer);
     assert(player != nullptr);
@@ -239,7 +240,7 @@ void LevelScreen::update(float delta) {
     
     auto menu = gui.getMenu();
     bool inputLocked =
-        menu->hasOpenPage() || hud->isInventoryOpen() || gui.isFocusCaught();
+        gui.getActiveFrame() || hud->isInventoryOpen() || gui.isFocusCaught();
     bool paused = hud->isPause();
     if (!paused) {
         world.updateTimers(delta);

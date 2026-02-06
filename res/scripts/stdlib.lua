@@ -232,6 +232,22 @@ _GUI_ROOT = Document.new("core:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
 gui.root = _GUI_ROOT
+gui.main_frame_id = "core:main"
+
+function gui.close_menu()
+    if menu then
+        menu:reset()
+    end
+    gui.set_active_frame("")
+end
+
+local __gui_create_frame = gui.create_frame
+function gui.create_frame(id, output, size)
+    __gui_create_frame(id, output, size)
+
+    local document = Document.new(id)
+    return document.root, document
+end
 
 do
     local status, err = pcall(function()
@@ -435,9 +451,12 @@ function __vc_on_hud_open()
         if menu.page ~= "" then
             if not menu:back() then
                 menu:reset()
+                gui.set_active_frame("")
             end
         elseif hud.is_inventory_open() then
             hud.close_inventory()
+        elseif gui.get_active_frame() then
+            gui.set_active_frame("")
         else
             hud.pause()
         end

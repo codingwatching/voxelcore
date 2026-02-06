@@ -40,6 +40,37 @@ gui.get_locales_info() -> table of tables {
 
 Returns information about all loaded locales (res/texts/\*).
 
+## Frames
+
+```lua
+-- A replacement for menu:reset() to close the pause menu, deactivating the main UI frame.
+gui.close_menu()
+
+-- Creates a frame.
+gui.create_frame(
+    -- Global frame id (not related to the UI 'id' property).
+    id: str,
+    -- The texture to render the frame to.
+    -- If the string is empty, the frame is rendered to the screen.
+    output_texture: str,
+    -- Frame size. For example: {640, 480}
+    size: vec2
+) -> Element, Document
+
+-- Returns the id of the active frame (not the element id).
+gui.get_active_frame() -> str
+
+-- Sets the active frame, receiving user input.
+-- An empty string specifies the null frame capturing the cursor.
+gui.set_active_frame(
+    -- ID of the frame created via gui.create_frame
+    id: str,
+    -- Function providing the cursor position in the frame.
+    -- Used for custom projection (e.g., in 3D)
+    [optional] cursorLocator
+)
+```
+
 ```lua
 gui.clear_markup(
     -- markup language ("md" - Markdown)
