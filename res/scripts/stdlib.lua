@@ -234,6 +234,13 @@ menu = _MENU
 gui.root = _GUI_ROOT
 gui.main_frame_id = "core:main"
 
+function gui.close_menu()
+    if menu then
+        menu:reset()
+    end
+    gui.set_active_frame("")
+end
+
 local __gui_create_frame = gui.create_frame
 function gui.create_frame(id, output, size)
     __gui_create_frame(id, output, size)
