@@ -294,8 +294,8 @@ void GUI::draw(const DrawContext& pctx, Assets& assets) {
     uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
     auto uishader = assets.get<Shader>("ui");
-    uishader->uniformMatrix("u_projview", uicamera->getProjView());
     uishader->use();
+    uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
     batch2D->begin();
     for (auto& [outputTexture, frame] : frames) {
