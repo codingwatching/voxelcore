@@ -13,15 +13,20 @@ using namespace gui;
 
 static inline constexpr int MAX_TEXTURE_SIZE = 2048;
 
-gui::Frame::Frame(GUI& gui, std::string outputTexture)
+gui::Frame::Frame(GUI& gui, std::string id, std::string outputTexture)
     : Container(gui, {}),
       fbo(nullptr),
       outputTexture(std::move(outputTexture)) {
+    frameId = std::move(id);
 }
 
 gui::Frame::~Frame() = default;
 
 void gui::Frame::draw(const DrawContext& pctx, const Assets& assets) {
+    if (outputTexture.empty()) {
+        Container::draw(pctx, assets);
+        return;
+    }
     if (fbo == nullptr) {
         return;
     }
@@ -52,4 +57,12 @@ void gui::Frame::updateOutput(Assets& assets) {
 
 const std::string& gui::Frame::getOutputTexture() const {
     return outputTexture;
+}
+
+const std::string& gui::Frame::getFrameId() const {
+    return frameId;
+}
+
+gui::Frame::State& gui::Frame::getState() {
+    return state;
 }

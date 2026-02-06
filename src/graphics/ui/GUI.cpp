@@ -1,10 +1,10 @@
 #include "GUI.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <utility>
 
 #include "assets/Assets.hpp"
+#include "debug/Logger.hpp"
 #include "elements/Label.hpp"
 #include "elements/Menu.hpp"
 #include "elements/Panel.hpp"
@@ -27,13 +27,15 @@
 #include <algorithm>
 #include <utility>
 
+static debug::Logger logger("gui");
+
 using namespace gui;
 
 GUI::GUI(Engine& engine)
     : engine(engine),
       input(engine.getInput()),
       batch2D(std::make_unique<Batch2D>(1024)),
-      container(std::make_shared<Container>(*this, glm::vec2(1000))) {
+      container(std::make_shared<Frame>(*this, CORE_MAIN, "")) {
     container->setId("root");
     uicamera =
         std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y);
@@ -64,6 +66,8 @@ GUI::GUI(Engine& engine)
         std::dynamic_pointer_cast<gui::UINode>(container),
         nullptr
     );
+    addFrame(container);
+    activeFrame = container;
 }
 
 GUI::~GUI() = default;
@@ -118,7 +122,9 @@ void GUI::updateTooltip(float delta) {
 }
 
 /// @brief Mouse related input and logic handling
-void GUI::actMouse(float delta, const CursorState& cursor) {
+void GUI::actMouse(Frame& frame, float delta, const CursorState& cursor) {
+    auto& state = frame.getState();
+
     float mouseDelta = glm::length(cursor.delta);
     doubleClicked = false;
     doubleClickTimer += delta + mouseDelta * 0.1f;
@@ -158,13 +164,13 @@ void GUI::actMouse(float delta, const CursorState& cursor) {
     }
 
     for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
-        auto node = it->lock();
-        if (node) {
-            if (node->isInside(cursor.pos)) {
+        auto mouseOverNode = it->lock();
+        if (mouseOverNode) {
+            if (mouseOverNode->isInside(cursor.pos)) {
                 ++it;
                 continue;
             }
-            node->setMouseOver(false);
+            mouseOverNode->setMouseOver(false);
         }
         it = mouseOver.erase(it);
     }
@@ -233,14 +239,16 @@ void GUI::actFocused() {
 
 void GUI::act(float delta, const glm::uvec2& vp) {
     container->setSize(vp);
-    container->act(delta);
+    for (auto& pair : frames) {
+        pair.second->act(delta);
+    }
     auto prevfocus = focus;
 
     updateTooltip(delta);
 
     const auto& cursor = input.getCursor();
-    if (!cursor.locked) {
-        actMouse(delta, cursor);
+    if (!cursor.locked && activeFrame) {
+        actMouse(*activeFrame, delta, cursor);
     } else {
         if (hover) {
             hover->setMouseEnter(false);
@@ -263,22 +271,7 @@ void GUI::postAct() {
     }
 }
 
-void GUI::renderFrames(const DrawContext& pctx, Assets& assets) {
-    auto ctx = pctx.sub(batch2D.get());
-
-    auto uishader = assets.get<Shader>("ui");
-    uishader->use();
-    uishader->uniformMatrix("u_projview", uicamera->getProjView());
-
-    batch2D->begin();
-    for (auto& [outputTexture, frame] : frames) {
-        frame->updateOutput(assets);
-        frame->draw(ctx, assets);
-    }
-    batch2D->flush();
-}
-
-void GUI::draw(const DrawContext& pctx, const Assets& assets) {
+void GUI::draw(const DrawContext& pctx, Assets& assets) {
     auto ctx = pctx.sub(batch2D.get());
 
     auto& viewport = ctx.getViewport();
@@ -300,7 +293,10 @@ void GUI::draw(const DrawContext& pctx, const Assets& assets) {
     uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
     batch2D->begin();
-    container->draw(ctx, assets);
+    for (auto& [outputTexture, frame] : frames) {
+        frame->updateOutput(assets);
+        frame->draw(ctx, assets);
+    }
 
     if (hover) {
         engine.getWindow().setCursor(hover->getCursor());
@@ -354,7 +350,26 @@ void GUI::add(std::shared_ptr<UINode> node) {
 }
 
 void GUI::addFrame(std::shared_ptr<Frame> frame) {
-    frames[frame->getOutputTexture()] = std::move(frame);
+    const auto& id = frame->getFrameId();
+    frames[id] = std::move(frame);
+}
+
+void GUI::setActiveFrame(const std::string& id) {
+    if (id.empty()) {
+        activeFrame = nullptr;
+        return;
+    }
+    const auto& found = frames.find(id);
+    if (found == frames.end()) {
+        logger.error() << "attempted to make non-existing frame '" << id
+                       << "' as active";
+        return;
+    }
+    activeFrame = found->second;
+}
+
+std::shared_ptr<gui::Frame> GUI::getActiveFrame() const {
+    return activeFrame;
 }
 
 void GUI::remove(UINode* node) noexcept {

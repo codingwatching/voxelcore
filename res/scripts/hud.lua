@@ -127,11 +127,11 @@ function on_hud_open()
 
     hud.default_hand_controller = update_hand
 
-    local name = "gui/no_icon"
-    gui.create_frame(name, {16, 16})
+    local name = "misc/moon"
+    gui.create_frame(name, name, {128, 128})
 
     local document = Document.new(name)
-    document.root:add("<label>Hello</label>")
+    document.root:add("<button>Hello, World</button>")
     document.root.color = {255, 0, 0, 255}
 end
 

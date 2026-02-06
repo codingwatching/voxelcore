@@ -232,6 +232,7 @@ _GUI_ROOT = Document.new("core:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
 gui.root = _GUI_ROOT
+gui.main_frame_id = "core:main"
 
 do
     local status, err = pcall(function()
@@ -435,6 +436,7 @@ function __vc_on_hud_open()
         if menu.page ~= "" then
             if not menu:back() then
                 menu:reset()
+                gui.set_active_frame("")
             end
         elseif hud.is_inventory_open() then
             hud.close_inventory()

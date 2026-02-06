@@ -1154,19 +1154,42 @@ static int l_create_frame(lua::State* L) {
     if (engine->isHeadless()) {
         return 0;
     }
-    std::string outputTexture = lua::require_string(L, 1);
-    auto size = lua::tovec2(L, 2);
+    std::string id = lua::require_string(L, 1);
+    std::string outputTexture = lua::require_string(L, 2);
+    auto size = lua::tovec2(L, 3);
 
     auto& gui = engine->getGUI();
-    auto frame = std::make_shared<gui::Frame>(gui, outputTexture);
+    auto frame = std::make_shared<gui::Frame>(gui, id, outputTexture);
     frame->setSize(std::move(size));
     auto& assets = *engine->getAssets();
     auto document = std::make_shared<UiDocument>(
-        outputTexture, UiDocScript {}, frame, nullptr
+        id, UiDocScript {}, frame, nullptr
     );
-    assets.store(document, document->getId());
+    assets.store(document, id);
     gui.addFrame(std::move(frame));
     return 0;
+}
+
+static int l_set_active_frame(lua::State* L) {
+    if (engine->isHeadless()) {
+        return 0;
+    }
+    std::string id = lua::require_string(L, 1);
+    auto& gui = engine->getGUI();
+    gui.setActiveFrame(id);
+    return 0;
+}
+
+static int l_get_active_frame(lua::State* L) {
+    if (engine->isHeadless()) {
+        return 0;
+    }
+    auto& gui = engine->getGUI();
+    auto frame = gui.getActiveFrame();
+    if (frame == nullptr) {
+        return 0;
+    }
+    return lua::pushstring(L, frame->getId());
 }
 
 const luaL_Reg guilib[] = {
@@ -1183,6 +1206,8 @@ const luaL_Reg guilib[] = {
     {"load_document", lua::wrap<l_gui_load_document>},
     {"set_syntax_styles", lua::wrap<l_set_syntax_styles>},
     {"create_frame", lua::wrap<l_create_frame>},
+    {"set_active_frame", lua::wrap<l_set_active_frame>},
+    {"get_active_frame", lua::wrap<l_get_active_frame>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {nullptr, nullptr}
 };

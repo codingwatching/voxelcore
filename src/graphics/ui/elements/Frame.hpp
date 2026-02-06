@@ -8,7 +8,10 @@ class UiDocument;
 namespace gui {
     class Frame final : public Container {
     public:
-        Frame(GUI& gui, std::string outputTexture);
+        struct State {
+        };
+
+        Frame(GUI& gui, std::string id, std::string outputTexture);
         virtual ~Frame();
 
         void draw(const DrawContext& pctx, const Assets& assets) override;
@@ -16,7 +19,14 @@ namespace gui {
         void updateOutput(Assets& assets);
 
         const std::string& getOutputTexture() const;
+
+        const std::string& getFrameId() const;
+
+        /// @brief Frame state is controlled in gui::GUI
+        State& getState();
     private:
+        std::string frameId;
+        State state {};
         std::unique_ptr<Framebuffer> fbo;
         std::string outputTexture;
     };

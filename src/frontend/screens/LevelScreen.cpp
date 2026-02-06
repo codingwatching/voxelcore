@@ -56,6 +56,7 @@ LevelScreen::LevelScreen(
     auto& assets = *engine.getAssets();
     auto menu = engine.getGUI().getMenu();
     menu->reset();
+    gui.setActiveFrame("");
 
     auto player = level->players->get(localPlayer);
     assert(player != nullptr);
