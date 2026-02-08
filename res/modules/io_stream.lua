@@ -259,7 +259,7 @@ function io_stream:read_line()
 end
 
 function io_stream:write_line(str)
-    self:__write(utf8.tobytes(str .. LF))
+    self:__write(utf8.tobytes(str .. "\n"))
 end
 
 function io_stream:read(arg, useTable)

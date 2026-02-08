@@ -519,7 +519,7 @@ audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
 local function __vc__process_post_runnables()
-    if #__post_runnables then
+    if #__post_runnables > 0 then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __vc__error)
             if not status then
