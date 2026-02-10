@@ -34,6 +34,7 @@ class Shader;
 class Shadows;
 class Skybox;
 class TextsRenderer;
+class CloudsRenderer;
 struct EngineSettings;
 
 struct CompileTimeShaderSettings {
@@ -57,6 +58,7 @@ class WorldRenderer {
     std::unique_ptr<Shadows> shadowMapping;
     std::unique_ptr<DebugLinesRenderer> debugLines;
     std::unique_ptr<PrecipitationRenderer> precipitation;
+    std::unique_ptr<CloudsRenderer> cloudsRenderer;
     Weather weather {};
     
     float timer = 0.0f;

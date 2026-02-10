@@ -130,21 +130,22 @@ void Shadows::refresh(
     const std::function<void(Camera&)>& renderShadowPass
 ) {
     static int frameid = 0;
-    if (shadows) {
-        if (frameid % 2 == 0) {
-            generateShadowsMap(
-                camera, pctx, *shadowMap, shadowCamera, 1.0f, renderShadowPass
-            );
-        } else {
-            generateShadowsMap(
-                camera,
-                pctx,
-                *wideShadowMap,
-                wideShadowCamera,
-                3.0f,
-                renderShadowPass
-            );
-        }
+    if (!shadows) {
+        return;
+    }
+    if (frameid % 2 == 0) {
+        generateShadowsMap(
+            camera, pctx, *shadowMap, shadowCamera, 1.0f, renderShadowPass
+        );
+    } else {
+        generateShadowsMap(
+            camera,
+            pctx,
+            *wideShadowMap,
+            wideShadowCamera,
+            3.0f,
+            renderShadowPass
+        );
     }
     frameid++;
 }
@@ -176,10 +177,7 @@ void Shadows::generateShadowsMap(
     shadowCamera.setAspectRatio(1.0f);
 
     float t = worldInfo.daytime - 0.25f;
-    if (t < 0.0f) {
-        t += 1.0f;
-    }
-    t = fmod(t, 0.5f);
+    t = glm::mod(t < 0.0f ? t + 1.0f : t, 0.5f);
 
     float sunCycleStep = 1.0f / 500.0f;
     float sunAngle = glm::radians(
@@ -206,15 +204,13 @@ void Shadows::generateShadowsMap(
 
     shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 1000.0f));
 
-    {
-        auto sctx = pctx.sub();
-        sctx.setDepthTest(true);
-        sctx.setCullFace(true);
-        sctx.setViewport({resolution, resolution});
-        shadowMap.bind();
-        if (renderShadowPass) {
-            renderShadowPass(shadowCamera);
-        }
-        shadowMap.unbind();
+    auto sctx = pctx.sub();
+    sctx.setDepthTest(true);
+    sctx.setCullFace(true);
+    sctx.setViewport({resolution, resolution});
+    shadowMap.bind();
+    if (renderShadowPass) {
+        renderShadowPass(shadowCamera);
     }
+    shadowMap.unbind();
 }

@@ -6,15 +6,17 @@
 
 #include <cstring>
 
+class Content;
+
 class VoxelsVolume {
 public:
-    static inline constexpr size_t MAX_VOXELS = CHUNK_VOL * 2;
-
     VoxelsVolume(int w, int h, int d)
      : VoxelsVolume(0, 0, 0, w, h, d) {}
 
     VoxelsVolume(int x, int y, int z, int w, int h, int d)
-        : x(x), y(y), z(z), w(w), h(h), d(d) {
+        : x(x), y(y), z(z), w(w), h(h), d(d),
+          voxels(std::make_unique<voxel[]>(w * h * d)),
+          lights(std::make_unique<light_t[]>(w * h * d)) {
         std::memset(voxels.get(), 0xFF, sizeof(voxel) * w * h * d);
     }
 
@@ -52,7 +54,15 @@ public:
         return voxels.get();
     }
 
+    const voxel* getVoxels() const {
+        return voxels.get();
+    }
+
     light_t* getLights() {
+        return lights.get();
+    }
+
+    const light_t* getLights() const {
         return lights.get();
     }
 
@@ -80,6 +90,8 @@ public:
         }
         return lights[vox_index(bx - x, by - y, bz - z, w, d)];
     }
+
+    void compressInto(VoxelsVolume& dst, const Content& content) const;
 private:
     int x, y, z;
     int w, h, d;

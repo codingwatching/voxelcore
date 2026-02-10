@@ -50,6 +50,7 @@
 #include "Skybox.hpp"
 #include "Emitter.hpp"
 #include "TextNote.hpp"
+#include "CloudsRenderer.hpp"
 
 #include <assert.h>
 #include <algorithm>
@@ -116,6 +117,7 @@ WorldRenderer::WorldRenderer(
     );
     shadowMapping = std::make_unique<Shadows>(level);
     debugLines = std::make_unique<DebugLinesRenderer>(level);
+    cloudsRenderer = std::make_unique<CloudsRenderer>(assets);
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -210,6 +212,7 @@ void WorldRenderer::renderOpaque(
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunksRenderer->drawChunks(camera, shader);
+    cloudsRenderer->draw(timer, fogFactor, camera);
     blockWraps->draw(ctx, player);
 
     if (hudVisible) {
@@ -369,7 +372,7 @@ void WorldRenderer::renderFrame(
         if (gbufferPipeline) {
             postProcessing.bindDepthBuffer();
         } else {
-            postProcessing.getFramebuffer()->bind();
+            ctx.setFramebuffer(postProcessing.getFramebuffer());
         }
 
         // Background sky plane
@@ -448,43 +451,45 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     int y = std::floor(player.currentCamera->position.y);
     int z = std::floor(player.currentCamera->position.z);
     auto block = player.chunks->get(x, y, z);
-    if (block && block->id) {
-        const auto& def = level.content.getIndices()->blocks.require(block->id);
-        if (def.overlayTexture.empty()) {
-            return;
-        }
-        auto textureRegion = util::get_texture_region(
-            assets, def.overlayTexture, "blocks:notfound"
-        );
-        DrawContext ctx = wctx.sub();
-        ctx.setDepthTest(false);
-        ctx.setCullFace(false);
-        
-        auto& shader = assets.require<Shader>("ui3d");
-        shader.use();
-        batch3d->begin();
-        shader.uniformMatrix("u_projview", glm::mat4(1.0f));
-        shader.uniformMatrix("u_apply", glm::mat4(1.0f));
-        auto light = player.chunks->getLight(x, y, z);
-        float s = Lightmap::extract(light, 3) / 15.0f;
-        glm::vec4 tint(
-            glm::min(1.0f, Lightmap::extract(light, 0) / 15.0f + s),
-            glm::min(1.0f, Lightmap::extract(light, 1) / 15.0f + s),
-            glm::min(1.0f, Lightmap::extract(light, 2) / 15.0f + s),
-            1.0f
-        );
-        batch3d->texture(textureRegion.texture);
-        batch3d->sprite(
-            glm::vec3(),
-            glm::vec3(0, 1, 0),
-            glm::vec3(1, 0, 0),
-            2,
-            2,
-            textureRegion.region,
-            tint
-        );
-        batch3d->flush();
+
+    if (block == nullptr || block->id == BLOCK_AIR || block->id == BLOCK_VOID) {
+        return;
     }
+    const auto& def = level.content.getIndices()->blocks.require(block->id);
+    if (def.overlayTexture.empty()) {
+        return;
+    }
+    auto textureRegion = util::get_texture_region(
+        assets, def.overlayTexture, "blocks:notfound"
+    );
+    DrawContext ctx = wctx.sub();
+    ctx.setDepthTest(false);
+    ctx.setCullFace(false);
+    
+    auto& shader = assets.require<Shader>("ui3d");
+    shader.use();
+    batch3d->begin();
+    shader.uniformMatrix("u_projview", glm::mat4(1.0f));
+    shader.uniformMatrix("u_apply", glm::mat4(1.0f));
+    auto light = player.chunks->getLight(x, y, z);
+    float s = Lightmap::extract(light, 3) / 15.0f;
+    glm::vec4 tint(
+        glm::min(1.0f, Lightmap::extract(light, 0) / 15.0f + s),
+        glm::min(1.0f, Lightmap::extract(light, 1) / 15.0f + s),
+        glm::min(1.0f, Lightmap::extract(light, 2) / 15.0f + s),
+        1.0f
+    );
+    batch3d->texture(textureRegion.texture);
+    batch3d->sprite(
+        glm::vec3(),
+        glm::vec3(0, 1, 0),
+        glm::vec3(1, 0, 0),
+        2,
+        2,
+        textureRegion.region,
+        tint
+    );
+    batch3d->flush();
 }
 
 void WorldRenderer::clear() {
