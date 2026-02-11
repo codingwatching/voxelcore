@@ -21,6 +21,7 @@ graphics.gamma.tooltip=Lighting brightness curve
 graphics.backlight.tooltip=Backlight to prevent total darkness
 graphics.dense-render.tooltip=Enables transparency in blocks like leaves
 graphics.soft-lighting.tooltip=Enables blocks soft lighting
+graphics.advanced-render.tooltip=Use graphics pipeline supporting advanced effects like shadows, SSAO
 
 # settings
 settings.Controls Search Mode=Search by attached button name
