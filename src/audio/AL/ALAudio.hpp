@@ -11,15 +11,9 @@
 #include "audio/audio.hpp"
 #include "audio/effects.hpp"
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#include <OpenAL/alext.h>
-#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-#endif
 
 namespace audio {
     struct ALBuffer;
