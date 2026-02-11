@@ -159,13 +159,11 @@ private:
     }
 };
 
-static inline constexpr int WIDTH = 256 / 2;
-static inline constexpr int DEPTH = 256 / 2;
+static inline constexpr int WIDTH = 256;
+static inline constexpr int DEPTH = 256;
 
 
 CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
-    timeutil::ScopeLogTimer log(111);
-
     VolumeRenderer volumeRenderer(1024 * 1024);
 
     for (int layer = 0; layer < 2; layer++) {
@@ -185,7 +183,7 @@ CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
                 float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
                 float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
                 float z = lz;
-                float s = 2.0f;
+                float s = 1.5f;
                 auto n = fnlGetNoise3D(&state, x * s, y * s, z * s);
                 n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 0.25f, y * s, z * 3.0f) * 0.5f;
                 n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
@@ -230,14 +228,14 @@ void CloudsRenderer::draw(float timer, float fogFactor, const Camera& camera) {
     auto& shader = assets.require<Shader>("main");
     assets.require<Texture>("misc/blank").bind();
 
-    float scale = 15;
+    float scale = 8;
     float totalWidth = WIDTH * scale;
     float totalDepth = DEPTH * scale;
 
     int cellX = glm::floor(camera.position.x / totalWidth + 0.5f);
     int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
 
-    float speed = 10.0f * 100.0;
+    float speed = 10.0f;
     for (int i = 0; i < 2; i++) {
         float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
         float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
