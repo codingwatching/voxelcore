@@ -1,5 +1,6 @@
 #include "stdin_reader.hpp"
 
+#include "engine/Engine.hpp"
 #include "logic/CommandsInterpreter.hpp"
 #include "coders/json.hpp"
 #include "debug/Logger.hpp"
@@ -11,8 +12,9 @@ static debug::Logger logger("stdin-reader");
 
 static std::thread reader_thread;
 
-void start_stdin_reader(cmd::CommandsInterpreter& interpreter) {
-    reader_thread = std::thread([&interpreter]() {
+void start_stdin_reader(Engine& engine) {
+    reader_thread = std::thread([&engine]() {
+        auto& interpreter = engine.getCmd();
         logger.info() << "reader thread started";
         
         std::string line;
@@ -20,16 +22,18 @@ void start_stdin_reader(cmd::CommandsInterpreter& interpreter) {
             if (line.empty()) {
                 continue;
             }
-            try {
-                auto result = interpreter.execute(line);
-                if (result.isString()) {
-                    logger.info() << result.asString();
-                } else {
-                    logger.info() << json::stringify(result, true);
+            engine.postRunnable([line, &interpreter] () {
+                try {
+                    auto result = interpreter.execute(line);
+                    if (result.isString()) {
+                        logger.info() << result.asString();
+                    } else {
+                        logger.info() << json::stringify(result, true);
+                    }
+                } catch (const std::exception& err) {
+                    logger.error() << err.what();
                 }
-            } catch (const std::exception& err) {
-                logger.error() << err.what();
-            }
+            });
         }
     });
     reader_thread.detach();

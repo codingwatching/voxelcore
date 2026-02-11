@@ -1,7 +1,5 @@
 #pragma once
 
-namespace cmd {
-    class CommandsInterpreter;
-}
+class Engine;
 
-void start_stdin_reader(cmd::CommandsInterpreter& interpreter);
+void start_stdin_reader(Engine& engine);

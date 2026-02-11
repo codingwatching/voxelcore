@@ -193,7 +193,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         project->loadProjectClientScript();
     }
     if (params.stdinCommands) {
-        start_stdin_reader(*cmd);
+        start_stdin_reader(*this);
     }
 }
 
