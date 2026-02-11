@@ -1,4 +1,4 @@
-#include "stdin_reader.hpp"
+#include "stdin_cmd_reader.hpp"
 
 #include "engine/Engine.hpp"
 #include "logic/CommandsInterpreter.hpp"
@@ -12,7 +12,7 @@ static debug::Logger logger("stdin-reader");
 
 static std::thread reader_thread;
 
-void start_stdin_reader(Engine& engine) {
+void cmd::start_stdin_cmd_reader(Engine& engine) {
     reader_thread = std::thread([&engine]() {
         auto& interpreter = engine.getCmd();
         logger.info() << "reader thread started";
