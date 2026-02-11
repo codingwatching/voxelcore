@@ -192,8 +192,9 @@ void Engine::initialize(CoreParameters coreParameters) {
     if (!params.headless) {
         project->loadProjectClientScript();
     }
-
-    start_stdin_reader(*cmd);
+    if (params.stdinCommands) {
+        start_stdin_reader(*cmd);
+    }
 }
 
 void Engine::loadSettings() {

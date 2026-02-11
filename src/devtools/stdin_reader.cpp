@@ -13,6 +13,8 @@ static std::thread reader_thread;
 
 void start_stdin_reader(cmd::CommandsInterpreter& interpreter) {
     reader_thread = std::thread([&interpreter]() {
+        logger.info() << "reader thread started";
+        
         std::string line;
         while (std::getline(std::cin, line)) {
             if (line.empty()) {
