@@ -15,6 +15,7 @@
 #include "devtools/DebuggingServer.hpp"
 #include "devtools/Editor.hpp"
 #include "devtools/Project.hpp"
+#include "devtools/stdin_reader.hpp"
 #include "EnginePaths.hpp"
 #include "frontend/locale.hpp"
 #include "frontend/menu.hpp"
@@ -190,6 +191,9 @@ void Engine::initialize(CoreParameters coreParameters) {
     project->loadProjectStartScript();
     if (!params.headless) {
         project->loadProjectClientScript();
+    }
+    if (params.stdinCommands) {
+        start_stdin_reader(*cmd);
     }
 }
 
