@@ -32,7 +32,7 @@ using namespace scripting;
 static DocumentNode get_document_node_impl(
     lua::State*, const std::string& name, const std::string& nodeName, bool throwable=true
 ) {
-    auto doc = engine->getAssets()->get<UiDocument>(name);
+    auto doc = engine->requireAssets().get<UiDocument>(name);
     if (doc == nullptr) {
         if (throwable) {
             throw std::runtime_error("document '" + name + "' not found");
@@ -1026,7 +1026,7 @@ static int l_gui_str(lua::State* L) {
 
 static int l_gui_reindex(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto doc = engine->getAssets()->get<UiDocument>(name);
+    auto doc = engine->requireAssets().get<UiDocument>(name);
     if (doc == nullptr) {
         throw std::runtime_error(
             "document '" + std::string(name) + "' not found"
@@ -1124,7 +1124,7 @@ static int l_gui_load_document(lua::State* L) {
         engine->getGUI(), std::move(env), alias, filename, filename.string()
     );
     auto document = documentPtr.get();
-    engine->getAssets()->store(std::move(documentPtr), alias);
+    engine->requireAssets().store(std::move(documentPtr), alias);
 
     // namespace extension
     if (lua::istable(L, 4)) {
