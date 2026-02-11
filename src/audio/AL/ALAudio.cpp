@@ -788,10 +788,18 @@ void ALAudio::setAcoustics(Acoustics acoustics) {
         return;
     }
     int reverbEffect = effects[REVERB_EFFECT];
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_GAIN,
+        glm::max(0.1f, glm::min(acoustics.reverbGain, 0.8f) *
+            (1.0f - glm::min(1.0f, acoustics.reverbAbsorption)))
+    ));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_DELAY, acoustics.reverbReflectionsDelay));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_LATE_REVERB_DELAY, acoustics.reverbLateReflectionsDelay));
     AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, std::max<float>(0.1f, acoustics.reverbDecayTime)));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.14f));
-    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
-    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.99f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, acoustics.reverbRoomRolloff));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, glm::pow(acoustics.reverbGain, 2.0f)));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_LATE_REVERB_GAIN, glm::pow(acoustics.reverbGain, 2.0f)));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_HFRATIO, 1.0f - acoustics.reverbAbsorption));
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }

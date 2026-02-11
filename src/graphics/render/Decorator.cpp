@@ -97,34 +97,63 @@ void Decorator::updateAcoustics(const Camera& camera) {
     const auto& start = camera.position;
     float rayLength = 40.0f;
 
+    auto& blocks = level.content.getIndices()->blocks;
+
     int rays = 100;
     int hit = 0;
     float averageDistance = 0.0f;
+    float averageAbsorption = 0.0f;
+    float speedOfSound = 300.0f;
+    float minDistance = rayLength;
     for (int i = 0; i < rays; i++) {
-        glm::vec3 dir {
-            random.randFloat() - 0.5f,
-            random.randFloat() - 0.5f,
-            random.randFloat() - 0.5f,
-        };
+        float u1 = random.randFloat();
+        float u2 = random.randFloat();
+        float z = 2.0f * u1 - 1.0f;
+        float phi = 2.0f * glm::pi<float>() * u2;
+        float r = std::sqrt(1.0f - z * z);
+
+        glm::vec3 dir = { r * std::cos(phi), r * std::sin(phi), z };
+
         dir = glm::normalize(dir);
-        auto end = chunks.rayCastToObstacle(start, dir, rayLength);
+        glm::vec3 end;
+        glm::ivec3 norm;
+        glm::ivec3 iend;
+        auto vox = chunks.rayCast(start, dir, rayLength, end, norm, iend);
+        if (vox == nullptr) {
+            continue;
+        }
         auto distance = glm::distance(start, end);
         if (distance >= rayLength * 0.98f) {
             continue;
         }
+        if (distance < minDistance) {
+            minDistance = distance;
+        }
+        auto def = blocks.get(vox->id);
+        if (def == nullptr) {
+            continue;
+        }
+        auto material = level.content.findBlockMaterial(def->material);
+        if (material == nullptr) {
+            return;
+        }
         hit++;
-        averageDistance += distance * 0.2f;
+        averageDistance += distance;
+        averageAbsorption += material->soundAbsorption;
     }
-    float decayTime =
-        glm::sqrt(averageDistance / hit) *
-        glm::max(0.0f, glm::pow(hit / static_cast<float>(rays), 3.0f) - 0.6f) *
-        1.6f;
-    decayTime *= 2.5f;
-    decayTime *= decayTime;
-    logger.info() << "rays hit " << hit << "/" << rays << " decay-time: " << decayTime;
+    averageDistance /= hit;
+    averageAbsorption /= hit;
 
+    float decayTime = 20.0f * (averageDistance / rayLength);
+    float escapeRatio = static_cast<float>(rays - hit) / static_cast<float>(rays);
 
+    acoustics.reverbGain = glm::pow(hit / static_cast<float>(rays), 3.0f);
+    acoustics.reverbReflectionsDelay = minDistance / speedOfSound;
+    acoustics.reverbLateReflectionsDelay = averageDistance / speedOfSound;
     acoustics.reverbDecayTime = decayTime;
+    acoustics.reverbRoomRolloff = escapeRatio * 1.5f;
+    acoustics.reverbAbsorption = averageAbsorption;
+
     audio::set_acoustics(std::move(acoustics));
 }
 

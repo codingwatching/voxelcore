@@ -28,6 +28,11 @@ namespace audio {
     };
 
     struct Acoustics {
+        float reverbGain;
+        float reverbReflectionsDelay;
+        float reverbLateReflectionsDelay;
         float reverbDecayTime;
+        float reverbRoomRolloff;
+        float reverbAbsorption;
     };
 }
