@@ -15,7 +15,7 @@
 #include "devtools/DebuggingServer.hpp"
 #include "devtools/Editor.hpp"
 #include "devtools/Project.hpp"
-#include "devtools/StdinReader.hpp"
+#include "devtools/stdin_reader.hpp"
 #include "EnginePaths.hpp"
 #include "frontend/locale.hpp"
 #include "frontend/menu.hpp"

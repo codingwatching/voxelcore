@@ -1,4 +1,4 @@
-#include "StdinReader.hpp"
+#include "stdin_reader.hpp"
 
 #include "logic/CommandsInterpreter.hpp"
 #include "coders/json.hpp"
