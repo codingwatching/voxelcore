@@ -32,6 +32,9 @@ using namespace scripting;
 static DocumentNode get_document_node_impl(
     lua::State*, const std::string& name, const std::string& nodeName, bool throwable=true
 ) {
+    if (engine->isHeadless()) {
+        throw std::runtime_error("not available in headless mode");
+    }
     auto doc = engine->getAssets()->get<UiDocument>(name);
     if (doc == nullptr) {
         if (throwable) {

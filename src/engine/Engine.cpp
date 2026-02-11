@@ -420,7 +420,7 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-    return assets->getStorage();
+    return assets ? assets->getStorage() : nullptr;
 }
 
 AssetsLoader& Engine::acquireBackgroundLoader() {

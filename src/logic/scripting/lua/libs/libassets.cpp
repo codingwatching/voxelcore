@@ -26,6 +26,9 @@ static void load_texture(
 }
 
 static int l_request_texture(lua::State* L) {
+    if (engine->isHeadless()) {
+        throw std::runtime_error("not available in headless mode");
+    }
     std::string filename = lua::require_string(L, 1);
     std::string alias = lua::require_string(L, 2);
     auto& loader = engine->acquireBackgroundLoader();
@@ -34,6 +37,9 @@ static int l_request_texture(lua::State* L) {
 }
 
 static int l_load_texture(lua::State* L) {
+    if (engine->isHeadless()) {
+        throw std::runtime_error("not available in headless mode");
+    }
     if (lua::isstring(L, 3) && lua::require_lstring(L, 3) != "png") {
         throw std::runtime_error("unsupportd image format");
     }
@@ -61,6 +67,9 @@ static int l_load_texture(lua::State* L) {
 }
 
 static int l_parse_model(lua::State* L) {
+    if (engine->isHeadless()) {
+        throw std::runtime_error("not available in headless mode");
+    }
     auto format = lua::require_lstring(L, 1);
     auto string = lua::require_lstring(L, 2);
     auto name = lua::require_string(L, 3);
@@ -79,6 +88,9 @@ static int l_parse_model(lua::State* L) {
 }
 
 static int l_to_canvas(lua::State* L) {
+    if (engine->isHeadless()) {
+        throw std::runtime_error("not available in headless mode");
+    }
     auto& assets = *engine->getAssets();
 
     auto alias = lua::require_lstring(L, 1);
