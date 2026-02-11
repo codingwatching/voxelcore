@@ -173,25 +173,43 @@ CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
         const int w = WIDTH;
         const int h = 8;
         const int d = DEPTH;
+        const int dd = d * 1.5;
 
-        state.seed = 52365 + layer * 3521;
+        state.seed = 5265 + layer * 3521;
+
+        float pi2 = glm::two_pi<float>();
+
+        float heightmap[w * dd];
+        for (int lz = 0; lz < dd; lz++) {
+            for (int lx = 0; lx < w; lx++) {
+                float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
+                float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
+                float z = lz;
+                float s = 2.0f;
+                auto n = fnlGetNoise3D(&state, x * s, y * s, z * s);
+                n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 0.25f, y * s, z * 3.0f) * 0.5f;
+                n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
+                n += fnlGetNoise3D(&state, x * s * 4, y * s * 4, z * s * 4) * 0.125f * 2;
+                n += fnlGetNoise3D(&state, x * s * 8, y * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
+                n += fnlGetNoise3D(&state, x * s * 16, y * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
+                n = glm::max(0.0f, n);
+                // n = n * n * 2.0f;
+                n -= 0.2f + layer * 0.5f;
+                // n -= 0.5f;
+
+                heightmap[lz * w + lx] = n;
+            }
+        }
 
         bool voxels[w * h * d];
         for (int y = 0; y < h; y++) {
             for (int z = 0; z < d; z++) {
                 for (int x = 0; x < w; x++) {
-                    float s = 2.0f;
-                    auto n = fnlGetNoise2D(&state, x * s, z * s);
-                    n += fnlGetNoise2D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 0.25f, z * 3.0f) * 0.5f;
-                    n += fnlGetNoise2D(&state, x * s * 2, z * s * 2) * 0.25f;
-                    n += fnlGetNoise2D(&state, x * s * 4, z * s * 4) * 0.125f * 2;
-                    n += fnlGetNoise2D(&state, x * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
-                    n += fnlGetNoise2D(&state, x * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
-                    n = glm::max(0.0f, n);
-                    // n = n * n * 2.0f;
-                    n -= 0.2f + layer * 0.5f;
-                    // n -= 0.5f;
-
+                    float n = heightmap[z * w + x];
+                    if (z < d / 2) {
+                        float t = z / static_cast<float>(d / 2);
+                        n = n * t + heightmap[(d + z) * w + x] * (1.0f - t);
+                    }
                     bool solid = y <= n * h && y >= (0.5f - n * 0.5f) * h;
                     voxels[vox_index(x, y, z, w, d)] = solid;
                 }
@@ -208,8 +226,6 @@ CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
 
 CloudsRenderer::~CloudsRenderer() = default;
 
-#include "util/timeutil.hpp"
-
 void CloudsRenderer::draw(float timer, float fogFactor, const Camera& camera) {
     auto& shader = assets.require<Shader>("main");
     assets.require<Texture>("misc/blank").bind();
@@ -218,26 +234,24 @@ void CloudsRenderer::draw(float timer, float fogFactor, const Camera& camera) {
     float totalWidth = WIDTH * scale;
     float totalDepth = DEPTH * scale;
 
-    int cellX = glm::round(camera.position.x / totalWidth);
-    int cellZ = glm::round(camera.position.z / totalDepth);
+    int cellX = glm::floor(camera.position.x / totalWidth + 0.5f);
+    int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
 
-    float speed = 10.0f;
-    
-    timeutil::ScopeLogTimer log(555);
-
+    float speed = 10.0f * 100.0;
     for (int i = 0; i < 2; i++) {
-        float speedX = glm::sin(i * 0.3f) * speed / (i + 1);
-        float speedZ = -glm::cos(i * 0.3f) * speed / (i + 1);
+        float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
+        float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
                 auto matrix = glm::mat4(1.0f);
-                // matrix = glm::rotate(matrix, timer * 0.003f * (i % 2 * 2 - 1) + i, glm::vec3(0, 1, 0));
                 matrix = glm::translate(
                     matrix,
                     glm::vec3(
-                        -128 * scale + (x + cellX) * WIDTH * scale + glm::mod(timer * speedX, totalWidth),
+                        -128 * scale + (x + cellX) * WIDTH * scale +
+                            glm::mod(timer * speedX, totalWidth),
                         250 + i * 200,
-                        -128 * scale + (z + cellZ) * DEPTH * scale + glm::mod(timer * speedZ, totalDepth)
+                        -128 * scale + (z + cellZ) * DEPTH * scale +
+                            glm::mod(timer * speedZ, totalDepth)
                     )
                 );
                 matrix = glm::scale(matrix, glm::vec3(scale, scale, scale));
