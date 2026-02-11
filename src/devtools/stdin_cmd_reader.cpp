@@ -8,7 +8,7 @@
 #include <thread>
 #include <iostream>
 
-static debug::Logger logger("stdin-reader");
+static debug::Logger logger("stdin-cmd");
 
 static std::thread reader_thread;
 

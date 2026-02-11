@@ -15,10 +15,10 @@
 using namespace scripting;
 
 static void load_texture(
-    const ubyte* bytes, size_t size, const std::string& destname
+    Assets& assets, const ubyte* bytes, size_t size, const std::string& destname
 ) {
     try {
-        engine->getAssets()->store(png::load_texture(bytes, size), destname);
+        assets.store(png::load_texture(bytes, size), destname);
     } catch (const std::runtime_error& err) {
         debug::Logger logger("lua.assetslib");
         logger.error() << err.what();
@@ -26,9 +26,6 @@ static void load_texture(
 }
 
 static int l_request_texture(lua::State* L) {
-    if (engine->isHeadless()) {
-        throw std::runtime_error("not available in headless mode");
-    }
     std::string filename = lua::require_string(L, 1);
     std::string alias = lua::require_string(L, 2);
     auto& loader = engine->acquireBackgroundLoader();
@@ -37,9 +34,8 @@ static int l_request_texture(lua::State* L) {
 }
 
 static int l_load_texture(lua::State* L) {
-    if (engine->isHeadless()) {
-        throw std::runtime_error("not available in headless mode");
-    }
+    auto& assets = engine->requireAssets();
+
     if (lua::isstring(L, 3) && lua::require_lstring(L, 3) != "png") {
         throw std::runtime_error("unsupportd image format");
     }
@@ -53,10 +49,13 @@ static int l_load_texture(lua::State* L) {
             lua::pop(L);
         }
         lua::pop(L);
-        load_texture(buffer.data(), buffer.size(), lua::require_string(L, 2));
+        load_texture(
+            assets, buffer.data(), buffer.size(), lua::require_string(L, 2)
+        );
     } else {
         auto string = lua::bytearray_as_string(L, 1);
         load_texture(
+            assets,
             reinterpret_cast<const ubyte*>(string.data()),
             string.size(),
             lua::require_string(L, 2)
@@ -67,16 +66,15 @@ static int l_load_texture(lua::State* L) {
 }
 
 static int l_parse_model(lua::State* L) {
-    if (engine->isHeadless()) {
-        throw std::runtime_error("not available in headless mode");
-    }
+    auto& assets = engine->requireAssets();
+
     auto format = lua::require_lstring(L, 1);
     auto string = lua::require_lstring(L, 2);
     auto name = lua::require_string(L, 3);
     
     if (format == "xml" || format == "vcm") {
         auto vcmModel = vcm::parse(name, string, format == "xml");
-        engine->getAssets()->store(
+        assets.store(
             std::make_unique<model::Model>(std::move(vcmModel.squash())), name
         );
     } else {
@@ -88,10 +86,7 @@ static int l_parse_model(lua::State* L) {
 }
 
 static int l_to_canvas(lua::State* L) {
-    if (engine->isHeadless()) {
-        throw std::runtime_error("not available in headless mode");
-    }
-    auto& assets = *engine->getAssets();
+    auto& assets = engine->requireAssets();
 
     auto alias = lua::require_lstring(L, 1);
     size_t sep = alias.rfind(':');
