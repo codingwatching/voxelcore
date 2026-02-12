@@ -141,8 +141,10 @@ void Decorator::updateAcoustics(const Camera& camera) {
         averageDistance += distance;
         averageAbsorption += material->soundAbsorption;
     }
-    averageDistance /= hit;
-    averageAbsorption /= hit;
+    if (hit > 0) {
+        averageDistance /= hit;
+        averageAbsorption /= hit;
+    }
 
     float decayTime = 20.0f * (averageDistance / rayLength);
     float escapeRatio = static_cast<float>(rays - hit) / static_cast<float>(rays);

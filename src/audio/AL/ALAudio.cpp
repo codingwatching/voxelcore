@@ -806,12 +806,68 @@ void ALAudio::setAcoustics(Acoustics acoustics) {
         glm::max(0.1f, glm::min(acoustics.reverbGain, 0.8f) *
             (1.0f - glm::min(1.0f, acoustics.reverbAbsorption)))
     ));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_DELAY, acoustics.reverbReflectionsDelay));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_LATE_REVERB_DELAY, acoustics.reverbLateReflectionsDelay));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, std::max<float>(0.1f, acoustics.reverbDecayTime)));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, acoustics.reverbRoomRolloff));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, glm::pow(acoustics.reverbGain, 2.0f)));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_LATE_REVERB_GAIN, glm::pow(acoustics.reverbGain, 2.0f)));
-    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_HFRATIO, 1.0f - acoustics.reverbAbsorption));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_REFLECTIONS_DELAY,
+        glm::clamp(
+            acoustics.reverbReflectionsDelay,
+            AL_REVERB_MIN_REFLECTIONS_DELAY,
+            AL_REVERB_MAX_REFLECTIONS_DELAY
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_LATE_REVERB_DELAY,
+        glm::clamp(
+            acoustics.reverbLateReflectionsDelay,
+            AL_REVERB_MIN_LATE_REVERB_DELAY,
+            AL_REVERB_MAX_LATE_REVERB_DELAY
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_DECAY_TIME,
+        glm::clamp(
+            acoustics.reverbDecayTime,
+            AL_REVERB_MIN_DECAY_TIME,
+            AL_REVERB_MAX_DECAY_TIME
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_ROOM_ROLLOFF_FACTOR,
+        glm::clamp(
+            acoustics.reverbRoomRolloff,
+            AL_REVERB_MIN_ROOM_ROLLOFF_FACTOR,
+            AL_REVERB_MAX_ROOM_ROLLOFF_FACTOR
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_REFLECTIONS_GAIN,
+        glm::clamp(
+            glm::pow(acoustics.reverbGain, 2.0f),
+            AL_REVERB_MIN_REFLECTIONS_GAIN,
+            AL_REVERB_MAX_REFLECTIONS_GAIN
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_LATE_REVERB_GAIN,
+        glm::clamp(
+            glm::pow(acoustics.reverbGain, 2.0f),
+            AL_REVERB_MIN_LATE_REVERB_GAIN,
+            AL_REVERB_MAX_LATE_REVERB_GAIN
+        )
+    ));
+    AL_CHECK(alEffectf(
+        reverbEffect,
+        AL_REVERB_DECAY_HFRATIO,
+        glm::clamp(
+            1.0f - acoustics.reverbAbsorption,
+            AL_REVERB_MIN_DECAY_HFRATIO,
+            AL_REVERB_MAX_DECAY_HFRATIO
+        )
+    ));
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }
