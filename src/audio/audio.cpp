@@ -159,7 +159,7 @@ void audio::initialize(
     enabled = enabled && settings.enabled.get();
     if (enabled) {
         logger.info() << "initializing ALAudio backend";
-        backend = ALAudio::create().release();
+        backend = ALAudio::create(settings).release();
     }
     if (backend == nullptr) {
         if (enabled) {

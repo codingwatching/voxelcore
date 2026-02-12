@@ -15,6 +15,8 @@
 #include <AL/alc.h>
 #include <AL/alext.h>
 
+struct AudioSettings;
+
 namespace audio {
     struct ALBuffer;
     class ALAudio;
@@ -177,6 +179,8 @@ namespace audio {
         uint maxSources = 256;
         uint maxEffectSlots = 64;
 
+        const AudioSettings& settings;
+
         bool initEffects();
     public:
         std::vector<uint> effectSlots;
@@ -185,7 +189,12 @@ namespace audio {
 
         bool useEffects;
 
-        ALAudio(ALCdevice* device, ALCcontext* context, bool effects);
+        ALAudio(
+            ALCdevice* device,
+            ALCcontext* context,
+            bool effects,
+            const AudioSettings& settings
+        );
         ~ALAudio();
 
         uint getFreeSource();
@@ -226,6 +235,6 @@ namespace audio {
             return false;
         }
 
-        static std::unique_ptr<ALAudio> create();
+        static std::unique_ptr<ALAudio> create(const AudioSettings& settings);
     };
 }

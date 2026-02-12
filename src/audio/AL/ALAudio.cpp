@@ -481,8 +481,16 @@ bool ALSpeaker::isManuallyStopped() const {
 
 static bool alc_enumeration_ext = false;
 
-ALAudio::ALAudio(ALCdevice* device, ALCcontext* context, bool useEffects)
-    : device(device), context(context), useEffects(useEffects) {
+ALAudio::ALAudio(
+    ALCdevice* device,
+    ALCcontext* context,
+    bool useEffects,
+    const AudioSettings& settings
+)
+    : device(device),
+      context(context),
+      settings(settings),
+      useEffects(useEffects) {
     ALCint size;
     alcGetIntegerv(device, ALC_ATTRIBUTES_SIZE, 1, &size);
     std::vector<ALCint> attrs(size);
@@ -693,7 +701,7 @@ std::unique_ptr<InputDevice> ALAudio::openInputDevice(
     );
 }
 
-std::unique_ptr<ALAudio> ALAudio::create() {
+std::unique_ptr<ALAudio> ALAudio::create(const AudioSettings& settings) {
     alc_enumeration_ext = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
 
     ALCdevice* device = alcOpenDevice(nullptr);
@@ -722,7 +730,7 @@ std::unique_ptr<ALAudio> ALAudio::create() {
     logger.info() << "device supports " << sends << " aux sends per source";
 
     logger.info() << "initialized";
-    return std::make_unique<ALAudio>(device, context, effects);
+    return std::make_unique<ALAudio>(device, context, effects, settings);
 }
 
 uint ALAudio::getFreeSource() {
@@ -785,6 +793,10 @@ void ALAudio::update(double) {
 
 void ALAudio::setAcoustics(Acoustics acoustics) {
     if (!useEffects) {
+        return;
+    }
+    if (!settings.acousticEffects.get()) {
+        alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, 0);
         return;
     }
     int reverbEffect = effects[REVERB_EFFECT];
