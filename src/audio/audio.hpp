@@ -43,8 +43,9 @@ namespace audio {
         /// @brief Channel volume setting
         float volume = 1.0f;
         bool paused = false;
+        bool effects;
     public:
-        Channel(std::string name);
+        Channel(std::string name, bool effects);
 
         /// @brief Get channel volume
         float getVolume() const;
@@ -73,6 +74,9 @@ namespace audio {
 
         /// @brief Check if the channel is paused
         bool isPaused() const;
+
+        /// @brief Check if the channel uses common acoustic effects / filters
+        bool isEffectsApplied() const;
     };
 
     /// @brief Pulse-code modulation data
@@ -549,8 +553,9 @@ namespace audio {
     /// @brief Create new channel.
     /// All non-builtin channels will be destroyed on audio::reset() call
     /// @param name channel name
+    /// @param effects use common acoustic effects / filters
     /// @return new channel index
-    int create_channel(const std::string& name);
+    int create_channel(const std::string& name, bool effects);
 
     /// @brief Get channel index by name
     /// @param name channel name

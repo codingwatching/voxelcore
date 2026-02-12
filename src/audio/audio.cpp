@@ -27,7 +27,8 @@ namespace {
     static bool input_enabled = false;
 }
 
-Channel::Channel(std::string name) : name(std::move(name)) {
+Channel::Channel(std::string name, bool effects)
+    : name(std::move(name)), effects(effects) {
 }
 
 float Channel::getVolume() const {
@@ -54,6 +55,10 @@ void Channel::resume() {
 
 bool Channel::isPaused() const {
     return paused;
+}
+
+bool Channel::isEffectsApplied() const {
+    return effects;
 }
 
 size_t PCMStream::readFully(char* buffer, size_t bufferSize, bool loop) {
@@ -171,15 +176,16 @@ void audio::initialize(
     struct {
         std::string name;
         NumberSetting* setting;
+        bool effects;
     } builtin_channels[] {
-        {"master", &settings.volumeMaster},
-        {"regular", &settings.volumeRegular},
-        {"music", &settings.volumeMusic},
-        {"ambient", &settings.volumeAmbient},
-        {"ui", &settings.volumeUI}
+        {"master", &settings.volumeMaster, false},
+        {"regular", &settings.volumeRegular, true},
+        {"music", &settings.volumeMusic, false},
+        {"ambient", &settings.volumeAmbient, true},
+        {"ui", &settings.volumeUI, false}
     };
     for (auto& channel : builtin_channels) {
-        create_channel(channel.name);
+        create_channel(channel.name, channel.effects);
         objects_keeper.keepAlive(channel.setting->observe([=](auto value) {
             audio::get_channel(channel.name)->setVolume(value * value);
         }, true));
@@ -419,12 +425,12 @@ Speaker* audio::get_speaker(speakerid_t id) {
     return found->second.get();
 }
 
-int audio::create_channel(const std::string& name) {
+int audio::create_channel(const std::string& name, bool effects) {
     int index = get_channel_index(name);
     if (index != -1) {
         return index;
     }
-    channels.emplace_back(std::make_unique<Channel>(name));
+    channels.emplace_back(std::make_unique<Channel>(name, effects));
     return channels.size() - 1;
 }
 

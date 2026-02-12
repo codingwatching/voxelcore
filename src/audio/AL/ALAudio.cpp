@@ -392,15 +392,18 @@ void ALSpeaker::setLoop(bool loop) {
 void ALSpeaker::play() {
     paused = false;
     manuallyStopped = false;
-    auto p_channel = get_channel(this->channel);
+    auto channel = get_channel(this->channel);
     AL_CHECK(alSourcef(
         source,
         AL_GAIN,
-        volume * p_channel->getVolume()
+        volume * channel->getVolume()
     ));
-    if (al->useEffects) {
+    if (al->useEffects && channel->isEffectsApplied()) {
         AL_CHECK(alSource3i(source, AL_AUXILIARY_SEND_FILTER, al->effectSlots[0], 0, al->filters[0]));
-        //AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER]));
+        //AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER])); // TODO: use lowpass filter
+    } else {
+        AL_CHECK(alSource3i(source, AL_AUXILIARY_SEND_FILTER, 0, 0, 0));
+        AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, 0));
     }
     AL_CHECK(alSourcePlay(source));
 }
@@ -598,14 +601,12 @@ bool ALAudio::initEffects() {
         }
     }
 
-    // Create reverb effect
     alEffecti(effects[REVERB_EFFECT], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
     if (alGetError() != AL_NO_ERROR) {
         logger.error() << "reverb effect is not supported";
         return false;
     }
 
-    // Create lowpass filter
     alFilteri(filters[LOWPASS_FILTER], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
     if (alGetError() != AL_NO_ERROR) {
         logger.error() << "lowpass filter is not supported";
@@ -614,7 +615,6 @@ bool ALAudio::initEffects() {
     alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAIN, 1.0f);
     alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAINHF, 0.01f);
 
-    // Attach effect to aux effect slot
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, effects[0]);
     if (alGetError() == AL_NO_ERROR) {
         logger.info() << "successfully loaded effect into effect slot";
