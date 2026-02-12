@@ -88,4 +88,5 @@ template<> void ContentUnitLoader<EntityDef>::loadUnit(
 
     root.at("skeleton-name").get(def.skeletonName);
     root.at("blocking").get(def.blocking);
+    root.at("step-height").get(def.stepHeight);
 }

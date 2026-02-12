@@ -42,7 +42,7 @@ void PhysicsSolver::step(
         vel += gravity * dt * gravityScale;
         if (hitbox.type == BodyType::DYNAMIC) {
             colisionCalc(chunks, hitbox, vel, pos, half, 
-                         (prevGrounded && gravityScale > 0.0f) ? 0.5f : 0.0f);
+                         (prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f);
         }
 
         pos += vel * dt + gravity * gravityScale * dt * dt * 0.5f;
