@@ -38,6 +38,7 @@ error.dependency-version-not-met=Версия зависимости не соо
 pack.remove-confirm=Удалить весь поставляемый паком/паками контент из мира (безвозвратно)?
 
 # Подсказки
+audio.acoustic-effects.tooltip=Акустические эффекты могут не поддерживаться системой
 graphics.gamma.tooltip=Кривая яркости освещения
 graphics.backlight.tooltip=Подсветка, предотвращающая полную темноту
 graphics.dense-render.tooltip=Включает прозрачность блоков, таких как листья
@@ -111,6 +112,7 @@ settings.Windowed=Оконный
 settings.Borderless=Безрамочный
 settings.Microphone=Микрофон
 settings.microphone.None=Нет
+settings.Acoustic effects=Акустические эффекты
 
 # Управление
 chunks.reload=Перезагрузить Чанки

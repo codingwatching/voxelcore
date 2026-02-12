@@ -39,7 +39,7 @@ function on_open()
     create_setting("chunks.load-distance", "Load Distance", 1)
     create_setting("chunks.load-speed", "Load Speed", 1)
     create_setting("graphics.fog-curve", "Fog Curve", 0.1)
-    
+
     create_checkbox("graphics.backlight", "Backlight", "graphics.backlight.tooltip")
     create_checkbox("graphics.soft-lighting", "Soft lighting", "graphics.soft-lighting.tooltip")
     create_checkbox("graphics.dense-render", "Dense blocks render", "graphics.dense-render.tooltip")

@@ -147,6 +147,7 @@ struct BlockMaterial : Serializable {
     std::string placeSound;
     std::string breakSound;
     std::string hitSound;
+    float soundAbsorption = 0.5f;
 
     dv::value toTable() const; // for compatibility
     dv::value serialize() const override;
