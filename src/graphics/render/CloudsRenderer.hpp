@@ -18,7 +18,8 @@ public:
         const Weather& weather,
         float timer,
         float fogFactor,
-        const Camera& camera
+        const Camera& camera,
+        int quality
     );
 private:
     std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> testMeshes;

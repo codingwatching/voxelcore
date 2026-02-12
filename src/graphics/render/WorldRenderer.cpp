@@ -215,8 +215,13 @@ void WorldRenderer::renderOpaque(
     chunksRenderer->drawChunks(camera, shader);
     blockWraps->draw(ctx, player);
 
-    setupWorldShader(cloudsShader, camera, settings, fogFactor);
-    cloudsRenderer->draw(cloudsShader, weather, timer, fogFactor, camera);
+    int cloudsQuality = settings.graphics.cloudsQuality.get();
+    if (cloudsQuality > 0) {
+        setupWorldShader(cloudsShader, camera, settings, fogFactor);
+        cloudsRenderer->draw(
+            cloudsShader, weather, timer, fogFactor, camera, cloudsQuality
+        );
+    }
 
     if (hudVisible) {
         renderLines(camera, linesShader, ctx);

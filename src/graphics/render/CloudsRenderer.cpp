@@ -229,7 +229,8 @@ void CloudsRenderer::draw(
     const Weather& weather,
     float timer,
     float fogFactor,
-    const Camera& camera
+    const Camera& camera,
+    int quality
 ) {
     float clouds = weather.clouds();
     shader.uniform4f(
@@ -247,7 +248,7 @@ void CloudsRenderer::draw(
     int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
 
     float speed = 4.0f;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < std::min<int>(quality, testMeshes.size()); i++) {
         float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
         float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
         for (int x = -2; x <= 2; x++) {
