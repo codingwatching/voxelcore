@@ -16,6 +16,10 @@ out vec4 a_torchLight;
 
 void main() {
     a_modelpos = u_model * vec4(v_position, 1.0f);
+    a_modelpos.x += sin(u_timer * 0.05 + a_modelpos.z * 0.002) * 1.5;
+    a_modelpos.z += sin(u_timer * 0.2 + a_modelpos.x * 0.002) * 1.5;
+    a_modelpos.y += sin(u_timer * 0.1 + (a_modelpos.x + a_modelpos.z) * 0.001) * 2.0;
+
     vec3 pos3d = a_modelpos.xyz - u_cameraPos;
 
     a_realnormal = v_normal.xyz * 2.0 - 1.0;

@@ -8,7 +8,8 @@
         "translucent",
         "background",
         "skybox_gen",
-        "shadows"
+        "shadows",
+        "clouds"
     ],
     "post-effects": [
         "default",

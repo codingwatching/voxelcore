@@ -91,6 +91,8 @@ struct GraphicsSettings {
     IntegerSetting denseRenderDistance {56, 0, 10'000};
     /// @brief Soft lighting for blocks
     FlagSetting softLighting {true};
+    /// @brief Clouds quality level
+    IntegerSetting cloudsQuality {2, 0, 2};
 };
 
 struct PathfindingSettings {

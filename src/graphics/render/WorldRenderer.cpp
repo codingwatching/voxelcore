@@ -50,6 +50,7 @@
 #include "Skybox.hpp"
 #include "Emitter.hpp"
 #include "TextNote.hpp"
+#include "CloudsRenderer.hpp"
 
 #include <assert.h>
 #include <algorithm>
@@ -116,6 +117,7 @@ WorldRenderer::WorldRenderer(
     );
     shadowMapping = std::make_unique<Shadows>(level);
     debugLines = std::make_unique<DebugLinesRenderer>(level);
+    cloudsRenderer = std::make_unique<CloudsRenderer>();
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -124,6 +126,7 @@ static void setup_weather(Shader& shader, const Weather& weather) {
     shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
     shader.uniform1f("u_weatherFogDencity", weather.fogDencity());
     shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
+    shader.uniform3f("u_minSkyLight", weather.minSkyLight());
 }
 
 static void setup_camera(Shader& shader, const Camera& camera) {
@@ -205,12 +208,21 @@ void WorldRenderer::renderOpaque(
     particles->render(camera);
 
     auto& shader = assets.require<Shader>("main");
+    auto& cloudsShader = assets.require<Shader>("clouds");
     auto& linesShader = assets.require<Shader>("lines");
 
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunksRenderer->drawChunks(camera, shader);
     blockWraps->draw(ctx, player);
+
+    int cloudsQuality = settings.graphics.cloudsQuality.get();
+    if (cloudsQuality > 0) {
+        setupWorldShader(cloudsShader, camera, settings, fogFactor);
+        cloudsRenderer->draw(
+            cloudsShader, weather, timer, fogFactor, camera, cloudsQuality
+        );
+    }
 
     if (hudVisible) {
         renderLines(camera, linesShader, ctx);
@@ -314,13 +326,19 @@ void WorldRenderer::renderFrame(
 
     auto& mainShader = assets.require<Shader>("main");
     auto& entityShader = assets.require<Shader>("entity");
+    auto& cloudsShader = assets.require<Shader>("clouds");
     auto& translucentShader = assets.require<Shader>("translucent");
     auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
 
     const auto& settings = engine.getSettings();
 
     Shader* affectedShaders[] {
-        &mainShader, &entityShader, &translucentShader, &deferredShader, nullptr
+        &mainShader,
+        &entityShader,
+        &cloudsShader,
+        &translucentShader,
+        &deferredShader,
+        nullptr
     };
 
     refreshSettings(affectedShaders);
@@ -331,7 +349,15 @@ void WorldRenderer::renderFrame(
     clouds = glm::max(worldInfo.fog, clouds);
     float mie = 1.0f + glm::max(worldInfo.fog, clouds * 0.5f) * 2.0f;
 
-    skybox->refresh(pctx, worldInfo.daytime, mie, 4);
+    float random = rand() / static_cast<float>(RAND_MAX);
+    skybox->refresh(
+        pctx,
+        worldInfo.daytime,
+        mie,
+        weather.skyTint(),
+        weather.highlight * random,
+        4
+    );
 
     chunksRenderer->update();
 
@@ -369,7 +395,7 @@ void WorldRenderer::renderFrame(
         if (gbufferPipeline) {
             postProcessing.bindDepthBuffer();
         } else {
-            postProcessing.getFramebuffer()->bind();
+            ctx.setFramebuffer(postProcessing.getFramebuffer());
         }
 
         // Background sky plane
@@ -385,15 +411,14 @@ void WorldRenderer::renderFrame(
         linesShader.uniformMatrix("u_projview", projView);
         lineBatch->flush();
 
+        skybox->bind();
         // Translucent blocks
         {
             auto sctx = ctx.sub();
             sctx.setCullFace(true);
-            skybox->bind();
             translucentShader.use();
             setupWorldShader(translucentShader, camera, settings, fogFactor);
             chunksRenderer->drawSortedMeshes(camera, translucentShader);
-            skybox->unbind();
         }
 
         // Weather effects
@@ -412,6 +437,7 @@ void WorldRenderer::renderFrame(
                 precipitation->render(camera, *weather);
             }
         }
+        skybox->unbind();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -448,43 +474,45 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     int y = std::floor(player.currentCamera->position.y);
     int z = std::floor(player.currentCamera->position.z);
     auto block = player.chunks->get(x, y, z);
-    if (block && block->id) {
-        const auto& def = level.content.getIndices()->blocks.require(block->id);
-        if (def.overlayTexture.empty()) {
-            return;
-        }
-        auto textureRegion = util::get_texture_region(
-            assets, def.overlayTexture, "blocks:notfound"
-        );
-        DrawContext ctx = wctx.sub();
-        ctx.setDepthTest(false);
-        ctx.setCullFace(false);
-        
-        auto& shader = assets.require<Shader>("ui3d");
-        shader.use();
-        batch3d->begin();
-        shader.uniformMatrix("u_projview", glm::mat4(1.0f));
-        shader.uniformMatrix("u_apply", glm::mat4(1.0f));
-        auto light = player.chunks->getLight(x, y, z);
-        float s = Lightmap::extract(light, 3) / 15.0f;
-        glm::vec4 tint(
-            glm::min(1.0f, Lightmap::extract(light, 0) / 15.0f + s),
-            glm::min(1.0f, Lightmap::extract(light, 1) / 15.0f + s),
-            glm::min(1.0f, Lightmap::extract(light, 2) / 15.0f + s),
-            1.0f
-        );
-        batch3d->texture(textureRegion.texture);
-        batch3d->sprite(
-            glm::vec3(),
-            glm::vec3(0, 1, 0),
-            glm::vec3(1, 0, 0),
-            2,
-            2,
-            textureRegion.region,
-            tint
-        );
-        batch3d->flush();
+
+    if (block == nullptr || block->id == BLOCK_AIR || block->id == BLOCK_VOID) {
+        return;
     }
+    const auto& def = level.content.getIndices()->blocks.require(block->id);
+    if (def.overlayTexture.empty()) {
+        return;
+    }
+    auto textureRegion = util::get_texture_region(
+        assets, def.overlayTexture, "blocks:notfound"
+    );
+    DrawContext ctx = wctx.sub();
+    ctx.setDepthTest(false);
+    ctx.setCullFace(false);
+    
+    auto& shader = assets.require<Shader>("ui3d");
+    shader.use();
+    batch3d->begin();
+    shader.uniformMatrix("u_projview", glm::mat4(1.0f));
+    shader.uniformMatrix("u_apply", glm::mat4(1.0f));
+    auto light = player.chunks->getLight(x, y, z);
+    float s = Lightmap::extract(light, 3) / 15.0f;
+    glm::vec4 tint(
+        glm::min(1.0f, Lightmap::extract(light, 0) / 15.0f + s),
+        glm::min(1.0f, Lightmap::extract(light, 1) / 15.0f + s),
+        glm::min(1.0f, Lightmap::extract(light, 2) / 15.0f + s),
+        1.0f
+    );
+    batch3d->texture(textureRegion.texture);
+    batch3d->sprite(
+        glm::vec3(),
+        glm::vec3(0, 1, 0),
+        glm::vec3(1, 0, 0),
+        2,
+        2,
+        textureRegion.region,
+        tint
+    );
+    batch3d->flush();
 }
 
 void WorldRenderer::clear() {

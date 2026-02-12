@@ -10,7 +10,6 @@
 // lighting
 #define SKY_LIGHT_MUL 2.5
 #define SKY_LIGHT_TINT (vec3(1.0, 0.75, 0.6) * 2.0)
-#define MIN_SKY_LIGHT vec3(0.2, 0.25, 0.33)
 
 // fog
 #define FOG_POS_SCALE vec3(1.0, 0.2, 1.0)
