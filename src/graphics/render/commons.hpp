@@ -1,13 +1,14 @@
 #pragma once
 
+#include "constants.hpp"
+#include "graphics/core/MeshData.hpp"
+#include "util/Buffer.hpp"
+
 #include <vector>
 #include <array>
 #include <memory>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-
-#include "graphics/core/MeshData.hpp"
-#include "util/Buffer.hpp"
 
 /// @brief Chunk mesh vertex format
 struct ChunkVertex {
@@ -49,5 +50,14 @@ struct ChunkMeshData {
 struct ChunkMesh {
     std::unique_ptr<Mesh<ChunkVertex>> mesh;
     SortingMeshData sortingMeshData;
-    std::unique_ptr<Mesh<ChunkVertex> > sortedMesh = nullptr;
+    std::unique_ptr<Mesh<ChunkVertex> > sortedMesh;
 };
+
+inline constexpr int VOXELS_BUFFER_PADDING = 2;
+
+template<int, int, int> class StaticVoxelsVolume;
+
+using VoxelsRenderVolume = StaticVoxelsVolume<
+    CHUNK_W + VOXELS_BUFFER_PADDING * 2,
+    CHUNK_H,
+    CHUNK_D + VOXELS_BUFFER_PADDING * 2>;

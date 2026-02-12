@@ -251,13 +251,13 @@ std::unique_ptr<ImageData> png::load_image(const ubyte* bytes, size_t size) {
     }
     png_read_image(pngPtr, rowPointers.get());
 
-    ImageFormat format = ImageFormat::rgba8888;
+    ImageFormat format = ImageFormat::RGBA8888;
     switch (colorType) {
         case PNG_COLOR_TYPE_RGBA:
-            format = ImageFormat::rgba8888;
+            format = ImageFormat::RGBA8888;
             break;
         case PNG_COLOR_TYPE_RGB:
-            format = ImageFormat::rgb888;
+            format = ImageFormat::RGB888;
             break;
         default:
             png_destroy_read_struct(&pngPtr, &infoPtr, nullptr);
@@ -296,7 +296,7 @@ void png::write_image(const std::string& filename, const ImageData* image) {
         image->getWidth(),
         image->getHeight(),
         (const ubyte*)image->getData(),
-        image->getFormat() == ImageFormat::rgba8888
+        image->getFormat() == ImageFormat::RGBA8888
     );
 }
 
@@ -306,6 +306,6 @@ util::Buffer<ubyte> png::encode_image(const ImageData& image) {
         image.getWidth(),
         image.getHeight(),
         image.getData(),
-        format == ImageFormat::rgba8888
+        format == ImageFormat::RGBA8888
     );
 }

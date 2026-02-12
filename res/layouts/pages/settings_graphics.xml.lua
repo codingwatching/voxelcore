@@ -46,4 +46,5 @@ function on_open()
     create_checkbox("graphics.advanced-render", "Advanced render", "graphics.advanced-render.tooltip")
     create_setting("graphics.ssao", "SSAO", 1, "", "graphics.ssao.tooltip")
     create_setting("graphics.shadows-quality", "Shadows quality", 1)
+    create_setting("graphics.clouds-quality", "Clouds quality", 1)
 end

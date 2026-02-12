@@ -56,12 +56,13 @@ LevelScreen::LevelScreen(
     auto& assets = *engine.getAssets();
     auto menu = engine.getGUI().getMenu();
     menu->reset();
+    gui.setActiveFrame("");
 
     auto player = level->players->get(localPlayer);
     assert(player != nullptr);
 
     controller =
-        std::make_unique<LevelController>(&engine, std::move(levelPtr), player);
+        std::make_unique<LevelController>(engine, std::move(levelPtr), player);
     playerController = std::make_unique<PlayerController>(
         settings, *level, *player, *controller->getBlocksController()
     );
@@ -112,11 +113,10 @@ LevelScreen::~LevelScreen() {
         saveDecorations();
     }
     scripting::on_frontend_close();
-    // unblock all bindings
     input.getBindings().enableAll();
     playerController->getPlayer()->chunks->saveAndClear();
     controller->onWorldQuit();
-    engine.getPaths().setCurrentWorldFolder("");
+
 }
 
 void LevelScreen::onOpen() {
@@ -184,7 +184,7 @@ void LevelScreen::saveWorldPreview() {
              static_cast<uint>(previewSize)}
         );
 
-        renderer->renderFrame(ctx, camera, false, true, 0.0f, *postProcessing);
+        renderer->renderFrame(ctx, camera, false, *postProcessing);
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write("world:preview.png", image.get());
@@ -240,7 +240,7 @@ void LevelScreen::update(float delta) {
     
     auto menu = gui.getMenu();
     bool inputLocked =
-        menu->hasOpenPage() || hud->isInventoryOpen() || gui.isFocusCaught();
+        gui.getActiveFrame() || hud->isInventoryOpen() || gui.isFocusCaught();
     bool paused = hud->isPause();
     if (!paused) {
         world.updateTimers(delta);
@@ -271,9 +271,11 @@ void LevelScreen::draw(float delta) {
     if (!hud->isPause()) {
         scripting::on_entities_render(engine.getTime().getDelta());
     }
-    renderer->renderFrame(
-        ctx, *camera, hudVisible, hud->isPause(), delta, *postProcessing
-    );
+    renderer->update(*camera, delta * !hud->isPause());
+    renderer->renderFrame(ctx, *camera, hudVisible, *postProcessing);
+    if (!hud->isPause()) {
+        scripting::on_frontend_render();
+    }
 
     if (hudVisible) {
         hud->draw(ctx);

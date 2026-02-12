@@ -147,7 +147,7 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
     if (map.has(COMP_TRANSFORM)) {
         transform.deserialize(map[COMP_TRANSFORM]);
     }
-    if (skeleton == nullptr) {
+    if (skeleton == nullptr || skeleton->config == nullptr) {
         return;
     }
     std::string skeletonName = skeleton->config->getName();
@@ -341,6 +341,16 @@ void Entities::update(float delta) {
     }
     updatePhysics(delta);
     scripting::on_entities_physics_update(delta);
+
+    auto view = registry->view<Transform, rigging::Skeleton>();
+    for (auto [entity, transform, skeleton] : view.each()) {
+        if (transform.dirty) {
+            transform.refresh();
+        }
+        if (skeleton.interpolation.isEnabled()) {
+            skeleton.interpolation.updateTimer(delta);
+        }
+    }
 }
 
 static void debug_render_skeleton(
@@ -397,6 +407,9 @@ void Entities::renderDebug(
         ctx.setLineWidth(2);
         for (auto [entity, transform, skeleton] : view.each()) {
             auto config = skeleton.config;
+            if (config == nullptr) {
+                continue;
+            }
             const auto& pos = transform.pos;
             const auto& size = transform.size;
             if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) {
@@ -412,20 +425,12 @@ void Entities::render(
     const Assets& assets,
     ModelBatch& batch,
     const Frustum* frustum,
-    float delta,
-    bool pause,
     entityid_t fpsEntity
 ) {
     auto view = registry->view<EntityId, Transform, rigging::Skeleton>();
     for (auto [entity, eid, transform, skeleton] : view.each()) {
         if (eid.uid == fpsEntity) {
             continue;
-        }
-        if (transform.dirty) {
-            transform.refresh();
-        }
-        if (skeleton.interpolation.isEnabled()) {
-            skeleton.interpolation.updateTimer(delta);
         }
         const auto& pos = transform.pos;
         const auto& size = transform.size;
@@ -434,9 +439,11 @@ void Entities::render(
         }
 
         const auto* rigConfig = skeleton.config;
-        rigConfig->render(
-            assets, batch, skeleton, transform.rot, pos, size
-        );
+        if (rigConfig) {
+            rigConfig->render(
+                assets, batch, skeleton, transform.rot, pos, size
+            );
+        }
     }
 }
 

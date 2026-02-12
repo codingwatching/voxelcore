@@ -375,7 +375,7 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone, int maxWorkers) {
     auto pool =
         std::make_shared<util::ThreadPool<aloader_entry, assetload::postfunc>>(
             "assets-loader-pool",
-            [=]() { return std::make_shared<LoaderWorker>(this); },
+            [=]() { return std::make_unique<LoaderWorker>(this); },
             [this](const assetload::postfunc& func) { func(&assets); },
             maxWorkers
         );

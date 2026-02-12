@@ -1,10 +1,7 @@
 #pragma once
 
-#include <memory>
-#include <glm/glm.hpp>
-#include "voxels/voxel.hpp"
 #include "typedefs.hpp"
-
+#include "voxels/voxel.hpp"
 #include "voxels/Block.hpp"
 #include "voxels/Chunk.hpp"
 #include "voxels/VoxelsVolume.hpp"
@@ -12,16 +9,39 @@
 #include "commons.hpp"
 #include "settings.hpp"
 
+#include <memory>
+#include <glm/glm.hpp>
+
 template<typename VertexStructure> class Mesh;
 class Content;
 class Block;
 class Chunk;
 class Chunks;
-class VoxelsVolume;
 class ContentGfxCache;
 struct UVRegion;
 
-class BlocksRenderer {
+class BlocksRenderer final {
+public:
+    BlocksRenderer(
+        size_t capacity,
+        const Content& content,
+        const ContentGfxCache& cache,
+        const EngineSettings& settings
+    );
+    ~BlocksRenderer();
+
+    void build(const Chunk* chunk, const VoxelsRenderVolume& volume);
+    ChunkMesh render(
+        const Chunk* chunk, const VoxelsRenderVolume& volume
+    );
+    ChunkMeshData createMesh();
+
+    size_t getMemoryConsumption() const;
+
+    bool isCancelled() const {
+        return cancelled;
+    }
+private:
     static const glm::vec3 SUN_VECTOR;
     const Content& content;
     std::unique_ptr<ChunkVertex[]> vertexBuffer;
@@ -37,7 +57,7 @@ class BlocksRenderer {
     bool densePass = false;
     bool denseRender = false;
     const Chunk* chunk = nullptr;
-    const VoxelsVolume* voxelsBuffer = nullptr;
+    const VoxelsRenderVolume* voxelsBuffer = nullptr;
 
     const Block* const* blockDefsCache;
     const ContentGfxCache& cache;
@@ -122,11 +142,9 @@ class BlocksRenderer {
         bool ao
     );
 
-    bool isOpenForLight(int x, int y, int z) const;
-
     // Does block allow to see other blocks sides (is it transparent)
     inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
-        auto vox = voxelsBuffer->pickBlock(
+        const auto& vox = voxelsBuffer->pickBlock(
             chunk->x * CHUNK_W + pos.x, pos.y, chunk->z * CHUNK_D + pos.z
         );
         if (vox.id == BLOCK_VOID) {
@@ -160,24 +178,4 @@ class BlocksRenderer {
 
     void render(const voxel* voxels, const int beginEnds[256][2]);
     SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
-public:
-    BlocksRenderer(
-        size_t capacity,
-        const Content& content,
-        const ContentGfxCache& cache,
-        const EngineSettings& settings
-    );
-    virtual ~BlocksRenderer();
-
-    void build(const Chunk* chunk, const VoxelsVolume& volume);
-    ChunkMesh render(
-        const Chunk* chunk, const VoxelsVolume& volume
-    );
-    ChunkMeshData createMesh();
-
-    size_t getMemoryConsumption() const;
-
-    bool isCancelled() const {
-        return cancelled;
-    }
 };

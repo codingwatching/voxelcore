@@ -157,7 +157,7 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
       frontend(frontend),
       player(player),
       debugImgWorldGen(std::make_unique<ImageData>(
-          ImageFormat::rgba8888, WORLDGEN_IMG_SIZE, WORLDGEN_IMG_SIZE
+          ImageFormat::RGBA8888, WORLDGEN_IMG_SIZE, WORLDGEN_IMG_SIZE
       )) {
     contentAccess = createContentAccess();
     contentAccess->setId("hud.content-access");
@@ -207,9 +207,6 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
 }
 
 Hud::~Hud() {
-    if (input.isCursorLocked()) {
-        input.toggleCursor();
-    }
     // removing all controlled ui
     for (auto& element : elements) {
         onRemove(element);
@@ -342,9 +339,6 @@ void Hud::update(bool visible) {
     if (!gui.isFocusCaught()) {
         processInput(visible);
     }
-    if ((isMenuOpen || inventoryOpen) == input.isCursorLocked()) {
-        input.toggleCursor();
-    }
 
     if (blockUI) {
         voxel* vox = chunks.get(blockPos.x, blockPos.y, blockPos.z);
@@ -395,6 +389,7 @@ void Hud::openInventory(bool playerInventory) {
         inventoryView->bind(inventory, &content);
         add(HudElement(HudElementMode::INVENTORY, inventoryDocument, inventoryView, false));
     }
+    gui.setActiveFrame(GUI::CORE_MAIN);
 }
 
 std::shared_ptr<Inventory> Hud::openInventory(
@@ -548,6 +543,7 @@ void Hud::closeInventory() {
         }
     }
     cleanup();
+    gui.setActiveFrame("");
 }
 
 void Hud::add(const HudElement& element, const dv::value& argsArray) {
@@ -710,9 +706,11 @@ void Hud::setPause(bool pause) {
     
     if (!pause && menu.hasOpenPage()) {
         menu.reset();
+        gui.setActiveFrame("");
     }
     if (pause && !menu.hasOpenPage()) {
         menu.setPage("pause");
+        gui.setActiveFrame(GUI::CORE_MAIN);
     }
 }
 

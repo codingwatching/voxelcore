@@ -561,7 +561,7 @@ public:
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, data.get());
         return std::make_unique<ImageData>(
-            ImageFormat::rgb888, size.x, size.y, data.release()
+            ImageFormat::RGB888, size.x, size.y, data.release()
         );
     }
 

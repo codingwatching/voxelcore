@@ -81,6 +81,8 @@ struct GraphicsSettings {
     IntegerSetting chunkMaxVerticesDense {800'000, 0, 8'000'000};
     /// @brief Limit of chunk renderers count
     IntegerSetting chunkMaxRenderers {6, -4, 32};
+    /// @brief Particles renderer vertices buffer capacity
+    IntegerSetting particlesBatchVertices {4'096, 0, 1'000'000};
     /// @brief Advanced render pipeline
     FlagSetting advancedRender {true};
     /// @brief Screen space ambient occlusion quality
@@ -91,6 +93,8 @@ struct GraphicsSettings {
     IntegerSetting denseRenderDistance {56, 0, 10'000};
     /// @brief Soft lighting for blocks
     FlagSetting softLighting {true};
+    /// @brief Clouds quality level
+    IntegerSetting cloudsQuality {2, 0, 2};
 };
 
 struct PathfindingSettings {

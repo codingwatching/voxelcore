@@ -112,6 +112,7 @@ settings.Windowed=Оконный
 settings.Borderless=Безрамочный
 settings.Microphone=Микрофон
 settings.microphone.None=Нет
+settings.Clouds quality=Качество облаков
 settings.Acoustic effects=Акустические эффекты
 
 # Управление

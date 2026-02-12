@@ -306,6 +306,9 @@ void Engine::startPauseLoop() {
 }
 
 void Engine::renderFrame() {
+    if (input->isCursorLocked() != (gui->getActiveFrame() == nullptr)) {
+        input->toggleCursor();
+    }
     screen->draw(time.getDelta());
 
     DrawContext ctx(nullptr, *window, nullptr);

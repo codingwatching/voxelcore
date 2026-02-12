@@ -768,7 +768,7 @@ void scripting::load_layout_script(
     const std::string& prefix,
     const io::path& file,
     const std::string& fileName,
-    uidocscript& script
+    UiDocScript& script
 ) {
     int env = *senv;
 

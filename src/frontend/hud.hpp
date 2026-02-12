@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 
 class Camera;
-class Block;
 class Assets;
 class Player;
 class Engine;
@@ -25,7 +24,6 @@ namespace gui {
     class GUI;
     class Menu;
     class UINode;
-    class Panel;
     class Container;
     class InventoryView;
     class SlotView;

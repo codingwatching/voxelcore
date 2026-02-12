@@ -1,9 +1,3 @@
-#include <bitset>
-#include <memory>
-#include <sstream>
-#include <string>
-#include <utility>
-
 #include "audio/audio.hpp"
 #include "constants.hpp"
 #include "content/Content.hpp"
@@ -36,6 +30,12 @@
 #include "voxels/GlobalChunks.hpp"
 #include "world/Level.hpp"
 #include "world/World.hpp"
+
+#include <bitset>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
 
 using namespace gui;
 
