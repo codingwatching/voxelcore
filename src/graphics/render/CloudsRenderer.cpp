@@ -218,7 +218,7 @@ CloudsRenderer::CloudsRenderer() {
         CloudsMap map({w, h, d}, voxels);
 
         volumeRenderer.build(map);
-        testMeshes[layer] = std::make_unique<Mesh<ChunkVertex>>(volumeRenderer.createMesh());
+        meshes[layer] = std::make_unique<Mesh<ChunkVertex>>(volumeRenderer.createMesh());
     }
 }
 
@@ -232,13 +232,7 @@ void CloudsRenderer::draw(
     const Camera& camera,
     int quality
 ) {
-    float clouds = weather.clouds();
-    shader.uniform4f(
-        "u_tint",
-        glm::vec4(
-            1.0f - clouds * 0.5, 1.0f - clouds * 0.45, 1.0f - clouds * 0.4, 1.0f
-        )
-    );
+    shader.uniform4f("u_tint", glm::vec4(weather.cloudsTint(), 1.0f));
 
     float scale = 8;
     float totalWidth = WIDTH * scale;
@@ -248,7 +242,7 @@ void CloudsRenderer::draw(
     int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
 
     float speed = 4.0f;
-    for (int i = 0; i < std::min<int>(quality, testMeshes.size()); i++) {
+    for (int i = 0; i < std::min<int>(quality, meshes.size()); i++) {
         float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
         float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
         for (int x = -2; x <= 2; x++) {
@@ -268,7 +262,7 @@ void CloudsRenderer::draw(
                 shader.uniform1f("u_fogFactor", fogFactor * 0.03f);
                 shader.uniform1f("u_fogCurve", 0.7f - 0.3f);
                 shader.uniformMatrix("u_model", matrix);
-                testMeshes[i]->draw();
+                meshes[i]->draw();
             }
         }
     }

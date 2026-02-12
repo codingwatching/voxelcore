@@ -22,5 +22,5 @@ public:
         int quality
     );
 private:
-    std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> testMeshes;
+    std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> meshes;
 };

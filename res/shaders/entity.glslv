@@ -28,7 +28,7 @@ void main() {
     a_texCoord = v_texCoord;
 
     a_dir = a_modelpos.xyz - u_cameraPos;
-    vec3 skyLightColor = pick_sky_color(u_skybox, u_dayTime);
+    vec3 skyLightColor = pick_sky_color(u_skybox, u_dayTime, u_minSkyLight);
     a_color.rgb = max(a_color.rgb, skyLightColor.rgb * v_light.a) * v_color;
     a_color.a = u_opacity;
 

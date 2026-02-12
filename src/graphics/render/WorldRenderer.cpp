@@ -126,6 +126,7 @@ static void setup_weather(Shader& shader, const Weather& weather) {
     shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
     shader.uniform1f("u_weatherFogDencity", weather.fogDencity());
     shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
+    shader.uniform3f("u_minSkyLight", weather.minSkyLight());
 }
 
 static void setup_camera(Shader& shader, const Camera& camera) {
@@ -348,7 +349,15 @@ void WorldRenderer::renderFrame(
     clouds = glm::max(worldInfo.fog, clouds);
     float mie = 1.0f + glm::max(worldInfo.fog, clouds * 0.5f) * 2.0f;
 
-    skybox->refresh(pctx, worldInfo.daytime, mie, 4);
+    float random = rand() / static_cast<float>(RAND_MAX);
+    skybox->refresh(
+        pctx,
+        worldInfo.daytime,
+        mie,
+        weather.skyTint(),
+        weather.highlight * random,
+        4
+    );
 
     chunksRenderer->update();
 
@@ -402,15 +411,14 @@ void WorldRenderer::renderFrame(
         linesShader.uniformMatrix("u_projview", projView);
         lineBatch->flush();
 
+        skybox->bind();
         // Translucent blocks
         {
             auto sctx = ctx.sub();
             sctx.setCullFace(true);
-            skybox->bind();
             translucentShader.use();
             setupWorldShader(translucentShader, camera, settings, fogFactor);
             chunksRenderer->drawSortedMeshes(camera, translucentShader);
-            skybox->unbind();
         }
 
         // Weather effects
@@ -429,6 +437,7 @@ void WorldRenderer::renderFrame(
                 precipitation->render(camera, *weather);
             }
         }
+        skybox->unbind();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

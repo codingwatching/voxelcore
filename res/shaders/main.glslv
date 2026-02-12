@@ -27,7 +27,7 @@ void main() {
     a_texCoord = v_texCoord;
 
     a_dir = a_modelpos.xyz - u_cameraPos;
-    vec3 skyLightColor = pick_sky_color(u_skybox, u_dayTime);
+    vec3 skyLightColor = pick_sky_color(u_skybox, u_dayTime, u_minSkyLight);
     a_skyLight = skyLightColor.rgb*v_light.a;
 
     mat4 viewmodel = u_view * u_model;
