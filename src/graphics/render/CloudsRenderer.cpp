@@ -11,17 +11,20 @@
 #include "io/io.hpp"
 #include "lighting/Lightmap.hpp"
 #include "maths/FastNoiseLite.h"
+#include "maths/FrustumCulling.hpp"
 #include "maths/voxmaths.hpp"
-#include "util/timeutil.hpp"
 #include "window/Camera.hpp"
 #include "world/Weather.hpp"
-#include "maths/FrustumCulling.hpp"
 
 #include <glm/ext.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 static debug::Logger logger("clouds-render");
+
+static inline constexpr int MAP_SIZE = 512;
+static inline constexpr float CLOUD_VOXEL_SCALE = 8.0f;
+static inline constexpr float CLOUDS_SPEED = 4.0f;
 
 class CloudsMap {
 public:
@@ -163,14 +166,69 @@ private:
     }
 };
 
-static inline constexpr int MAP_SIZE = 512;
+static void generate_heightmap(
+    float* heightmap, fnl_state& state, int w, int dd, int layerid
+) {
+    float pi2 = glm::two_pi<float>();
 
+    for (int lz = 0; lz < dd; lz++) {
+        for (int lx = 0; lx < w; lx++) {
+            float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
+            float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
+            float z = lz;
+            float s = 1.5f;
+            auto n = fnlGetNoise3D(&state, x * s * 0.7, y * s, z * s * 0.7);
+            n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 2.0f, y * s, z * 3.0f) * 0.5f;
+            n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
+            n += fnlGetNoise3D(&state, x * s * 4, y * s * 4, z * s * 4) * 0.125f * 2;
+            n += fnlGetNoise3D(&state, x * s * 8, y * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
+            n += fnlGetNoise3D(&state, x * s * 16, y * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
+            n = glm::max(0.0f, n);
+            n += -0.1f - layerid * 0.3f;
+
+            heightmap[lz * w + lx] = n;
+        }
+    }
+}
+
+static void sample_voxels(
+    bool* voxels,
+    const float* heightmap,
+    int height,
+    int segmentSize,
+    int segmentX,
+    int segmentZ
+) {
+    for (int y = 0; y < height; y++) {
+        for (int z = 0; z < segmentSize; z++) {
+            for (int x = 0; x < segmentSize; x++) {
+                int gx = (segmentX * segmentSize) + x;
+                int gz = (segmentZ * segmentSize) + z;
+
+                float n = heightmap[gz * MAP_SIZE + gx];
+                if (gz < MAP_SIZE / 2) {
+                    float t = gz / static_cast<float>(MAP_SIZE / 2);
+                    n = n * t +
+                        heightmap[(MAP_SIZE + gz) * MAP_SIZE + gx] * (1.0f - t);
+                }
+                bool solid = y <= n * height && y >= (0.5f - n * 0.5f) * height;
+                voxels[vox_index(x, y, z, segmentSize, segmentSize)] = solid;
+            }
+        }
+    }
+}
 
 CloudsRenderer::CloudsRenderer() {
     VolumeRenderer volumeRenderer(1024 * 512);
 
-    int diameter = 4;
-    int segmentSize = MAP_SIZE / diameter;
+    const int diameter = 4;
+    const int segmentSize = MAP_SIZE / diameter;
+
+    const int w = MAP_SIZE;
+    const int h = 8;
+    const int d = MAP_SIZE;
+    const int dd = d * 1.5;
+    auto heightmap = std::make_unique<float[]>(w * dd);
 
     for (int layerid = 0; layerid < 2; layerid++) {
         auto& layer = layers[layerid];
@@ -178,54 +236,14 @@ CloudsRenderer::CloudsRenderer() {
         layer.segmentSize = segmentSize;
 
         fnl_state state = fnlCreateState();
-        const int w = MAP_SIZE;
-        const int h = 8;
-        const int d = MAP_SIZE;
-        const int dd = d * 1.5;
-
         state.seed = 5265 + layerid * 3521;
 
-        float pi2 = glm::two_pi<float>();
-
-        auto heightmap = std::make_unique<float[]>(w * dd);
-        for (int lz = 0; lz < dd; lz++) {
-            for (int lx = 0; lx < w; lx++) {
-                float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
-                float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
-                float z = lz;
-                float s = 1.5f;
-                auto n = fnlGetNoise3D(&state, x * s * 0.7, y * s, z * s * 0.7);
-                n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 2.0f, y * s, z * 3.0f) * 0.5f;
-                n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
-                n += fnlGetNoise3D(&state, x * s * 4, y * s * 4, z * s * 4) * 0.125f * 2;
-                n += fnlGetNoise3D(&state, x * s * 8, y * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
-                n += fnlGetNoise3D(&state, x * s * 16, y * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
-                n = glm::max(0.0f, n);
-                n += -0.1f - layerid * 0.3f;
-
-                heightmap[lz * w + lx] = n;
-            }
-        }
+        generate_heightmap(heightmap.get(), state, w, dd, layerid);
 
         bool voxels[segmentSize * h * segmentSize];
         for (int sz = 0; sz < diameter; sz++) {
             for (int sx = 0; sx < diameter; sx++) {
-                for (int y = 0; y < h; y++) {
-                    for (int z = 0; z < segmentSize; z++) {
-                        for (int x = 0; x < segmentSize; x++) {
-                            int gx = (sx * segmentSize) + x;
-                            int gz = (sz * segmentSize) + z;
-
-                            float n = heightmap[gz * MAP_SIZE + gx];
-                            if (gz < MAP_SIZE / 2) {
-                                float t = gz / static_cast<float>(MAP_SIZE / 2);
-                                n = n * t + heightmap[(MAP_SIZE + gz) * MAP_SIZE + gx] * (1.0f - t);
-                            }
-                            bool solid = y <= n * h && y >= (0.5f - n * 0.5f) * h;
-                            voxels[vox_index(x, y, z, segmentSize, segmentSize)] = solid;
-                        }
-                    }
-                }
+                sample_voxels(voxels, heightmap.get(), h, segmentSize, sx, sz);
                 
                 CloudsMap map({segmentSize, h, segmentSize}, voxels);
 
@@ -248,13 +266,13 @@ void CloudsRenderer::draw(
     float timer,
     int layerId
 ) {
-    float scale = 8;
+    float scale = CLOUD_VOXEL_SCALE;
     int totalDiameter = layer.segmentSize * scale;
 
     int gcellX = floordiv(camera.position.x, totalDiameter);
     int gcellZ = floordiv(camera.position.z, totalDiameter);
 
-    float speed = 4.0f;
+    float speed = CLOUDS_SPEED;
     float speedX = glm::sin(layerId * 0.3f + 0.4f) * speed / (layerId + 1);
     float speedZ = -glm::cos(layerId * 0.3f + 0.4f) * speed / (layerId + 1);
 
