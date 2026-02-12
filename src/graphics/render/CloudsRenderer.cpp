@@ -15,6 +15,7 @@
 #include "util/timeutil.hpp"
 #include "window/Camera.hpp"
 #include "world/Weather.hpp"
+#include "maths/FrustumCulling.hpp"
 
 #include <glm/ext.hpp>
 #include <glm/gtx/norm.hpp>
@@ -240,8 +241,9 @@ CloudsRenderer::CloudsRenderer() {
 CloudsRenderer::~CloudsRenderer() = default;
 
 void CloudsRenderer::draw(
-    Shader& shader,
     Layer& layer,
+    Frustum& frustum,
+    Shader& shader,
     const Camera& camera,
     float timer,
     int layerId
@@ -278,6 +280,9 @@ void CloudsRenderer::draw(
                 ) > 4e6) {
                 continue;
             }
+            if (!frustum.isBoxVisible(position, position + glm::vec3(layer.segmentSize * scale))) {
+                continue;
+            }
             auto matrix = glm::mat4(1.0f);
             matrix = glm::translate(matrix, position);
             matrix = glm::scale(matrix, glm::vec3(scale, scale, scale));
@@ -301,11 +306,14 @@ void CloudsRenderer::draw(
     const Camera& camera,
     int quality
 ) {
+    Frustum frustum;
+    frustum.update(camera.getProjView());
+
     shader.uniform4f("u_tint", glm::vec4(weather.cloudsTint(), 1.0f));
     shader.uniform1f("u_fogFactor", fogFactor * 0.03f);
     shader.uniform1f("u_fogCurve", 0.7f - 0.3f);
 
     for (int i = 0; i < std::min<int>(quality, layers.size()); i++) {
-        draw(shader, layers[i], camera, timer, i);
+        draw(layers[i], frustum, shader, camera, timer, i);
     }
 }

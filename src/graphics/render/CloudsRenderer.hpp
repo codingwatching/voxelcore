@@ -9,6 +9,7 @@
 class Camera;
 class Shader;
 struct Weather;
+class Frustum;
 
 class CloudsRenderer final {
 public:
@@ -33,8 +34,9 @@ private:
     std::array<Layer, 2> layers;
 
     void draw(
-        Shader& shader,
         Layer& layer,
+        Frustum& frustum,
+        Shader& shader,
         const Camera& camera,
         float timer,
         int layerId
