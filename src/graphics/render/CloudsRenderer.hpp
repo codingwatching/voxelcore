@@ -4,16 +4,22 @@
 
 #include <memory>
 
-class Assets;
 class Camera;
+class Shader;
+struct Weather;
 
 class CloudsRenderer final {
 public:
-    CloudsRenderer(const Assets& assets);
+    CloudsRenderer();
     ~CloudsRenderer();
 
-    void draw(float timer, float fogFactor, const Camera& camera);
+    void draw(
+        Shader& shader,
+        const Weather& weather,
+        float timer,
+        float fogFactor,
+        const Camera& camera
+    );
 private:
-    const Assets& assets;
     std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> testMeshes;
 };

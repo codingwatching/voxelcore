@@ -117,7 +117,7 @@ WorldRenderer::WorldRenderer(
     );
     shadowMapping = std::make_unique<Shadows>(level);
     debugLines = std::make_unique<DebugLinesRenderer>(level);
-    cloudsRenderer = std::make_unique<CloudsRenderer>(assets);
+    cloudsRenderer = std::make_unique<CloudsRenderer>();
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -207,13 +207,16 @@ void WorldRenderer::renderOpaque(
     particles->render(camera);
 
     auto& shader = assets.require<Shader>("main");
+    auto& cloudsShader = assets.require<Shader>("clouds");
     auto& linesShader = assets.require<Shader>("lines");
 
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunksRenderer->drawChunks(camera, shader);
-    cloudsRenderer->draw(timer, fogFactor, camera);
     blockWraps->draw(ctx, player);
+
+    setupWorldShader(cloudsShader, camera, settings, fogFactor);
+    cloudsRenderer->draw(cloudsShader, weather, timer, fogFactor, camera);
 
     if (hudVisible) {
         renderLines(camera, linesShader, ctx);
@@ -317,13 +320,19 @@ void WorldRenderer::renderFrame(
 
     auto& mainShader = assets.require<Shader>("main");
     auto& entityShader = assets.require<Shader>("entity");
+    auto& cloudsShader = assets.require<Shader>("clouds");
     auto& translucentShader = assets.require<Shader>("translucent");
     auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
 
     const auto& settings = engine.getSettings();
 
     Shader* affectedShaders[] {
-        &mainShader, &entityShader, &translucentShader, &deferredShader, nullptr
+        &mainShader,
+        &entityShader,
+        &cloudsShader,
+        &translucentShader,
+        &deferredShader,
+        nullptr
     };
 
     refreshSettings(affectedShaders);

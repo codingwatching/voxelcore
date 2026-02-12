@@ -12,6 +12,7 @@
 #include "maths/FastNoiseLite.h"
 #include "util/timeutil.hpp"
 #include "window/Camera.hpp"
+#include "world/Weather.hpp"
 
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -163,7 +164,7 @@ static inline constexpr int WIDTH = 256;
 static inline constexpr int DEPTH = 256;
 
 
-CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
+CloudsRenderer::CloudsRenderer() {
     VolumeRenderer volumeRenderer(1024 * 1024);
 
     for (int layer = 0; layer < 2; layer++) {
@@ -216,7 +217,6 @@ CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
         
         CloudsMap map({w, h, d}, voxels);
 
-        timeutil::ScopeLogTimer log2(222);
         volumeRenderer.build(map);
         testMeshes[layer] = std::make_unique<Mesh<ChunkVertex>>(volumeRenderer.createMesh());
     }
@@ -224,9 +224,20 @@ CloudsRenderer::CloudsRenderer(const Assets& assets) : assets(assets) {
 
 CloudsRenderer::~CloudsRenderer() = default;
 
-void CloudsRenderer::draw(float timer, float fogFactor, const Camera& camera) {
-    auto& shader = assets.require<Shader>("main");
-    assets.require<Texture>("misc/blank").bind();
+void CloudsRenderer::draw(
+    Shader& shader,
+    const Weather& weather,
+    float timer,
+    float fogFactor,
+    const Camera& camera
+) {
+    float clouds = weather.clouds();
+    shader.uniform4f(
+        "u_tint",
+        glm::vec4(
+            1.0f - clouds * 0.5, 1.0f - clouds * 0.45, 1.0f - clouds * 0.4, 1.0f
+        )
+    );
 
     float scale = 8;
     float totalWidth = WIDTH * scale;
@@ -235,7 +246,7 @@ void CloudsRenderer::draw(float timer, float fogFactor, const Camera& camera) {
     int cellX = glm::floor(camera.position.x / totalWidth + 0.5f);
     int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
 
-    float speed = 10.0f;
+    float speed = 4.0f;
     for (int i = 0; i < 2; i++) {
         float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
         float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
