@@ -2,7 +2,9 @@
 
 #include "commons.hpp"
 
+#include <array>
 #include <memory>
+#include <vector>
 
 class Camera;
 class Shader;
@@ -22,5 +24,19 @@ public:
         int quality
     );
 private:
-    std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> meshes;
+    struct Layer {
+        int diameter;
+        int segmentSize;
+        std::vector<std::unique_ptr<Mesh<ChunkVertex>>> meshes;
+    };
+
+    std::array<Layer, 2> layers;
+
+    void draw(
+        Shader& shader,
+        Layer& layer,
+        const Camera& camera,
+        float timer,
+        int layerId
+    );
 };
