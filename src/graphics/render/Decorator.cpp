@@ -23,8 +23,11 @@
 #include "io/io.hpp"
 #include "audio/audio.hpp"
 #include "maths/util.hpp"
+#include "debug/Logger.hpp"
 
 namespace fs = std::filesystem;
+
+static debug::Logger logger("decorator");
 
 /// @brief Not greater than 64 for this BIG_PRIME value
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
@@ -70,19 +73,90 @@ Decorator::Decorator(
 
 void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
     const auto& found = blockEmitters.find(pos);
-    if (found == blockEmitters.end()) {
-        auto treg = util::get_texture_region(
-            assets, def.particles->texture, ""
-        );
-        blockEmitters[pos] = renderer.particles->add(std::make_unique<Emitter>(
-            level,
-            glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
-            *def.particles,
-            treg.texture,
-            treg.region,
-            -1
-        ));
+    if (found != blockEmitters.end()) {
+        return;
     }
+    auto treg = util::get_texture_region(
+        assets, def.particles->texture, ""
+    );
+    blockEmitters[pos] = renderer.particles->add(std::make_unique<Emitter>(
+        level,
+        glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
+        *def.particles,
+        treg.texture,
+        treg.region,
+        -1
+    ));
+}
+
+void Decorator::updateAcoustics(const Camera& camera) {
+    audio::Acoustics acoustics {};
+    util::PseudoRandom random(34621U);
+
+    auto& chunks = *player.chunks;
+    const auto& start = camera.position;
+    float rayLength = 40.0f;
+
+    auto& blocks = level.content.getIndices()->blocks;
+
+    int rays = 100;
+    int hit = 0;
+    float averageDistance = 0.0f;
+    float averageAbsorption = 0.0f;
+    float speedOfSound = 300.0f;
+    float minDistance = rayLength;
+    for (int i = 0; i < rays; i++) {
+        float u1 = random.randFloat();
+        float u2 = random.randFloat();
+        float z = 2.0f * u1 - 1.0f;
+        float phi = 2.0f * glm::pi<float>() * u2;
+        float r = std::sqrt(1.0f - z * z);
+
+        glm::vec3 dir = { r * std::cos(phi), r * std::sin(phi), z };
+
+        dir = glm::normalize(dir);
+        glm::vec3 end;
+        glm::ivec3 norm;
+        glm::ivec3 iend;
+        auto vox = chunks.rayCast(start, dir, rayLength, end, norm, iend);
+        if (vox == nullptr) {
+            continue;
+        }
+        auto distance = glm::distance(start, end);
+        if (distance >= rayLength * 0.98f) {
+            continue;
+        }
+        if (distance < minDistance) {
+            minDistance = distance;
+        }
+        auto def = blocks.get(vox->id);
+        if (def == nullptr) {
+            continue;
+        }
+        auto material = level.content.findBlockMaterial(def->material);
+        if (material == nullptr) {
+            return;
+        }
+        hit++;
+        averageDistance += distance;
+        averageAbsorption += material->soundAbsorption;
+    }
+    if (hit > 0) {
+        averageDistance /= hit;
+        averageAbsorption /= hit;
+    }
+
+    float decayTime = 20.0f * (averageDistance / rayLength);
+    float escapeRatio = static_cast<float>(rays - hit) / static_cast<float>(rays);
+
+    acoustics.reverbGain = glm::pow(hit / static_cast<float>(rays), 3.0f);
+    acoustics.reverbReflectionsDelay = minDistance / speedOfSound;
+    acoustics.reverbLateReflectionsDelay = averageDistance / speedOfSound;
+    acoustics.reverbDecayTime = decayTime;
+    acoustics.reverbRoomRolloff = escapeRatio * 1.5f;
+    acoustics.reverbAbsorption = averageAbsorption;
+
+    audio::set_acoustics(std::move(acoustics));
 }
 
 void Decorator::updateRandom(
@@ -283,4 +357,5 @@ void Decorator::update(
     }
     updateBlockEmitters(camera);
     updateTextNotes();
+    updateAcoustics(camera);
 }

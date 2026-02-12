@@ -15,6 +15,7 @@
 #include "devtools/DebuggingServer.hpp"
 #include "devtools/Editor.hpp"
 #include "devtools/Project.hpp"
+#include "devtools/stdin_cmd_reader.hpp"
 #include "EnginePaths.hpp"
 #include "frontend/locale.hpp"
 #include "frontend/menu.hpp"
@@ -190,6 +191,9 @@ void Engine::initialize(CoreParameters coreParameters) {
     project->loadProjectStartScript();
     if (!params.headless) {
         project->loadProjectClientScript();
+    }
+    if (params.stdinCommands) {
+        cmd::start_stdin_cmd_reader(*this);
     }
 }
 
@@ -419,10 +423,20 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-    return assets->getStorage();
+    return assets ? assets->getStorage() : nullptr;
+}
+
+Assets& Engine::requireAssets() {
+    if (isHeadless()) {
+        throw std::runtime_error("assets are not available in headless mode");
+    }
+    return *assets->getStorage();
 }
 
 AssetsLoader& Engine::acquireBackgroundLoader() {
+    if (isHeadless()) {
+        throw std::runtime_error("assets are not available in headless mode");
+    }
     return assets->acquireBackgroundLoader();
 }
 

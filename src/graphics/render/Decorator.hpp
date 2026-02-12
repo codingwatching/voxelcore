@@ -48,6 +48,7 @@ class Decorator {
     void updateBlockEmitters(const Camera& camera);
     void updateTextNotes();
     void addParticles(const Block& def, const glm::ivec3& pos);
+    void updateAcoustics(const Camera& camera);
 public:
     Decorator(
         Engine& engine,

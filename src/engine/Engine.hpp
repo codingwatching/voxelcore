@@ -110,6 +110,7 @@ public:
     
     /// @brief Get active assets storage instance
     Assets* getAssets();
+    Assets& requireAssets();
 
     AssetsLoader& acquireBackgroundLoader();
 

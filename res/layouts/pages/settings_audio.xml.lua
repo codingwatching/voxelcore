@@ -24,6 +24,14 @@ function update_setting(x, id, name, postfix)
     )
 end
 
+function create_checkbox(id, name, tooltip)
+    tooltip = tooltip or ''
+    document.root:add(string.format(
+        "<checkbox consumer='function(x) app.set_setting(\"%s\", x) end' checked='%s' tooltip='%s'>%s</checkbox>",
+        id, app.str_setting(id), gui.str(tooltip, "settings"), gui.str(name, "settings")
+    ))
+end
+
 local initialized = false
 
 function on_open()
@@ -71,4 +79,6 @@ function on_open()
     if info then
         selectbox.value = info.device_specifier
     end
+
+    create_checkbox("audio.acoustic-effects", "Acoustic effects", "audio.acoustic-effects.tooltip")
 end
