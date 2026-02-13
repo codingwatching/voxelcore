@@ -65,6 +65,7 @@ void PhysicsSolver::step(
             }
             if (!hitbox.grounded) {
                 pos.z = pz;
+                vel.z = 0.0f;
             }
             hitbox.grounded = false;
             for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
@@ -79,6 +80,7 @@ void PhysicsSolver::step(
             }
             if (!hitbox.grounded) {
                 pos.x = px;
+                vel.x = 0.0f;
             }
             hitbox.grounded = true;
         }
@@ -152,17 +154,16 @@ static bool calc_collision_neg(
         return false;
     }
     glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= ((half-offset*0.5f)[ny]-E)*2/s; iy++) {
+    for (int iy = 0; iy <= std::max<int>(1, ((half-offset*0.5f)[ny]-E)*2/s); iy++) {
         glm::vec3 coord;
         coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy * s;
         for (int iz = 0; iz <= (half[nz]-E)*2/s; iz++){
             coord[nz] = (pos[nz]-half[nz]+E) + iz * s;
             coord[nx] = (pos[nx]-half[nx]-E);
-
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z)) {
                 vel[nx] = 0.0f;
-                float newx = std::floor(coord[nx]) + aabb->max()[nx] + half[nx] + E;
-                if (std::abs(newx-pos[nx]) <= MAX_FIX) {
+                float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx] + E;
+                if (newx - pos[nx] <= E) {
                     pos[nx] = newx;
                 }
                 return true;
@@ -185,7 +186,7 @@ static void calc_collision_pos(
         return;
     }
     glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= ((half-offset*0.5f)[ny]-E)*2/s; iy++) {
+    for (int iy = 0; iy <= std::max<int>(1, ((half-offset*0.5f)[ny]-E)*2/s); iy++) {
         glm::vec3 coord;
         coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy * s;
         for (int iz = 0; iz <= (half[nz]-E)*2/s; iz++) {
@@ -194,7 +195,7 @@ static void calc_collision_pos(
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z)) {
                 vel[nx] = 0.0f;
                 float newx = std::floor(coord[nx]) - half[nx] + aabb->min()[nx] - E;
-                if (std::abs(newx-pos[nx]) <= MAX_FIX) {
+                if (newx - pos[nx] <= E) {
                     pos[nx] = newx;
                 }
                 return;
@@ -211,7 +212,7 @@ void PhysicsSolver::colisionCalc(
     const glm::vec3 half,
     float stepHeight
 ) {
-    // step size (smaller - more accurate, but slower)
+    // step size (smaller - more accurate, but slower) // TODO: GET RID OF THIS
     float s = 2.0f/BLOCK_AABB_GRID;
 
     stepHeight = calc_step_height(chunks, pos, half, stepHeight, s);
@@ -224,7 +225,7 @@ void PhysicsSolver::colisionCalc(
     calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight, s);
     calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight, s);
 
-    if (calc_collision_neg<1, 0, 2>(chunks, pos, vel, half, stepHeight, s)) {
+    if (calc_collision_neg<1, 0, 2>(chunks, pos, vel, half, 0.0f, s)) {
         hitbox.grounded = true;
     }
 
