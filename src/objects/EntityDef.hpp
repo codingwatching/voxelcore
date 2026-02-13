@@ -42,6 +42,9 @@ struct EntityDef {
     /// @brief Does entity prevent blocks setup
     bool blocking = true;
 
+    /// @brief Max obstacle height that does not require jumping
+    float stepHeight = 0.5f;
+
     /// @brief save-** flags
     struct {
         bool enabled = true;

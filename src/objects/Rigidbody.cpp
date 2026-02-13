@@ -80,4 +80,5 @@ void Rigidbody::initialize(
             create_sensor_callback<scripting::on_sensor_enter>(entities),
             create_sensor_callback<scripting::on_sensor_exit>(entities)};
     }
+    hitbox.stepHeight = def.stepHeight;
 }
