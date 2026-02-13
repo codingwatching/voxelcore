@@ -47,6 +47,8 @@ AppDir:
       - kde-style-breeze
       - plasma-integration
       - libllvm15
+      - libicu70
+      - libxml2
   files:
     exclude:
     - usr/share/man
