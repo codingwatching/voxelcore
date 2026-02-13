@@ -46,6 +46,7 @@ AppDir:
       - kwin-style-breeze
       - kde-style-breeze
       - plasma-integration
+      - libllvm15
   files:
     exclude:
     - usr/share/man
