@@ -65,6 +65,8 @@ inline constexpr int ATLAS_EXTRUSION = 2;
 
 inline constexpr int DEFAULT_FONT_SIZE = 16;
 
+inline constexpr int FONT_PAGES = 5;
+
 inline const std::string SHADERS_FOLDER = "shaders";
 inline const std::string TEXTURES_FOLDER = "textures";
 inline const std::string FONTS_FOLDER = "fonts";

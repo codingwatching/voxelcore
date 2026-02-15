@@ -5,6 +5,7 @@
 #include "graphics/core/ImageData.hpp"
 #include "graphics/core/Texture.hpp"
 #include "graphics/core/Font.hpp"
+#include "constants.hpp"
 
 #include <stdexcept>
 #include <ft2build.h>
@@ -38,11 +39,6 @@ namespace {
         }
 
         std::unique_ptr<Font> createInstance(int size) override {
-            int pagesCount = 5;
-
-            std::vector<std::unique_ptr<Texture>> pages;
-            std::vector<Font::Glyph> glyphs;
-
             if (FT_Error error = FT_Set_Pixel_Sizes(face, 0, size)) {
                 throw std::runtime_error(
                     "FT_Set_Pixel_Sizes error: " +
@@ -50,26 +46,15 @@ namespace {
                 );
             }
 
+            std::vector<std::unique_ptr<Texture>> pages;
+            std::vector<Font::Glyph> glyphs;
+
             int dstSize = size * 16;
             ImageData canvas(ImageFormat::RGBA8888, dstSize, dstSize);
+            ImageData bitmapDst(ImageFormat::RGBA8888, size, size);
 
-            int srcWidth = size;
-            int srcHeight = size;
-            ImageData bitmapDst(ImageFormat::RGBA8888, srcWidth, srcHeight);
-
-            for (int pageid = 0; pageid < pagesCount; pageid++) {
-                for (int c = 0; c < 256; c++) {
-                    if (!renderGlyph(pageid << 8 | c, bitmapDst)) {
-                        continue;
-                    }
-
-                    canvas.blit(bitmapDst, (c % 16) * size, (c / 16) * size);
-                    glyphs.push_back(Font::Glyph {
-                        face->glyph->bitmap_top - size,
-                        static_cast<int>(face->glyph->advance.x >> 6)
-                    });
-                }
-                canvas.flipY();
+            for (int pageid = 0; pageid < FONT_PAGES; pageid++) {
+                renderPage(pageid, canvas, bitmapDst, glyphs);
                 pages.push_back(Texture::from(&canvas));
             }
             return std::make_unique<Font>(
@@ -88,9 +73,12 @@ namespace {
                 logger.warning() << get_ft_error_message(error);
                 return false;
             }
-            const FT_Bitmap& bitmap = face->glyph->bitmap;
             auto dstData = bitmapDst.getData();
             std::memset(dstData, 0, bitmapDst.getDataSize());
+            if (face->glyph->bitmap.width == 0) {
+                return false;
+            }
+            const FT_Bitmap& bitmap = face->glyph->bitmap;
             for (int row = 0; row < std::min<int>(bitmap.rows, height); row++) {
                 for (int col = 0; col < std::min<int>(bitmap.width, width); col++) {
                     uint8_t value = bitmap.buffer[row * bitmap.pitch + col];
@@ -101,6 +89,35 @@ namespace {
                 }
             }
             return true;
+        }
+
+        void renderPage(
+            int pageid,
+            ImageData& canvas,
+            ImageData& bitmapDst,
+            std::vector<Font::Glyph>& glyphs
+        ) {
+            int size = canvas.getWidth() / 16;
+            for (int c = 0; c < 256; c++) {
+                int codepoint = pageid << 8 | c;
+                if (!renderGlyph(codepoint, bitmapDst)) {
+                    glyphs.push_back(Font::Glyph {0, size / 2});
+                    continue;
+                }
+
+                canvas.blit(bitmapDst, (c % 16) * size, (c / 16) * size);
+                
+                Font::Glyph glyph {
+                    face->glyph->bitmap_top - size,
+                    static_cast<int>(face->glyph->advance.x >> 6)
+                };
+                if (codepoint < glyphs.size()) {
+                    glyphs[codepoint] = std::move(glyph);
+                } else {
+                    glyphs.push_back(std::move(glyph));
+                }
+            }
+            canvas.flipY();
         }
     };
 }
