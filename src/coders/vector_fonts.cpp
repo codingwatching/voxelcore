@@ -88,6 +88,7 @@ namespace {
             }
             const FT_Bitmap& bitmap = face->glyph->bitmap;
             auto dstData = bitmapDst.getData();
+            std::memset(dstData, 0, bitmapDst.getDataSize());
             for (int row = 0; row < bitmap.rows; row++) {
                 for (int col = 0; col < bitmap.width; col++) {
                     uint8_t value = bitmap.buffer[row * bitmap.pitch + col];
