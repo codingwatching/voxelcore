@@ -26,7 +26,8 @@ static const char* get_ft_error_message(FT_Error error) {
 namespace {
     class FTFontFile : public vector_fonts::FontFile {
     public:
-        FTFontFile(FT_Face face, util::Buffer<ubyte> buffer) : face(std::move(face)), buffer(std::move(buffer)) {
+        FTFontFile(FT_Face face, util::Buffer<ubyte> buffer)
+            : face(std::move(face)), buffer(std::move(buffer)) {
         }
 
         ~FTFontFile() {
@@ -49,33 +50,20 @@ namespace {
                 );
             }
 
-            for (int pageid = 0; pageid < pagesCount; pageid++) {
-                int dstSize = size * 16;
-                ImageData canvas(ImageFormat::RGBA8888, dstSize, dstSize);
-                for (int c = 0; c < 256; c++) {
-                    int srcWidth = size;
-                    int srcHeight = size;
-                    ImageData bitmapDst(ImageFormat::RGBA8888, srcWidth, srcHeight);
-                    int codepoint = pageid << 8 | c;
+            int dstSize = size * 16;
+            ImageData canvas(ImageFormat::RGBA8888, dstSize, dstSize);
 
-                    if (FT_Error error = FT_Load_Char(face, codepoint, FT_LOAD_RENDER)) {
-                        logger.warning() << get_ft_error_message(error);
+            int srcWidth = size;
+            int srcHeight = size;
+            ImageData bitmapDst(ImageFormat::RGBA8888, srcWidth, srcHeight);
+
+            for (int pageid = 0; pageid < pagesCount; pageid++) {
+                for (int c = 0; c < 256; c++) {
+                    if (!renderGlyph(pageid << 8 | c, bitmapDst)) {
                         continue;
                     }
-                    FT_Bitmap& bitmap = face->glyph->bitmap;
-                    if (codepoint < 1000)
-                    logger.info() << codepoint << ": " << bitmap.width << "x" << bitmap.rows << "    " << size;
-                    auto dstData = bitmapDst.getData();
-                    for (int row = 0; row < bitmap.rows; row++) {
-                        for (int col = 0; col < bitmap.width; col++) {
-                            uint8_t value = bitmap.buffer[row * bitmap.pitch + col];
-                            dstData[(row * srcWidth + col) * 4 + 0] = 255;
-                            dstData[(row * srcWidth + col) * 4 + 1] = 255;
-                            dstData[(row * srcWidth + col) * 4 + 2] = 255;
-                            dstData[(row * srcWidth + col) * 4 + 3] = value;
-                        }
-                    }
-                    canvas.blit(bitmapDst, (int)(c % 16) * size, (int)(c / 16) * size);
+
+                    canvas.blit(bitmapDst, (c % 16) * size, (c / 16) * size);
                     glyphs.push_back(Font::Glyph {
                         face->glyph->bitmap_top - size,
                         static_cast<int>(face->glyph->advance.x >> 6)
@@ -84,11 +72,33 @@ namespace {
                 canvas.flipY();
                 pages.push_back(Texture::from(&canvas));
             }
-            return std::make_unique<Font>(std::move(pages), std::move(glyphs), size, size / 2);
+            return std::make_unique<Font>(
+                std::move(pages), std::move(glyphs), size, size / 2
+            );
         }
     private:
         FT_Face face;
         util::Buffer<ubyte> buffer;
+
+        bool renderGlyph(int codepoint, ImageData& bitmapDst) {
+            int width = bitmapDst.getWidth();
+            if (FT_Error error = FT_Load_Char(face, codepoint, FT_LOAD_RENDER)) {
+                logger.warning() << get_ft_error_message(error);
+                return false;
+            }
+            const FT_Bitmap& bitmap = face->glyph->bitmap;
+            auto dstData = bitmapDst.getData();
+            for (int row = 0; row < bitmap.rows; row++) {
+                for (int col = 0; col < bitmap.width; col++) {
+                    uint8_t value = bitmap.buffer[row * bitmap.pitch + col];
+                    dstData[(row * width + col) * 4 + 0] = 255;
+                    dstData[(row * width + col) * 4 + 1] = 255;
+                    dstData[(row * width + col) * 4 + 2] = 255;
+                    dstData[(row * width + col) * 4 + 3] = value;
+                }
+            }
+            return true;
+        }
     };
 }
 
