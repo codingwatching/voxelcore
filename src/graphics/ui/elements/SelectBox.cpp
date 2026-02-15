@@ -86,3 +86,7 @@ void SelectBox::drawBackground(const DrawContext& pctx, const Assets&) {
         pos.y + size.y / 2.0f + heightHalf
     );
 }
+
+std::shared_ptr<Label> SelectBox::getLabel() const {
+    return label;
+}

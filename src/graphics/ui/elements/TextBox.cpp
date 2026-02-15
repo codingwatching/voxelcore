@@ -1289,3 +1289,7 @@ void TextBox::setMarkup(std::string_view lang) {
 const std::string& TextBox::getMarkup() const {
     return markup;
 }
+
+std::shared_ptr<Label> TextBox::getLabel() const {
+    return label;
+}
