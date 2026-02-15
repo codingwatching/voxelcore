@@ -14,14 +14,23 @@ class Texture;
 class Batch2D;
 class Batch3D;
 class Camera;
+class ImageData;
+
+class Font;
 
 class Font {
-    int lineHeight;
-    int yoffset;
-    int glyphInterval = 8;
-    std::vector<std::unique_ptr<Texture>> pages;
 public:
-    Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset);
+    struct Glyph {
+        int yOffset;
+        int xAdvance;
+    };
+
+    Font(
+        std::vector<std::unique_ptr<Texture>> pages,
+        std::vector<Glyph> glyphs,
+        int lineHeight,
+        int yoffset
+    );
     ~Font();
 
     int getLineHeight() const;
@@ -69,4 +78,20 @@ public:
     FontMetrics getMetrics() const {
         return {lineHeight, yoffset, glyphInterval};
     }
+
+    const Glyph* getGlyph(int codepoint) const {
+        return (codepoint < 0 || codepoint >= glyphs.size())
+                   ? nullptr
+                   : &glyphs.at(codepoint);
+    }
+
+    static std::unique_ptr<Font> createBitmapFont(
+        std::vector<std::unique_ptr<ImageData>> pages
+    );
+private:
+    int lineHeight;
+    int yoffset;
+    int glyphInterval;
+    std::vector<std::unique_ptr<Texture>> pages;
+    std::vector<Glyph> glyphs;
 };

@@ -9,6 +9,7 @@
 #include "coders/commons.hpp"
 #include "coders/GLSLExtension.hpp"
 #include "coders/toml.hpp"
+#include "coders/vector_fonts.hpp"
 #include "content/ContentControl.hpp"
 #include "core_defs.hpp"
 #include "debug/Logger.hpp"
@@ -166,6 +167,8 @@ void Engine::initialize(CoreParameters coreParameters) {
         project->permissions.has(Permissions::RECORD_AUDIO),
         settings.audio
     );
+
+    vector_fonts::initialize();
 
     if (settings.ui.language.get() == "auto") {
         settings.ui.language.set(
@@ -341,6 +344,9 @@ void Engine::close() {
     if (gui) {
         gui.reset();
         logger.info() << "gui finished";
+    }
+    if (!isHeadless()) {
+        vector_fonts::finalize();
     }
     audio::close();
     debuggingServer.reset();

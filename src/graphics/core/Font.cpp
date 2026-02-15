@@ -11,8 +11,17 @@ inline constexpr uint GLYPH_SIZE = 16;
 inline constexpr uint MAX_CODEPAGES = 10000; // idk ho many codepages unicode has
 inline constexpr glm::vec4 SHADOW_TINT(0.0f, 0.0f, 0.0f, 1.0f);
 
-Font::Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset) 
-    : lineHeight(lineHeight), yoffset(yoffset), pages(std::move(pages)) {
+Font::Font(
+    std::vector<std::unique_ptr<Texture>> pages,
+    std::vector<Glyph> glyphs,
+    int lineHeight,
+    int yoffset
+)
+    : lineHeight(lineHeight),
+      glyphInterval(lineHeight / 2),
+      yoffset(yoffset),
+      pages(std::move(pages)),
+      glyphs(std::move(glyphs)) {
 }
 
 Font::~Font() = default;
@@ -39,7 +48,7 @@ bool Font::isPrintableChar(uint codepoint) const {
 }
 
 int FontMetrics::calcWidth(std::wstring_view text, size_t offset, size_t length) const {
-    return std::min(text.length() - offset, length) * glyphInterval;
+    return std::min(text.length() - offset, length) * _glyphInterval;
 }
 
 int Font::calcWidth(std::wstring_view text, size_t length) const {
@@ -71,7 +80,7 @@ static inline void draw_glyph(
 
         batch.sprite(
             pos.x + (offset.x + i / (right.x/glyphInterval/2.0f)) * right.x,
-            pos.y + offset.y * right.y,
+            pos.y + offset.y * up.y,
             right.x / glyphInterval,
             up.y,
             -0.15f * style.italic,
@@ -152,11 +161,15 @@ static inline void draw_text(
                 x++;
                 continue;
             }
+            int yOffset = 0;
+            if (auto glyph = font.getGlyph(c)) {
+                yOffset = glyph->yOffset;
+            }
             uint charpage = c >> 8;
             if (charpage == page){
                 batch.texture(font.getPage(charpage));
                 draw_glyph(
-                    batch, pos, glm::vec2(x, y), c, right, up, interval, style
+                    batch, pos, glm::vec2(x, y - yOffset / static_cast<float>(font.getLineHeight())), c, right, up, interval, style
                 );
             }
             else if (charpage > page && charpage < next){
@@ -242,4 +255,22 @@ void Font::draw(
         styles,
         styleMapOffset
     );
+}
+
+std::unique_ptr<Font> Font::createBitmapFont(
+    std::vector<std::unique_ptr<ImageData>> pages
+) {
+    int res = pages.at(0)->getHeight() / 16;
+    std::vector<std::unique_ptr<Texture>> textures;
+    std::vector<Glyph> glyphs(textures.size() * 256);
+    for (auto& page : pages) {
+        if (page == nullptr) {
+            textures.emplace_back(nullptr);
+        } else {
+            auto texture = Texture::from(page.get());
+            texture->setMipMapping(false, true);
+            textures.emplace_back(std::move(texture));
+        }
+    }
+    return std::make_unique<Font>(std::move(textures), std::move(glyphs), res, 4);
 }

@@ -13,6 +13,7 @@
 #include "coders/obj.hpp"
 #include "coders/vcm.hpp"
 #include "coders/vec3.hpp"
+#include "coders/vector_fonts.hpp"
 #include "constants.hpp"
 #include "debug/Logger.hpp"
 #include "engine/EnginePaths.hpp"
@@ -199,8 +200,18 @@ assetload::postfunc assetload::font(
     const ResPaths& paths,
     const std::string& filename,
     const std::string& name,
-    const std::shared_ptr<AssetCfg>&
+    const std::shared_ptr<AssetCfg>& config
 ) {
+    auto cfg = std::dynamic_pointer_cast<FontCfg>(config);
+    auto ext = fs::path(filename).extension().string();
+    if (ext == ".ttf" || ext == ".otf") {
+        logger.info() << "loading vector font " << util::quote(filename);
+        return [=](auto assets) {
+            auto font = vector_fonts::load_font(paths.find(filename).string());
+            assets->store(font->createInstance(cfg ? cfg->size : 16), name);
+        };
+    }
+
     auto pages = std::make_shared<std::vector<std::unique_ptr<ImageData>>>();
     for (size_t i = 0; i <= 1024; i++) {
         std::string pagefile = filename + "_" + std::to_string(i) + ".png";
@@ -214,20 +225,7 @@ assetload::postfunc assetload::font(
         }
     }
     return [=](auto assets) {
-        int res = pages->at(0)->getHeight() / 16;
-        std::vector<std::unique_ptr<Texture>> textures;
-        for (auto& page : *pages) {
-            if (page == nullptr) {
-                textures.emplace_back(nullptr);
-            } else {
-                auto texture = Texture::from(page.get());
-                texture->setMipMapping(false, true);
-                textures.emplace_back(std::move(texture));
-            }
-        }
-        assets->store(
-            std::make_unique<Font>(std::move(textures), res, 4), name
-        );
+        assets->store(Font::createBitmapFont(std::move(*pages)), name);
     };
 }
 
