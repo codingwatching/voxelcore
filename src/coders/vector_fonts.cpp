@@ -25,7 +25,8 @@ static const char* get_ft_error_message(FT_Error error) {
 }
 
 namespace {
-    class FTFontFile : public vector_fonts::FontFile {
+    class FTFontFile : public vector_fonts::FontFile,
+                       public std::enable_shared_from_this<FTFontFile> {
     public:
         FTFontFile(FT_Face face, util::Buffer<ubyte> buffer)
             : face(std::move(face)), buffer(std::move(buffer)) {
@@ -47,19 +48,41 @@ namespace {
             }
 
             std::vector<std::unique_ptr<Texture>> pages;
-            std::vector<Font::Glyph> glyphs;
+            std::vector<Glyph> glyphs;
 
             int dstSize = size * 16;
             ImageData canvas(ImageFormat::RGBA8888, dstSize, dstSize);
             ImageData bitmapDst(ImageFormat::RGBA8888, size, size);
 
-            for (int pageid = 0; pageid < FONT_PAGES; pageid++) {
+            for (int pageid = 0; pageid < DEFAULT_PRE_RENDER_FONT_PAGES; pageid++) {
                 renderPage(pageid, canvas, bitmapDst, glyphs);
                 pages.push_back(Texture::from(&canvas));
             }
             return std::make_unique<Font>(
-                std::move(pages), std::move(glyphs), size, size / 2
+                std::move(pages),
+                std::move(glyphs),
+                size,
+                size / 2,
+                shared_from_this()
             );
+        }
+
+        std::unique_ptr<Texture> renderPage(
+            int pageid, std::vector<Glyph>& glyphs, int size
+        ) override {
+            if (FT_Error error = FT_Set_Pixel_Sizes(face, 0, size)) {
+                throw std::runtime_error(
+                    "FT_Set_Pixel_Sizes error: " +
+                    std::string(get_ft_error_message(error))
+                );
+            }
+
+            int dstSize = size * 16;
+            ImageData canvas(ImageFormat::RGBA8888, dstSize, dstSize);
+            ImageData bitmapDst(ImageFormat::RGBA8888, size, size);
+
+            renderPage(pageid, canvas, bitmapDst, glyphs);
+            return Texture::from(&canvas);
         }
     private:
         FT_Face face;
@@ -95,19 +118,19 @@ namespace {
             int pageid,
             ImageData& canvas,
             ImageData& bitmapDst,
-            std::vector<Font::Glyph>& glyphs
+            std::vector<Glyph>& glyphs
         ) {
             int size = canvas.getWidth() / 16;
             for (int c = 0; c < 256; c++) {
                 int codepoint = pageid << 8 | c;
                 if (!renderGlyph(codepoint, bitmapDst)) {
-                    glyphs.push_back(Font::Glyph {0, size / 2});
+                    glyphs.push_back(Glyph {0, size / 2});
                     continue;
                 }
 
                 canvas.blit(bitmapDst, (c % 16) * size, (c / 16) * size);
                 
-                Font::Glyph glyph {
+                Glyph glyph {
                     face->glyph->bitmap_top - size,
                     static_cast<int>(face->glyph->advance.x >> 6)
                 };
@@ -133,11 +156,14 @@ void vector_fonts::initialize() {
 
 void vector_fonts::finalize() {
     if (FT_Error error = FT_Done_FreeType(library)) {
-        logger.error() << "error on FT_Done_FreeType: " << get_ft_error_message(error);
+        logger.error() << "error on FT_Done_FreeType: "
+                       << get_ft_error_message(error);
     }
 }
 
-std::unique_ptr<vector_fonts::FontFile> vector_fonts::load_font(const std::string& filename) {
+std::shared_ptr<vector_fonts::FontFile> vector_fonts::load_font(
+    const std::string& filename
+) {
     auto bytes = io::read_bytes_buffer(io::path(filename));
 
     FT_Face face;
@@ -150,5 +176,5 @@ std::unique_ptr<vector_fonts::FontFile> vector_fonts::load_font(const std::strin
         );
     }
 
-    return std::make_unique<FTFontFile>(std::move(face), std::move(bytes));
+    return std::make_shared<FTFontFile>(std::move(face), std::move(bytes));
 }

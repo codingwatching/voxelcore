@@ -2,8 +2,12 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class Font;
+struct Glyph;
+
+class Texture;
 
 namespace vector_fonts {
     class FontFile {
@@ -11,10 +15,14 @@ namespace vector_fonts {
         virtual ~FontFile() {}
     
         virtual std::unique_ptr<Font> createInstance(int size) = 0;
+
+        virtual std::unique_ptr<Texture> renderPage(
+            int pageid, std::vector<Glyph>& glyphs, int size
+        ) = 0;
     };
 
     void initialize();
     void finalize();
 
-    std::unique_ptr<vector_fonts::FontFile> load_font(const std::string& filename);
+    std::shared_ptr<vector_fonts::FontFile> load_font(const std::string& filename);
 }

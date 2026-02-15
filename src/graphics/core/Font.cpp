@@ -1,11 +1,13 @@
 #include "Font.hpp"
 
-#include <limits>
-#include <utility>
-#include "Texture.hpp"
 #include "Batch2D.hpp"
 #include "Batch3D.hpp"
+#include "coders/vector_fonts.hpp"
+#include "Texture.hpp"
 #include "window/Camera.hpp"
+
+#include <limits>
+#include <utility>
 
 inline constexpr uint GLYPH_SIZE = 16;
 inline constexpr uint MAX_CODEPAGES = 10000; // idk ho many codepages unicode has
@@ -15,13 +17,15 @@ Font::Font(
     std::vector<std::unique_ptr<Texture>> pages,
     std::vector<Glyph> glyphs,
     int lineHeight,
-    int yoffset
+    int yoffset,
+    std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile
 )
     : lineHeight(lineHeight),
       yoffset(yoffset),
       glyphInterval(lineHeight / 2),
       pages(std::move(pages)),
-      glyphs(std::move(glyphs)) {
+      glyphs(std::move(glyphs)),
+      fontFile(std::move(fontFile)) {
 }
 
 Font::~Font() = default;
@@ -139,7 +143,7 @@ static inline void draw_glyph(
 
 template <class Batch>
 static inline void draw_text(
-    const Font& font,
+    Font& font,
     Batch& batch,
     std::wstring_view text,
     const glm::vec3& pos,
@@ -244,7 +248,7 @@ void Font::draw(
     const FontStylesScheme* styles,
     size_t styleMapOffset,
     float scale
-) const {
+) {
     draw_text(
         *this, batch, text,
         glm::vec3(x, y, 0),
@@ -264,7 +268,7 @@ void Font::draw(
     const glm::vec3& pos,
     const glm::vec3& right,
     const glm::vec3& up
-) const {
+) {
     draw_text(
         *this, batch, text, pos,
         right * static_cast<float>(glyphInterval),
@@ -295,4 +299,29 @@ std::unique_ptr<Font> Font::createBitmapFont(
         }
     }
     return std::make_unique<Font>(std::move(textures), std::move(glyphs), res, 4);
+}
+
+const Glyph* Font::getGlyph(int codepoint) {
+    if (codepoint < 0) {
+        return nullptr;
+    }
+    if (codepoint < glyphs.size()) {
+        return &glyphs.at(codepoint);
+    }
+    if (!this->fontFile.has_value() || this->fontFile->expired()) {
+        return nullptr;
+    }
+    int codepage = codepoint >> 8;
+    if (codepage >= 1024) {
+        return nullptr;
+    }
+    if (glyphs.size() < (codepage << 8)) {
+        glyphs.resize(codepage << 8);
+    }
+    auto fontFile = this->fontFile->lock();
+    if (pages.size() <= codepage) {
+        pages.resize(codepage);
+    }
+    pages.push_back(fontFile->renderPage(codepage, glyphs, lineHeight));
+    return &glyphs.at(codepoint);
 }

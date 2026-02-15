@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 #include <glm/glm.hpp>
 
 #include "typedefs.hpp"
@@ -18,18 +19,23 @@ class ImageData;
 
 class Font;
 
+namespace vector_fonts {
+    class FontFile;
+}
+
+struct Glyph {
+    int yOffset;
+    int xAdvance;
+};
+
 class Font {
 public:
-    struct Glyph {
-        int yOffset;
-        int xAdvance;
-    };
-
     Font(
         std::vector<std::unique_ptr<Texture>> pages,
         std::vector<Glyph> glyphs,
         int lineHeight,
-        int yoffset
+        int yoffset,
+        std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile = std::nullopt
     );
     ~Font();
 
@@ -61,7 +67,7 @@ public:
         const FontStylesScheme* styles,
         size_t styleMapOffset,
         float scale = 1
-    ) const;
+    );
 
     void draw(
         Batch3D& batch,
@@ -71,7 +77,7 @@ public:
         const glm::vec3& pos,
         const glm::vec3& right={1, 0, 0},
         const glm::vec3& up={0, 1, 0}
-    ) const;
+    );
 
     const Texture* getPage(int page) const;
 
@@ -79,11 +85,7 @@ public:
         return {std::nullopt, lineHeight, yoffset, glyphInterval};
     }
  
-    const Glyph* getGlyph(int codepoint) const {
-        return (codepoint < 0 || codepoint >= glyphs.size())
-                   ? nullptr
-                   : &glyphs.at(codepoint);
-    }
+    const Glyph* getGlyph(int codepoint);
 
     static std::unique_ptr<Font> createBitmapFont(
         std::vector<std::unique_ptr<ImageData>> pages
@@ -94,4 +96,5 @@ private:
     int glyphInterval;
     std::vector<std::unique_ptr<Texture>> pages;
     std::vector<Glyph> glyphs;
+    std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile;
 };

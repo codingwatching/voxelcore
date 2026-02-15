@@ -208,6 +208,7 @@ assetload::postfunc assetload::font(
         logger.info() << "loading vector font " << util::quote(filename);
         return [=](auto assets) {
             auto font = vector_fonts::load_font(paths.find(filename).string());
+            assets->store(font, filename);
             assets->store(font->createInstance(cfg ? cfg->size : 16), name);
         };
     }
