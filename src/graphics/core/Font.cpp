@@ -18,8 +18,8 @@ Font::Font(
     int yoffset
 )
     : lineHeight(lineHeight),
-      glyphInterval(lineHeight / 2),
       yoffset(yoffset),
+      glyphInterval(lineHeight / 2),
       pages(std::move(pages)),
       glyphs(std::move(glyphs)) {
 }
@@ -48,7 +48,22 @@ bool Font::isPrintableChar(uint codepoint) const {
 }
 
 int FontMetrics::calcWidth(std::wstring_view text, size_t offset, size_t length) const {
-    return std::min(text.length() - offset, length) * _glyphInterval;
+    auto font = this->font.has_value() ? this->font->lock() : nullptr;
+    if (font == nullptr) {
+        return std::min(text.length() - offset, length) * _glyphInterval;
+    }
+    int totalWidth = 0;
+    for (int i = offset; i < offset + length && i < text.length(); i++) {
+        auto codepoint = text[i];
+        if (!font->isPrintableChar(codepoint)) {
+            totalWidth += _glyphInterval;
+        } else if (auto glyph = font->getGlyph(codepoint)) {
+            totalWidth += glyph->xAdvance;
+        } else {
+            totalWidth += _glyphInterval;
+        }
+    }
+    return totalWidth;
 }
 
 int Font::calcWidth(std::wstring_view text, size_t length) const {
@@ -109,7 +124,6 @@ static inline void draw_glyph(
         } else {
             color = style.color;
         }
-        
 
         batch.sprite(
             pos + right * (offset.x + i) + up * offset.y,
@@ -143,9 +157,11 @@ static inline void draw_text(
     
     uint page = 0;
     uint next = MAX_CODEPAGES;
-    int x = 0;
+    float x = 0;
     int y = 0;
     bool hasLines = false;
+
+    float baseAdvance = glm::length(right);
 
     do {
         for (size_t i = 0; i < text.length(); i++) {
@@ -162,8 +178,10 @@ static inline void draw_text(
                 continue;
             }
             int yOffset = 0;
+            float advance = baseAdvance;
             if (auto glyph = font.getGlyph(c)) {
                 yOffset = glyph->yOffset;
+                advance = glyph->xAdvance;
             }
             uint charpage = c >> 8;
             if (charpage == page){
@@ -175,7 +193,7 @@ static inline void draw_text(
             else if (charpage > page && charpage < next){
                 next = charpage;
             }
-            x++;
+            x += advance / baseAdvance;
         }
         page = next;
         next = MAX_CODEPAGES;
@@ -263,6 +281,10 @@ std::unique_ptr<Font> Font::createBitmapFont(
     int res = pages.at(0)->getHeight() / 16;
     std::vector<std::unique_ptr<Texture>> textures;
     std::vector<Glyph> glyphs(textures.size() * 256);
+    for (auto& glyph : glyphs) {
+        glyph.yOffset = 0;
+        glyph.xAdvance = res / 2;
+    }
     for (auto& page : pages) {
         if (page == nullptr) {
             textures.emplace_back(nullptr);

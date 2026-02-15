@@ -82,6 +82,8 @@ namespace {
 
         bool renderGlyph(int codepoint, ImageData& bitmapDst) {
             int width = bitmapDst.getWidth();
+            int height = bitmapDst.getHeight();
+
             if (FT_Error error = FT_Load_Char(face, codepoint, FT_LOAD_RENDER)) {
                 logger.warning() << get_ft_error_message(error);
                 return false;
@@ -89,8 +91,8 @@ namespace {
             const FT_Bitmap& bitmap = face->glyph->bitmap;
             auto dstData = bitmapDst.getData();
             std::memset(dstData, 0, bitmapDst.getDataSize());
-            for (int row = 0; row < bitmap.rows; row++) {
-                for (int col = 0; col < bitmap.width; col++) {
+            for (int row = 0; row < std::min<int>(bitmap.rows, height); row++) {
+                for (int col = 0; col < std::min<int>(bitmap.width, width); col++) {
                     uint8_t value = bitmap.buffer[row * bitmap.pitch + col];
                     dstData[(row * width + col) * 4 + 0] = 255;
                     dstData[(row * width + col) * 4 + 1] = 255;

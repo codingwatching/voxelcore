@@ -76,9 +76,9 @@ public:
     const Texture* getPage(int page) const;
 
     FontMetrics getMetrics() const {
-        return {lineHeight, yoffset, glyphInterval};
+        return {std::nullopt, lineHeight, yoffset, glyphInterval};
     }
-
+ 
     const Glyph* getGlyph(int codepoint) const {
         return (codepoint < 0 || codepoint >= glyphs.size())
                    ? nullptr

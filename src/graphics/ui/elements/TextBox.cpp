@@ -252,10 +252,12 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
 
     float time = gui.getWindow().time();
 
+    // drawing caret here
     if (isFocused() && editable && static_cast<int>((time - caretLastMove) * 2) % 2 == 0) {
         uint line = label->getLineByTextIndex(caret);
+        auto linestart = label->getTextLineOffset(line);
         uint lcaret = caret - label->getTextLineOffset(line);
-        int width = rawTextCache.metrics.calcWidth(input, 0, lcaret);
+        int width = rawTextCache.metrics.calcWidth(input.substr(linestart), 0, lcaret);
 
         batch->rect(
             lcoord.x + width,
@@ -264,6 +266,7 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
             lineHeight
         );
     }
+    // drawing selection
     if (selectionStart != selectionEnd) {
         auto selectionCtx = subctx.sub(batch);
         selectionCtx.setBlendMode(BlendMode::addition);
@@ -349,12 +352,8 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
 }
 
 void TextBox::drawBackground(const DrawContext& pctx, const Assets& assets) {
-    auto font = assets.get<Font>(label->getFontName());
-    rawTextCache.prepare(
-        reinterpret_cast<ptrdiff_t>(font),
-        font->getMetrics(),
-        label->getSize().x
-    );
+    auto font = assets.getShared<Font>(label->getFontName());
+    rawTextCache.prepare(font, font->getMetrics(), label->getSize().x);
 
     glm::vec2 pos = calcPos();
 
@@ -384,8 +383,11 @@ void TextBox::drawBackground(const DrawContext& pctx, const Assets& assets) {
 }
 
 void TextBox::refreshLabel() {
+    if (!rawTextCache.metrics.font.has_value()) {
+        return;
+    }
     rawTextCache.prepare(
-        rawTextCache.fontId,
+        rawTextCache.metrics.font.value().lock(),
         rawTextCache.metrics,
         static_cast<size_t>(getSize().x)
     );
@@ -425,7 +427,7 @@ void TextBox::refreshLabel() {
         lineNumbersLabel->setColor(glm::vec4(1, 1, 1, 0.25f));
     }
 
-    if (autoresize && rawTextCache.fontId) {
+    if (autoresize) {
         auto size = getSize();
         int newy = glm::min(
             static_cast<int>(parent->getSize().y),
@@ -443,7 +445,7 @@ void TextBox::refreshLabel() {
         }
     }
 
-    if (multiline && rawTextCache.fontId) {
+    if (multiline) { 
         setScrollable(true);
         uint height = label->getLinesNumber() * rawTextCache.metrics.lineHeight *
                       label->getLineInterval();
@@ -665,7 +667,7 @@ size_t TextBox::normalizeIndex(int index) {
 /// @param y screen Y position
 /// @return non-normalized character index
 int TextBox::calcIndexAt(int x, int y) const {
-    if (rawTextCache.fontId == 0) return 0;
+    if (!rawTextCache.metrics.font.has_value()) return 0;
     const auto& labelText = label->getText();
     glm::vec2 lcoord = label->calcPos();
     uint line = label->getLineByYOffset(y - lcoord.y);
@@ -682,7 +684,7 @@ int TextBox::calcIndexAt(int x, int y) const {
 }
 
 int TextBox::getLineYOffset(int line) const {
-    if (rawTextCache.fontId == 0) return 0;
+    if (!rawTextCache.metrics.font.has_value()) return 0;
     return label->getLineYOffset(line);
 }
 
@@ -1205,12 +1207,16 @@ size_t TextBox::getCaret() const {
 void TextBox::setCaret(size_t position) {
     const auto& labelText = label->getText();
     caret = std::min(static_cast<size_t>(position), input.length());
-    if (rawTextCache.fontId == 0) {
+
+    auto font = rawTextCache.metrics.font.has_value()
+                    ? rawTextCache.metrics.font->lock()
+                    : nullptr;
+    if (font == nullptr) {
         return;
     }
     int width = label->getSize().x;
 
-    rawTextCache.prepare(rawTextCache.fontId, rawTextCache.metrics, width);
+    rawTextCache.prepare(font, rawTextCache.metrics, width);
     rawTextCache.update(input, multiline, label->isTextWrapping());
 
     caretLastMove = gui.getWindow().time();
