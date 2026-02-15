@@ -206,10 +206,15 @@ assetload::postfunc assetload::font(
     auto ext = fs::path(filename).extension().string();
     if (ext == ".ttf" || ext == ".otf") {
         logger.info() << "loading vector font " << util::quote(filename);
-        return [=](auto assets) {
-            auto font = vector_fonts::load_font(paths.find(filename).string());
-            assets->store(font, filename);
-            assets->store(font->createInstance(cfg ? cfg->size : 16), name);
+        return [=](Assets* assets) {
+            using FontFile = vector_fonts::FontFile;
+            FontFile* fontFile;
+            if ((fontFile = assets->get<FontFile>(filename)) == nullptr) {
+                auto fontFilePtr = vector_fonts::load_font(paths.find(filename).string());
+                fontFile = fontFilePtr.get();
+                assets->store(fontFilePtr, filename);
+            }
+            assets->store(fontFile->createInstance(cfg ? cfg->size : 16), name);
         };
     }
 
