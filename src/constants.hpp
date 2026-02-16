@@ -63,6 +63,10 @@ inline constexpr int TRANSLUCENT_BLOCKS_SORT_INTERVAL = 8;
 
 inline constexpr int ATLAS_EXTRUSION = 2;
 
+inline constexpr int DEFAULT_FONT_SIZE = 16;
+
+inline constexpr int DEFAULT_PRE_RENDER_FONT_PAGES = 1; // must be at least 1
+
 inline const std::string SHADERS_FOLDER = "shaders";
 inline const std::string TEXTURES_FOLDER = "textures";
 inline const std::string FONTS_FOLDER = "fonts";

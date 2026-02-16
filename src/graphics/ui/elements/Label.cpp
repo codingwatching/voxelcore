@@ -11,11 +11,11 @@
 
 using namespace gui;
 
-void LabelCache::prepare(std::ptrdiff_t fontId, FontMetrics metrics, size_t wrapWidth) {
-    if (fontId != this->fontId) {
+void LabelCache::prepare(const std::shared_ptr<Font>& font, FontMetrics metrics, size_t wrapWidth) {
+    if (!this->metrics.font.has_value() || font.get() != this->metrics.font.value().lock().get()) {
         resetFlag = true;
-        this->fontId = fontId;
         this->metrics = metrics;
+        this->metrics.font = font;
     }
     if (wrapWidth != this->wrapWidth) {
         resetFlag = true;
@@ -42,7 +42,8 @@ void LabelCache::update(std::wstring_view text, bool multiline, bool wrap) {
     lines.clear();
     lines.push_back(LineScheme {0, false});
 
-    if (fontId == 0) {
+    auto font = metrics.font.has_value() ? metrics.font.value().lock() : nullptr;
+    if (font == nullptr) {
         wrap = false;
     }
     
@@ -61,26 +62,27 @@ void LabelCache::update(std::wstring_view text, bool multiline, bool wrap) {
                 }
             }
         }
-        if (fontId != 0) {
-            int maxWidth = 0;
-            for (int i = 0; i < lines.size() - 1; i++) {
-                const auto& next = lines[i + 1];
-                const auto& cur = lines[i];
-                maxWidth = std::max(
-                    metrics.calcWidth(
-                        text.substr(cur.offset, next.offset - cur.offset)
-                    ),
-                    maxWidth
-                );
-            }
+        if (font == nullptr) {
+            return;
+        }
+        int maxWidth = 0;
+        for (int i = 0; i < lines.size() - 1; i++) {
+            const auto& next = lines[i + 1];
+            const auto& cur = lines[i];
             maxWidth = std::max(
                 metrics.calcWidth(
-                    text.substr(lines[lines.size() - 1].offset)
+                    text.substr(cur.offset, next.offset - cur.offset)
                 ),
                 maxWidth
             );
-            multilineWidth = maxWidth;
         }
+        maxWidth = std::max(
+            metrics.calcWidth(
+                text.substr(lines[lines.size() - 1].offset)
+            ),
+            maxWidth
+        );
+        multilineWidth = maxWidth;
     }
 }
 
@@ -136,7 +138,7 @@ void Label::setText(std::wstring text) {
     this->text = std::move(text);
     cache.update(this->text, multiline, textWrap);
 
-    if (cache.fontId != 0 && autoresize) {
+    if (cache.metrics.font.has_value() && !cache.metrics.font->expired() && autoresize) {
         setSize(calcSize());
     }
 }
@@ -203,9 +205,9 @@ uint Label::getLinesNumber() const {
 
 void Label::draw(const DrawContext& pctx, const Assets& assets) {
     auto batch = pctx.getBatch2D();
-    auto font = assets.get<Font>(fontName);
+    auto font = assets.getShared<Font>(fontName);
     cache.prepare(
-        reinterpret_cast<ptrdiff_t>(font),
+        font,
         font->getMetrics(),
         static_cast<size_t>(glm::abs(getSize().x))
     );

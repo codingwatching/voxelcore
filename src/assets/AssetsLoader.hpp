@@ -33,14 +33,19 @@ struct LayoutCfg : AssetCfg {
     gui::GUI* gui;
     scriptenv env;
 
-    LayoutCfg(gui::GUI* gui, scriptenv env) : gui(gui), env(std::move(env)) {
-    }
+    LayoutCfg(gui::GUI* gui, scriptenv env) : gui(gui), env(std::move(env)) {}
 };
 
 struct SoundCfg : AssetCfg {
     bool keepPCM;
 
     SoundCfg(bool keepPCM) : keepPCM(keepPCM) {}
+};
+
+struct FontCfg : AssetCfg {
+    int size;
+
+    FontCfg(int size) : size(size) {}
 };
 
 enum class AtlasType {

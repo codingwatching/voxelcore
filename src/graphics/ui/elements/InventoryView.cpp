@@ -276,13 +276,13 @@ void SlotView::draw(const DrawContext& pctx, const Assets& assets) {
     drawItemIcon(batch, stack, item, assets, tint, pos);
 
     if (stack.getCount() > 1 || stack.getFields() != nullptr) {
-        const auto& font = assets.require<Font>(FONT_DEFAULT);
+        auto& font = assets.require<Font>(FONT_DEFAULT);
         drawItemInfo(batch, stack, item, font, pos);
     }
 }
 
 static void draw_shaded_text(
-    Batch2D& batch, const Font& font, const std::wstring& text, int x, int y
+    Batch2D& batch, Font& font, const std::wstring& text, int x, int y
 ) {
     batch.setColor({0, 0, 0, 1.0f});
     font.draw(batch, text, x + 1, y + 1, nullptr, 0);
@@ -294,7 +294,7 @@ void SlotView::drawItemInfo(
     Batch2D& batch,
     const ItemStack& stack,
     const ItemDef& item,
-    const Font& font,
+    Font& font,
     const glm::vec2& pos
 ) {
     const int SLOT_SIZE = InventoryView::SLOT_SIZE;

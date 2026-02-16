@@ -309,6 +309,9 @@ static std::shared_ptr<UINode> read_label(
     std::wstring text = parse_inner_text(element, reader.getContext());
     auto label = std::make_shared<Label>(reader.getGUI(), text);
     read_uinode(reader, element, *label);
+    if (element.has("font")) {
+        label->setFontName(element.attr("font").getText());
+    }
     if (element.has("text-align")) {
         label->setAlign(align_from_string(
             element.attr("text-align").getText(), label->getAlign()
@@ -428,6 +431,12 @@ static std::shared_ptr<UINode> read_button(
             element.attr("text-align").getText(), button->getTextAlign()
         ));
     }
+    if (element.has("font")) {
+        if (auto label = button->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            button->setMustRefresh();
+        }
+    }
     return button;
 }
 
@@ -488,6 +497,12 @@ static std::shared_ptr<UINode> read_select(
         selectBox->listenChange([callback = std::move(callback)](
                                     GUI&, const std::string& value
                                 ) { callback(value); });
+    }
+    if (element.has("font")) {
+        if (auto label = selectBox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            selectBox->setMustRefresh();
+        }
     }
     read_panel_impl(reader, element, *selectBox, false);
     return selectBox;
@@ -625,6 +640,12 @@ static std::shared_ptr<UINode> read_text_box(
     if (auto onDownPressed = create_runnable(reader, element, "ondown")) {
         textbox->setOnDownPressed(onDownPressed);
     }
+    if (element.has("font")) {
+        if (auto label = textbox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            textbox->setMustRefresh();
+        }
+    }
     return textbox;
 }
 
@@ -703,6 +724,12 @@ static std::shared_ptr<UINode> read_input_bind_box(
     glm::vec4 padding = element.attr("padding", "6").asVec4();
     auto bindbox =
         std::make_shared<InputBindBox>(reader.getGUI(), found, padding);
+    if (element.has("font")) {
+        if (auto label = bindbox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            bindbox->setMustRefresh();
+        }
+    }
     read_panel_impl(reader, element, *bindbox);
     return bindbox;
 }
