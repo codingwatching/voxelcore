@@ -688,7 +688,7 @@ void scripting::load_content_script(
     funcsset.onblockremoved =
         register_event(env, "on_block_removed", prefix + ".blockremoved");
 
-    namesCache.randomUpdate = prefix + ".update";
+    namesCache.update = prefix + ".update";
     namesCache.randomUpdate = prefix + ".randupdate";
 }
 
