@@ -71,13 +71,13 @@ public:
     );
     virtual ~ChunksRenderer();
 
-    const Mesh<ChunkVertex>* render(
+    const ChunkMesh* render(
         const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
     );
     void unload(const Chunk* chunk);
     void clear();
 
-    const Mesh<ChunkVertex>* getOrRender(
+    const ChunkMesh* getOrRender(
         const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
     );
 

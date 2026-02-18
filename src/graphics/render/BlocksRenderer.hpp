@@ -6,6 +6,7 @@
 #include "voxels/Chunk.hpp"
 #include "voxels/VoxelsVolume.hpp"
 #include "maths/util.hpp"
+#include "maths/aabb.hpp"
 #include "commons.hpp"
 #include "settings.hpp"
 
@@ -56,6 +57,7 @@ private:
     bool cancelled = false;
     bool densePass = false;
     bool denseRender = false;
+    AABB meshAABB {};
     const Chunk* chunk = nullptr;
     const VoxelsRenderVolume* voxelsBuffer = nullptr;
 
