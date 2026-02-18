@@ -803,8 +803,10 @@ void ALAudio::setAcoustics(Acoustics acoustics) {
     AL_CHECK(alEffectf(
         reverbEffect,
         AL_REVERB_GAIN,
-        glm::max(0.1f, glm::min(acoustics.reverbGain, 0.8f) *
-            (1.0f - glm::min(1.0f, acoustics.reverbAbsorption)))
+        glm::clamp(glm::min(acoustics.reverbGain, 0.8f) *
+            (1.0f - glm::min(1.0f, acoustics.reverbAbsorption)),
+            AL_REVERB_MIN_GAIN,
+            AL_REVERB_MAX_GAIN)
     ));
     AL_CHECK(alEffectf(
         reverbEffect,
