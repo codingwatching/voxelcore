@@ -2,23 +2,22 @@
 
 /// blocks_agent is set of templates but not a class to minimize OOP overhead.
 
-#include "voxel.hpp"
 #include "Block.hpp"
 #include "Chunk.hpp"
 #include "Chunks.hpp"
-#include "VoxelsVolume.hpp"
-#include "GlobalChunks.hpp"
 #include "constants.hpp"
-#include "typedefs.hpp"
 #include "content/Content.hpp"
+#include "GlobalChunks.hpp"
 #include "maths/voxmaths.hpp"
+#include "typedefs.hpp"
+#include "voxel.hpp"
+#include "VoxelsVolume.hpp"
 
 #include <algorithm>
-#include <set>
-#include <algorithm>
-#include <stdint.h>
-#include <stdexcept>
 #include <glm/glm.hpp>
+#include <set>
+#include <stdexcept>
+#include <stdint.h>
 
 struct AABB;
 
