@@ -2,6 +2,7 @@
 
 #include "constants.hpp"
 #include "graphics/core/MeshData.hpp"
+#include "maths/aabb.hpp"
 #include "util/Buffer.hpp"
 
 #include <vector>
@@ -45,12 +46,14 @@ struct SortingMeshData {
 struct ChunkMeshData {
     MeshData<ChunkVertex> mesh;
     SortingMeshData sortingMesh;
+    AABB meshAABB;
 };
 
 struct ChunkMesh {
     std::unique_ptr<Mesh<ChunkVertex>> mesh;
     SortingMeshData sortingMeshData;
     std::unique_ptr<Mesh<ChunkVertex> > sortedMesh;
+    AABB meshAABB;
 };
 
 inline constexpr int VOXELS_BUFFER_PADDING = 2;
