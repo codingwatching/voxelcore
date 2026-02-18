@@ -1,11 +1,5 @@
 #include "Chunks.hpp"
 
-#include <math.h>
-
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
 #include "data/StructLayout.hpp"
 #include "coders/byte_utils.hpp"
 #include "content/Content.hpp"
@@ -19,6 +13,11 @@
 #include "world/LevelEvents.hpp"
 #include "VoxelsVolume.hpp"
 #include "blocks_agent.hpp"
+
+#include <math.h>
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
 
 Chunks::Chunks(
     int32_t w,
@@ -67,20 +66,21 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) const {
         }
     }
     const auto& def = indices.blocks.require(v->id);
-    if (def.obstacle) {
-        glm::ivec3 offset {};
-        if (v->state.segment) {
-            glm::ivec3 point(ix, iy, iz);
-            offset = seekOrigin(point, def, v->state) - point;
-        }
-        const auto& boxes =
-            def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
-        for (const auto& hitbox : boxes) {
-            if (hitbox.contains(
-                {x - ix - offset.x, y - iy - offset.y, z - iz - offset.z}
-            )) {
-                return &hitbox;
-            }
+    if (!def.obstacle) {
+        return nullptr;
+    }
+    glm::ivec3 offset {};
+    if (v->state.segment) {
+        glm::ivec3 point(ix, iy, iz);
+        offset = seekOrigin(point, def, v->state) - point;
+    }
+    const auto& boxes =
+        def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
+    for (const auto& hitbox : boxes) {
+        if (hitbox.contains(
+            {x - ix - offset.x, y - iy - offset.y, z - iz - offset.z}
+        )) {
+            return &hitbox;
         }
     }
     return nullptr;

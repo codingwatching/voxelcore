@@ -461,7 +461,7 @@ void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false
 void get_voxels(const GlobalChunks& chunks, VoxelsVolume* volume, bool backlight=false);
 
 template <class Storage>
-inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z, const AABB& aabb) {
     int ix = std::floor(x);
     int iy = std::floor(y);
     int iz = std::floor(z);
@@ -475,23 +475,28 @@ inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float
         }
     }
     const auto& def = chunks.getContentIndices().blocks.require(v->id);
-    if (def.obstacle) {
-        glm::ivec3 offset {};
-        if (v->state.segment) {
-            glm::ivec3 point(ix, iy, iz);
-            offset = seek_origin(chunks, point, def, v->state) - point;
-        }
-        const auto& boxes =
-            def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
-        for (const auto& hitbox : boxes) {
-            if (hitbox.contains(
-                {x - ix - offset.x, y - iy - offset.y, z - iz - offset.z}
-            )) {
-                return &hitbox;
-            }
+    if (!def.obstacle) {
+        return nullptr;
+    }
+    glm::ivec3 offset {};
+    if (v->state.segment) {
+        glm::ivec3 point(ix, iy, iz);
+        offset = seek_origin(chunks, point, def, v->state) - point;
+    }
+    const auto& boxes =
+        def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
+
+    for (const auto& hitbox : boxes) {
+        if (hitbox.intersects(aabb - glm::ivec3(ix, iy, iz))) {
+            return &hitbox;
         }
     }
     return nullptr;
+}
+
+template <class Storage>
+inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+    return is_obstacle_at(chunks, x, y, z, AABB({x, y, z}, {x + 1, y + 1, z + 1}));
 }
 
 } // blocks_agent

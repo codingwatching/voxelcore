@@ -5,8 +5,8 @@
 #include "voxels/Block.hpp"
 #include "voxels/GlobalChunks.hpp"
 #include "voxels/voxel.hpp"
+#include "debug/Logger.hpp"
 
-#include <iostream>
 #include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
@@ -14,7 +14,11 @@
 inline const float E = 0.03f;
 inline const float MAX_FIX = 0.1f;
 
+static debug::Logger logger("physics-solver");
+
 PhysicsSolver::PhysicsSolver(glm::vec3 gravity) : gravity(gravity) {}
+
+static int samples_count = 0;
 
 void PhysicsSolver::step(
     const GlobalChunks& chunks, 
@@ -23,9 +27,9 @@ void PhysicsSolver::step(
     uint substeps, 
     entityid_t entity
 ) {
+    samples_count = 0;
     float dt = delta / static_cast<float>(substeps);
     float linearDamping = hitbox.linearDamping * hitbox.friction;
-    float s = 2.0f/BLOCK_AABB_GRID;
 
     auto half = hitbox.getHalfSize();
     glm::vec3& pos = hitbox.position;
@@ -53,11 +57,12 @@ void PhysicsSolver::step(
         if (hitbox.crouching && hitbox.grounded){
             float y = (pos.y-half.y-E);
             hitbox.grounded = false;
-            for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
-                float x = (px-half.x+E) + ix * s;
-                for (int iz = 0; iz <= (half.z-E)*2/s; iz++){
-                    float z = (pos.z-half.z+E) + iz * s;
-                    if (chunks.isObstacleAt(x,y,z)){
+            for (int ix = 0; ix <= glm::ceil((half.x-E)*2); ix++) {
+                float x = (px-half.x+E) + ix;
+                for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++){
+                    float z = (pos.z-half.z+E) + iz;
+                    samples_count++;
+                    if (chunks.isObstacleAt(x,y,z, AABB(pos - half, pos + half))){
                         hitbox.grounded = true;
                         break;
                     }
@@ -68,11 +73,12 @@ void PhysicsSolver::step(
                 vel.z = 0.0f;
             }
             hitbox.grounded = false;
-            for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
-                float x = (pos.x-half.x+E) + ix * s;
-                for (int iz = 0; iz <= (half.z-E)*2/s; iz++){
-                    float z = (pz-half.z+E) + iz * s;
-                    if (chunks.isObstacleAt(x,y,z)){
+            for (int ix = 0; ix <= glm::ceil((half.x-E)*2); ix++) {
+                float x = (pos.x-half.x+E) + ix;
+                for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++){
+                    float z = (pz-half.z+E) + iz;
+                    samples_count++;
+                    if (chunks.isObstacleAt(x,y,z, AABB(pos - half, pos + half))){
                         hitbox.grounded = true;
                         break;
                     }
@@ -103,7 +109,7 @@ void PhysicsSolver::step(
         bool triggered = false;
         switch (sensor.type) {
             case SensorType::AABB:
-                triggered = aabb.intersect(sensor.calculated.aabb);
+                triggered = aabb.intersects(sensor.calculated.aabb);
                 break;
             case SensorType::RADIUS:
                 triggered = glm::distance2(
@@ -118,21 +124,23 @@ void PhysicsSolver::step(
             sensor.nextEntered.insert(entity);
         }
     }
+    logger.info() << "total samples: " << samples_count;
 }
 
 static float calc_step_height(
     const GlobalChunks& chunks, 
     const glm::vec3& pos, 
     const glm::vec3& half,
-    float stepHeight,
-    float s
+    float stepHeight
 ) {
+    AABB aabb(pos - half, pos + half);
     if (stepHeight > 0.0f) {
-        for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
-            float x = (pos.x-half.x+E) + ix * s;
-            for (int iz = 0; iz <= (half.z-E)*2/s; iz++) {
-                float z = (pos.z-half.z+E) + iz * s;
-                if (chunks.isObstacleAt(x, pos.y+half.y+stepHeight, z)) {
+        for (int ix = 0; ix <= glm::ceil((half.x-E) * 2); ix++) {
+            float x = (pos.x-half.x+E) + ix;
+            for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++) {
+                float z = (pos.z-half.z+E) + iz;
+                samples_count++;
+                if (chunks.isObstacleAt(x, pos.y+half.y+stepHeight, z, aabb)) {
                     return 0.0f;
                 }
             }
@@ -147,20 +155,26 @@ static bool calc_collision_neg(
     glm::vec3& pos,
     glm::vec3& vel,
     const glm::vec3& half,
-    float stepHeight,
-    float s
+    float stepHeight
 ) {
     if (vel[nx] >= 0.0f) {
         return false;
     }
     glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= std::max<int>(1, ((half-offset*0.5f)[ny]-E)*2/s); iy++) {
+    for (int iy = 0; iy <= glm::ceil(((half-offset*0.5f)[ny]-E)*2); iy++) {
         glm::vec3 coord;
-        coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy * s;
-        for (int iz = 0; iz <= (half[nz]-E)*2/s; iz++){
-            coord[nz] = (pos[nz]-half[nz]+E) + iz * s;
+        coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy;
+        for (int iz = 0; iz <= glm::ceil((half[nz]-E)*2); iz++){
+            coord[nz] = (pos[nz]-half[nz]+E) + iz;
             coord[nx] = (pos[nx]-half[nx]-E);
-            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z)) {
+            samples_count++;
+            
+            auto boxAABB = AABB(pos - half, pos + half);
+            glm::vec3 scale(1.0f);
+            scale[nz] = 1.0f - E * 2.0f;
+            boxAABB.scale(scale);
+
+            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
                 vel[nx] = 0.0f;
                 float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx] + E;
                 if (newx - pos[nx] <= E) {
@@ -179,23 +193,29 @@ static void calc_collision_pos(
     glm::vec3& pos,
     glm::vec3& vel,
     const glm::vec3& half,
-    float stepHeight,
-    float s
+    float stepHeight
 ) {
     if (vel[nx] <= 0.0f) {
         return;
     }
     glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= std::max<int>(1, ((half-offset*0.5f)[ny]-E)*2/s); iy++) {
+    for (int iy = 0; iy <= glm::ceil(((half-offset*0.5f)[ny]-E)*2); iy++) {
         glm::vec3 coord;
-        coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy * s;
-        for (int iz = 0; iz <= (half[nz]-E)*2/s; iz++) {
-            coord[nz] = (pos[nz]-half[nz]+E) + iz * s;
+        coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy;
+        for (int iz = 0; iz <= glm::ceil((half[nz]-E)*2); iz++) {
+            coord[nz] = (pos[nz]-half[nz]+E) + iz;
             coord[nx] = (pos[nx]+half[nx]+E);
-            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z)) {
+            samples_count++;
+
+            auto boxAABB = AABB(pos - half, pos + half);
+            glm::vec3 scale(1.0f);
+            scale[nz] = 1.0f - E * 2.0f;
+            boxAABB.scale(scale);
+
+            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
                 vel[nx] = 0.0f;
                 float newx = std::floor(coord[nx]) - half[nx] + aabb->min()[nx] - E;
-                if (newx - pos[nx] <= E) {
+                if (newx - pos[nx] >= -E) {
                     pos[nx] = newx;
                 }
                 return;
@@ -212,30 +232,28 @@ void PhysicsSolver::colisionCalc(
     const glm::vec3 half,
     float stepHeight
 ) {
-    // step size (smaller - more accurate, but slower) // TODO: GET RID OF THIS
-    float s = 2.0f/BLOCK_AABB_GRID;
-
-    stepHeight = calc_step_height(chunks, pos, half, stepHeight, s);
+    stepHeight = calc_step_height(chunks, pos, half, stepHeight);
 
     const AABB* aabb;
     
-    calc_collision_neg<0, 1, 2>(chunks, pos, vel, half, stepHeight, s);
-    calc_collision_pos<0, 1, 2>(chunks, pos, vel, half, stepHeight, s);
+    calc_collision_neg<0, 1, 2>(chunks, pos, vel, half, stepHeight);
+    calc_collision_pos<0, 1, 2>(chunks, pos, vel, half, stepHeight);
 
-    calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight, s);
-    calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight, s);
+    calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight);
+    calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight);
 
-    if (calc_collision_neg<1, 0, 2>(chunks, pos, vel, half, 0.0f, s)) {
+    if (calc_collision_neg<1, 0, 2>(chunks, pos, vel, half, 0.0f)) {
         hitbox.grounded = true;
     }
 
     if (stepHeight > 0.0 && vel.y <= 0.0f){
-        for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
-            float x = (pos.x-half.x+E) + ix * s;
-            for (int iz = 0; iz <= (half.z-E)*2/s; iz++) {
-                float z = (pos.z-half.z+E) + iz * s;
+        for (int ix = 0; ix <= glm::ceil((half.x-E)*2); ix++) {
+            float x = (pos.x-half.x+E) + ix;
+            for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++) {
+                float z = (pos.z-half.z+E) + iz;
                 float y = (pos.y-half.y+E);
-                if ((aabb = chunks.isObstacleAt(x,y,z))){
+                samples_count++;
+                if ((aabb = chunks.isObstacleAt(x,y,z, AABB(pos - half, pos + half)))){
                     vel.y = 0.0f;
                     float newy = std::floor(y) + aabb->max().y + half.y;
                     if (std::abs(newy-pos.y) <= MAX_FIX+stepHeight) {
@@ -247,12 +265,13 @@ void PhysicsSolver::colisionCalc(
         }
     }
     if (vel.y > 0.0f){
-        for (int ix = 0; ix <= (half.x-E)*2/s; ix++) {
-            float x = (pos.x-half.x+E) + ix * s;
-            for (int iz = 0; iz <= (half.z-E)*2/s; iz++) {
-                float z = (pos.z-half.z+E) + iz * s;
+        for (int ix = 0; ix <= glm::ceil((half.x-E)*2); ix++) {
+            float x = (pos.x-half.x+E) + ix;
+            for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++) {
+                float z = (pos.z-half.z+E) + iz;
                 float y = (pos.y+half.y+E);
-                if ((aabb = chunks.isObstacleAt(x,y,z))){
+                samples_count++;
+                if ((aabb = chunks.isObstacleAt(x,y,z, AABB(pos - half, pos + half)))){
                     vel.y = 0.0f;
                     float newy = std::floor(y) - half.y + aabb->min().y - E;
                     if (std::abs(newy-pos.y) <= MAX_FIX) {

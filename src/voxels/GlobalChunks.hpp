@@ -57,7 +57,7 @@ public:
 
     void putChunk(std::shared_ptr<Chunk> chunk);
 
-    const AABB* isObstacleAt(float x, float y, float z) const;
+    const AABB* isObstacleAt(float x, float y, float z, const AABB& aabb) const;
 
     inline Chunk* getChunk(int cx, int cz) const {
         const auto& found = chunksMap.find(keyfrom(cx, cz));
