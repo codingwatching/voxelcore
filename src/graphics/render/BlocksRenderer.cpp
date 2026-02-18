@@ -310,6 +310,12 @@ void BlocksRenderer::blockCustomModel(
         if (culled) {
             return;
         }
+    } else {
+        meshAABB.addPoint(
+            coord + X * glm::vec3(block.size.x) +
+            Y * glm::vec3(block.size.y) +
+            Z * glm::vec3(block.size.z)
+        );
     }
 
     const auto& model = cache.getModel(block.rt.id, block.getVariantIndex(states.userbits));
