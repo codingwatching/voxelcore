@@ -70,17 +70,46 @@ static int l_parse_model(lua::State* L) {
 
     auto format = lua::require_lstring(L, 1);
     auto string = lua::require_lstring(L, 2);
-    auto name = lua::require_string(L, 3);
+    std::string name = lua::require_string(L, 3);
+    std::string skeletonName;
+    if (lua::isstring(L, 4)) {
+        skeletonName = lua::require_string(L, 4);
+    }
+
+    if (format != "xml" && format != "vcm") {
+        throw std::runtime_error(
+            "unknown format " + util::quote(std::string(format))
+        );
+    }
+
+    auto vcmModel = vcm::parse(name, string, format == "xml");
     
-    if (format == "xml" || format == "vcm") {
-        auto vcmModel = vcm::parse(name, string, format == "xml");
+    if (skeletonName.empty()) {
         assets.store(
             std::make_unique<model::Model>(std::move(vcmModel.squash())), name
         );
     } else {
-        throw std::runtime_error(
-            "unknown format " + util::quote(std::string(format))
+        auto skeleton = std::make_unique<rigging::SkeletonConfig>(
+            std::move(*vcmModel.skeleton)
         );
+        if (vcmModel.parts.size() > 1) {
+            for (auto& [partName, model] : vcmModel.parts) {
+                assets.store(
+                    std::make_unique<model::Model>(std::move(model)),
+                    name + "." + partName
+                );
+            }
+            for (auto& bone : skeleton->getBones()) {
+                bone->setModel(name + "." + bone->model.name);
+            }
+        } else {
+            assets.store(
+                std::make_unique<model::Model>(
+                    std::move(vcmModel.parts["root"])), name
+            );
+            skeleton->getRoot()->setModel(name);
+        }
+        assets.store(std::move(skeleton), skeletonName);
     }
     return 0;
 }
