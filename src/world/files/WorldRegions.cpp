@@ -183,7 +183,7 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
             LIGHTMAP_DATA_LEN);
     }
     // Writing block inventories
-    if (!chunk->inventories.empty()) {
+    if (!chunk->inventories.empty() || chunk->flags.inventoriesRemoved) {
         uint datasize;
         auto data = write_inventories(chunk->inventories, datasize);
         put(chunk->x,

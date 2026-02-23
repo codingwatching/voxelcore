@@ -38,6 +38,7 @@ public:
         bool entities : 1;
         bool blocksData : 1;
         bool dirtyHeights : 1;
+        bool inventoriesRemoved : 1;
     } flags {};
 
     uint64_t lastRandomTickId = -1;

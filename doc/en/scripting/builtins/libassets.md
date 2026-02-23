@@ -30,7 +30,11 @@ assets.parse_model(
     -- Contents of the model file
     content: str,
     -- Model name after loading
-    name: str
+    name: str,
+    -- The skeleton name after loading. May be the same as the model name.
+    -- The model will be split by the named bones.
+    [optional]
+    skeleton_name: string
 )
 
 -- Creates a Canvas from a loaded texture.
