@@ -9,12 +9,11 @@
 #include <glm/glm.hpp>
 
 class Block;
+class Entities;
 class GlobalChunks;
 struct Sensor;
 
 class PhysicsSolver {
-    glm::vec3 gravity;
-    std::vector<Sensor*> sensors;
 public:
     PhysicsSolver(glm::vec3 gravity);
     void step(
@@ -24,7 +23,22 @@ public:
         uint substeps,
         entityid_t entity
     );
-    void colisionCalc(
+
+    auto& getSensorsWriteable() {
+        return sensors;
+    }
+
+    auto& getSolidHitboxesWriteable() {
+        return solidHitboxes;
+    }
+
+    void removeSensor(Sensor* sensor);
+private:
+    glm::vec3 gravity;
+    std::vector<Sensor*> sensors;
+    std::vector<Hitbox*> solidHitboxes;
+
+    void calcCollisions(
         const GlobalChunks& chunks,
         Hitbox& hitbox,
         glm::vec3& vel,
@@ -32,12 +46,13 @@ public:
         const glm::vec3 half,
         float stepHeight
     );
-    bool isBlockInside(int x, int y, int z, Hitbox* hitbox);
-    bool isBlockInside(int x, int y, int z, Block* def, blockstate state, Hitbox* hitbox);
 
-    void setSensors(std::vector<Sensor*> sensors) {
-        this->sensors = std::move(sensors);
-    }
-
-    void removeSensor(Sensor* sensor);
+    void calcSubstep(
+        const GlobalChunks& chunks,
+        Hitbox& hitbox,
+        glm::vec3& vel,
+        glm::vec3& pos,
+        bool prevGrounded,
+        float dt
+    );
 };

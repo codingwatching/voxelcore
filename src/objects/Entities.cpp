@@ -278,13 +278,17 @@ void Entities::updateSensors(
 }
 
 void Entities::preparePhysics(float delta) {
+    auto& physics = *level.physics;
+    auto& solidHitboxes = physics.getSolidHitboxesWriteable();
+
+
     if (sensorsTickClock.update(delta)) {
         auto part = sensorsTickClock.getPart();
         auto parts = sensorsTickClock.getParts();
 
+        auto& sensors = physics.getSensorsWriteable();
+
         auto view = registry->view<EntityId, Transform, Rigidbody>();
-        auto physics = level.physics.get();
-        std::vector<Sensor*> sensors;
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
             if (!rigidbody.enabled) {
                 continue;
@@ -294,7 +298,16 @@ void Entities::preparePhysics(float delta) {
             }
             updateSensors(rigidbody, transform, sensors);
         }
-        physics->setSensors(std::move(sensors));
+    }
+
+    solidHitboxes.clear();
+
+    auto view = registry->view<EntityId, Rigidbody>();
+    for (auto [entity, eid, rigidbody] : view.each()) {
+        if (!eid.def.solid || eid.destroyFlag || !rigidbody.enabled) {
+            continue;
+        }
+        solidHitboxes.emplace_back(&rigidbody.hitbox);
     }
 }
 

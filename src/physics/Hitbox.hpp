@@ -60,6 +60,7 @@ struct Hitbox {
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;
+    glm::vec3 groundVelocity {};
 
     Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
 

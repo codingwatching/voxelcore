@@ -9,5 +9,7 @@ void EntityDef::cloneTo(EntityDef& dst) {
     dst.radialSensors = radialSensors;
     dst.skeletonName = skeletonName;
     dst.blocking = blocking;
+    dst.solid = solid;
+    dst.stepHeight = stepHeight;
     dst.save = save;
 }
