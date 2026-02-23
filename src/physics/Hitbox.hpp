@@ -57,6 +57,7 @@ struct Hitbox {
     float friction = 1.0f;
     float verticalDamping = 1.0f;
     bool grounded = false;
+    bool collided[3] {};
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;

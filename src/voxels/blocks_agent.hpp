@@ -460,22 +460,21 @@ void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false
 void get_voxels(const GlobalChunks& chunks, VoxelsVolume* volume, bool backlight=false);
 
 template <class Storage>
-inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z, const AABB& aabb) {
+inline std::optional<AABB> is_obstacle_at(const Storage& chunks, float x, float y, float z, const AABB& aabb) {
     int ix = std::floor(x);
     int iy = std::floor(y);
     int iz = std::floor(z);
     voxel* v = get(chunks, ix, iy, iz);
     if (v == nullptr) {
         if (iy >= CHUNK_H) {
-            return nullptr;
+            return std::nullopt;
         } else {
-            static const AABB empty;
-            return &empty;
+            return AABB();
         }
     }
     const auto& def = chunks.getContentIndices().blocks.require(v->id);
     if (!def.obstacle) {
-        return nullptr;
+        return std::nullopt;
     }
     glm::ivec3 offset {};
     if (v->state.segment) {
@@ -487,14 +486,14 @@ inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float
 
     for (const auto& hitbox : boxes) {
         if (hitbox.intersects(aabb - glm::ivec3(ix, iy, iz))) {
-            return &hitbox;
+            return hitbox + offset;
         }
     }
-    return nullptr;
+    return std::nullopt;
 }
 
 template <class Storage>
-inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+inline std::optional<AABB> is_obstacle_at(const Storage& chunks, float x, float y, float z) {
     return is_obstacle_at(chunks, x, y, z, AABB({x, y, z}, {x + 1, y + 1, z + 1}));
 }
 

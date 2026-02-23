@@ -174,7 +174,8 @@ static bool calc_collision_neg(
     glm::vec3& pos,
     glm::vec3& vel,
     const glm::vec3& half,
-    float stepHeight
+    float stepHeight,
+    bool collided[3]
 ) {
     if (vel[nx] >= 0.0f) {
         return false;
@@ -185,7 +186,7 @@ static bool calc_collision_neg(
         coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy;
         for (int iz = 0; iz <= glm::ceil((half[nz]-E)*2); iz++){
             coord[nz] = (pos[nz]-half[nz]+E) + iz;
-            coord[nx] = (pos[nx]-half[nx]-E);
+            coord[nx] = (pos[nx]-half[nx]-E) - E;
             
             auto boxAABB = AABB(pos - half, pos + half);
             glm::vec3 scale(1.0f);
@@ -195,10 +196,11 @@ static bool calc_collision_neg(
             boxAABB.b.y -= stepHeight;
 
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
-                vel[nx] = 0.0f;
                 float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx] + E;
-                if (newx - pos[nx] <= E) {
+                if (pos[nx] < newx) {
+                    vel[nx] = 0.0f;
                     pos[nx] = newx;
+                    collided[nx] = true;
                 }
                 return true;
             }
@@ -266,7 +268,8 @@ static void calc_collision_pos(
     glm::vec3& pos,
     glm::vec3& vel,
     const glm::vec3& half,
-    float stepHeight
+    float stepHeight,
+    bool collided[3]
 ) {
     if (vel[nx] <= 0.0f) {
         return;
@@ -277,7 +280,7 @@ static void calc_collision_pos(
         coord[ny] = ((pos+offset)[ny]-half[ny]+E) + iy;
         for (int iz = 0; iz <= glm::ceil((half[nz]-E)*2); iz++) {
             coord[nz] = (pos[nz]-half[nz]+E) + iz;
-            coord[nx] = (pos[nx]+half[nx]+E);
+            coord[nx] = (pos[nx]+half[nx]+E) + E;
 
             auto boxAABB = AABB(pos - half, pos + half);
             glm::vec3 scale(1.0f);
@@ -287,10 +290,11 @@ static void calc_collision_pos(
             boxAABB.b.y -= stepHeight;
 
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
-                vel[nx] = 0.0f;
                 float newx = std::floor(coord[nx]) - half[nx] + aabb->min()[nx] - E;
-                if (newx - pos[nx] >= -E) {
+                if (pos[nx] > newx) {
+                    vel[nx] = 0.0f;
                     pos[nx] = newx;
+                    collided[nx] = true;
                 }
                 return;
             }
@@ -306,18 +310,27 @@ void PhysicsSolver::calcCollisions(
     const glm::vec3 half,
     float stepHeight
 ) {
+    hitbox.collided[0] = false;
+    hitbox.collided[1] = false;
+    hitbox.collided[2] = false;
     stepHeight = calc_step_height(chunks, pos, half, stepHeight);
 
-    const AABB* aabb;
-    
-    calc_collision_neg<0, 1, 2>(chunks, pos, vel, half, stepHeight);
-    calc_collision_pos<0, 1, 2>(chunks, pos, vel, half, stepHeight);
+    auto prevPos = pos;
 
-    calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight);
-    calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight);
+    calc_collision_neg<0, 1, 2>(chunks, pos, vel, half, stepHeight, hitbox.collided);
+    calc_collision_pos<0, 1, 2>(chunks, pos, vel, half, stepHeight, hitbox.collided);
+
+    calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight, hitbox.collided);
+    calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight, hitbox.collided);
 
     if (calc_collision_neg_y(chunks, solidHitboxes, pos, vel, half, hitbox.groundVelocity)) {
         hitbox.grounded = true;
+    }
+
+    for (int axis = 0; axis < 3; axis++) {
+        if (hitbox.collided[axis]) {
+            pos[axis] = prevPos[axis];
+        }
     }
 
     if (stepHeight > 0.0 && vel.y <= 0.0f){
@@ -330,7 +343,7 @@ void PhysicsSolver::calcCollisions(
             for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++) {
                 float z = (pos.z-half.z) + iz;
                 float y = (pos.y-half.y+E);
-                if ((aabb = chunks.isObstacleAt(x,y,z, boxAABB))){
+                if (auto aabb = chunks.isObstacleAt(x,y,z, boxAABB)){
                     vel.y = 0.0f;
                     float newy = std::floor(y) + aabb->max().y + half.y;
                     if (std::abs(newy-pos.y) <= stepHeight) {
@@ -351,7 +364,7 @@ void PhysicsSolver::calcCollisions(
             for (int iz = 0; iz <= glm::ceil((half.z-E)*2); iz++) {
                 float z = (pos.z-half.z+E) + iz;
                 float y = (pos.y+half.y+E);
-                if ((aabb = chunks.isObstacleAt(x,y,z, boxAABB))){
+                if (auto aabb = chunks.isObstacleAt(x,y,z, boxAABB)){
                     vel.y = 0.0f;
                     float newy = std::floor(y) - half.y + aabb->min().y - E;
                     if (std::abs(newy-pos.y) <= 0.0f) {
