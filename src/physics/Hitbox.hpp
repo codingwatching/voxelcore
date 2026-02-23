@@ -66,7 +66,7 @@ struct Hitbox {
     Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
 
     AABB getAABB() const {
-        return AABB(position-halfsize, position+halfsize);
+        return AABB(position - halfsize, position + halfsize);
     }
 
     glm::vec3 getHalfSize() const {
