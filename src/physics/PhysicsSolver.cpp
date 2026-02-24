@@ -52,6 +52,37 @@ static void calc_collision_pos(
     bool (&collided)[3]
 ) {
     glm::vec3 offset(0.0f, stepHeight + E, 0.0f);
+    for (auto box : solidHitboxes) {
+        if (glm::distance2(box->position, pos) < E) {
+            continue;
+        }
+        auto boxhalf = box->getHalfSize();
+        auto boxAABB = AABB(pos - half, pos + half);
+        glm::vec3 scale(1.0f);
+        scale[nz] = 1.0f - E * 2.0f;
+        scale[ny] = 1.0f - E * 2.0f;
+        boxAABB.scale(scale);
+        boxAABB = boxAABB + offset;
+        boxAABB.b.y -= stepHeight + E * 2;
+
+        if (box->getAABB().intersects(boxAABB)) {
+            float newnegx = box->position[nx] - boxhalf[nx] - half[nx] - E;
+            float newposx = box->position[nx] + boxhalf[nx] + half[nx] + E;
+            float newx;
+            if (glm::abs(newnegx - pos[nx]) < glm::abs(newposx - pos[nx])) {
+                newx = newnegx;
+            } else {
+                continue;
+            }
+            if (pos[nx] > newx) {
+                if (vel[nx] > 0.0f) {
+                    vel[nx] = 0.0f;
+                }
+                pos[nx] = newx;
+                collided[nx] = true;
+            }
+        }
+    }
     if (vel[nx] <= 0.0f) {
         return;
     }
@@ -93,6 +124,37 @@ static bool calc_collision_neg(
     bool (&collided)[3]
 ) {
     glm::vec3 offset(0.0f, stepHeight + E, 0.0f);
+    for (auto box : solidHitboxes) {
+        if (glm::distance2(box->position, pos) < E) {
+            continue;
+        }
+        auto boxhalf = box->getHalfSize();
+        auto boxAABB = AABB(pos - half, pos + half);
+        glm::vec3 scale(1.0f);
+        scale[nz] = 1.0f - E * 2.0f;
+        scale[ny] = 1.0f - E * 2.0f;
+        boxAABB.scale(scale);
+        boxAABB = boxAABB + offset;
+        boxAABB.b.y -= stepHeight + E * 2;
+
+        if (box->getAABB().intersects(boxAABB)) {
+            float newnegx = box->position[nx] - boxhalf[nx] - half[nx] - E;
+            float newposx = box->position[nx] + boxhalf[nx] + half[nx] + E;
+            float newx;
+            if (glm::abs(newnegx - pos[nx]) > glm::abs(newposx - pos[nx])) {
+                newx = newposx;
+            } else {
+                continue;
+            }
+            if (pos[nx] < newx) {
+                if (vel[nx] < 0.0f) {
+                    vel[nx] = 0.0f;
+                }
+                pos[nx] = newx;
+                collided[nx] = true;
+            }
+        }
+    }
     if (vel[nx] >= 0.0f) {
         return false;
     }
@@ -136,8 +198,14 @@ static bool calc_collision_neg_y(
         if (glm::distance2(box->position, pos) < E) {
             continue;
         }
+        auto boxAABB = AABB(pos - half, pos + half);
+        glm::vec3 scale(1.0f);
+        scale.x = 1.0f - E * 4.0f;
+        scale.z = 1.0f - E * 4.0f;
+        boxAABB.scale(scale);
+
         auto boxhalf = box->getHalfSize();
-        if (box->getAABB().intersects(AABB(pos - half, pos + half))) {
+        if (box->getAABB().intersects(boxAABB)) {
             float newy = box->position.y + boxhalf.y + half.y;
             if (pos.y < newy) {
                 pos.y = newy;
