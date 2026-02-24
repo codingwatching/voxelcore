@@ -274,7 +274,7 @@ void PhysicsSolver::calcCollisions(
     
     if (vel.y > 0.0f){
         AABB boxAABB = AABB(-half, +half);
-        boxAABB.scale(glm::vec3(1.0f - E * 2, 1.0f + E * 2, 1.0f - E * 2));
+        boxAABB.scale(glm::vec3(1.0f - E * 4, 1.0f + E * 2, 1.0f - E * 4));
         boxAABB = boxAABB.translated(pos);
 
         for (int ix = 0; ix <= glm::ceil((half.x-E)*2); ix++) {
@@ -289,6 +289,22 @@ void PhysicsSolver::calcCollisions(
                         pos.y = newy;
                         hitbox.collided[1] = true;
                     }
+                    break;
+                }
+            }
+        }
+        for (auto box : solidHitboxes) {
+            if (glm::distance2(box->position, pos) < E) {
+                continue;
+            }
+            auto boxhalf = box->getHalfSize();
+            if (box->getAABB().intersects(boxAABB)) {
+                float newy = box->position.y - boxhalf.y - half.y;
+                if (pos.y > newy) {
+                    pos.y = newy;
+                }
+                if (vel.y > 0.0f) {
+                    vel.y = 0.0f;
                     break;
                 }
             }
