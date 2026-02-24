@@ -394,7 +394,7 @@ void PhysicsSolver::calcSubstep(
             if (glm::distance2(box->position, pos) < E) {
                 continue;
             }
-            if (box->getAABB().intersects(AABB(pos - half, pos + half))) {
+            if (box->getAABB().intersects(boxAABB)) {
                 hitbox.grounded = true;
                 break;
             }
