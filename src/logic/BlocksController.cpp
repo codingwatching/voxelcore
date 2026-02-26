@@ -186,7 +186,7 @@ void BlocksController::randomTick(int tickid, int parts, uint padding) {
                     continue;
                 }
                 auto& chunk = chunks.getChunks()[index];
-                if (chunk == nullptr || !chunk->flags.lighted) {
+                if (chunk == nullptr || !chunk->flags.ready) {
                     continue;
                 }
                 if (chunk->lastRandomTickId == randomTickId) {
