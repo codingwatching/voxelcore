@@ -261,7 +261,8 @@ local function create_FFIview_class(name, typename, typesize)
             return function()
                 i = i + 1
                 if i <= self.bytes.size / typesize then
-                    return i, self.ptr[i - 1]
+                    local ptr = FFI.cast(ptrtype, self.bytes.bytes)
+                    return i, ptr[i - 1]
                 end
             end
         end
