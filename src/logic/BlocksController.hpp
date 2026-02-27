@@ -3,7 +3,6 @@
 #include <functional>
 #include <glm/glm.hpp>
 
-#include "maths/fastmaths.hpp"
 #include "typedefs.hpp"
 #include "util/Clock.hpp"
 #include "voxels/voxel.hpp"
@@ -31,7 +30,6 @@ class BlocksController {
     util::Clock randTickClock;
     util::Clock blocksTickClock;
     util::Clock worldTickClock;
-    FastRandom random {};
     std::vector<OnBlockInteraction> blockInteractionCallbacks;
     uint64_t randomTickId = 0;
 public:
