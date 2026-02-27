@@ -47,9 +47,7 @@ public:
     );
 
     void update(float delta, uint padding);
-    void randomTick(
-        const Chunk& chunk, int segments, const ContentIndices* indices
-    );
+    void randomTick(const Chunk& chunk, const ContentIndices* indices);
     void randomTick(int tickid, int parts, uint padding);
     void onBlocksTick(int tickid, int parts);
     int64_t createBlockInventory(int x, int y, int z);
