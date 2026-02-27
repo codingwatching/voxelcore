@@ -1,6 +1,15 @@
 #include "Assets.hpp"
 
-Assets::~Assets() = default;
+Assets::Assets(util::ObjectsKeeper& vault) : vault(vault) {
+}
+
+Assets::~Assets() {
+    for (auto& [_, map] : assets) {
+        for (auto& [__, asset] : map) {
+            vault.keepAlive(std::move(asset));
+        }
+    }
+}
 
 const std::vector<TextureAnimation>& Assets::getAnimations() {
     return animations;
