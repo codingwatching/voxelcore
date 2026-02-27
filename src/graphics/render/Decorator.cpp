@@ -1,29 +1,30 @@
 #include "Decorator.hpp"
 
-#include "ParticlesRenderer.hpp"
-#include "WorldRenderer.hpp"
-#include "TextsRenderer.hpp"
-#include "TextNote.hpp"
-#include "assets/Assets.hpp"
 #include "assets/assets_util.hpp"
+#include "assets/Assets.hpp"
+#include "audio/audio.hpp"
 #include "content/Content.hpp"
-#include "voxels/Chunks.hpp"
-#include "voxels/Chunk.hpp"
-#include "voxels/Block.hpp"
-#include "world/Level.hpp"
-#include "window/Camera.hpp"
-#include "objects/Player.hpp"
-#include "objects/Players.hpp"
-#include "objects/Entities.hpp"
-#include "objects/Entity.hpp"
-#include "logic/LevelController.hpp"
-#include "util/stringutil.hpp"
+#include "debug/Logger.hpp"
 #include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
 #include "io/io.hpp"
-#include "audio/audio.hpp"
+#include "logic/LevelController.hpp"
 #include "maths/util.hpp"
-#include "debug/Logger.hpp"
+#include "objects/Entities.hpp"
+#include "objects/Entity.hpp"
+#include "objects/Player.hpp"
+#include "objects/Players.hpp"
+#include "ParticlesRenderer.hpp"
+#include "settings.hpp"
+#include "TextNote.hpp"
+#include "TextsRenderer.hpp"
+#include "util/stringutil.hpp"
+#include "voxels/Block.hpp"
+#include "voxels/Chunk.hpp"
+#include "voxels/Chunks.hpp"
+#include "window/Camera.hpp"
+#include "world/Level.hpp"
+#include "WorldRenderer.hpp"
 
 namespace fs = std::filesystem;
 
@@ -48,6 +49,7 @@ Decorator::Decorator(
 )
     : level(*controller.getLevel()),
       assets(assets),
+      settings(engine.getSettings()),
       player(player),
       renderer(renderer) {
     controller.getBlocksController()->listenBlockInteraction(
@@ -90,6 +92,9 @@ void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
 }
 
 void Decorator::updateAcoustics(const Camera& camera) {
+    if (!settings.audio.acousticEffects.get()) {
+        return;
+    }
     audio::Acoustics acoustics {};
     util::PseudoRandom random(34621U);
 
