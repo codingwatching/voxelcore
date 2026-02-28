@@ -494,4 +494,57 @@ inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float
     return nullptr;
 }
 
+/// @brief Check block grounding
+/// @tparam Storage chunks storage class
+/// @param chunks chunks storage
+/// @param def block definition
+/// @param rotationIndex target block rotation index
+/// @param origin target block origin
+/// @return true if grounded
+template <class Storage>
+inline bool check_grounding(
+    const Storage& chunks,
+    const Block& def,
+    uint8_t rotationIndex,
+    const glm::ivec3& origin
+) {
+    const auto& vec = get_ground_direction(def, rotationIndex);
+
+    if (def.rt.extended) {
+        const auto& rotation = def.rotations.variants[rotationIndex];
+
+        if (def.groundingBehaviour == GroundingBehaviour::PARTIAL) {
+            for (int sz = 0; sz < def.size.z; sz++) {
+                for (int sx = 0; sx < def.size.x; sx++) {
+                    auto pos = origin;
+                    pos += rotation.axes[0] * sx;
+                    pos += rotation.axes[2] * sz;
+                    if (blocks_agent::is_solid_at(chunks, pos.x + vec.x, pos.y + vec.y, pos.z + vec.z)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        else if (def.groundingBehaviour == GroundingBehaviour::COMPLETE) {
+            for (int sz = 0; sz < def.size.z; sz++) {
+                for (int sx = 0; sx < def.size.x; sx++) {
+                    auto pos = origin;
+                    pos += rotation.axes[0] * sx;
+                    pos += rotation.axes[2] * sz;
+                    if (!blocks_agent::is_solid_at(chunks, pos.x + vec.x, pos.y + vec.y, pos.z + vec.z)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        else if (def.groundingBehaviour == GroundingBehaviour::ORIGIN) {
+            return blocks_agent::is_solid_at(chunks, origin.x + vec.x, origin.y + vec.y, origin.z + vec.z);
+        }
+    }
+
+    return blocks_agent::is_solid_at(chunks, origin.x + vec.x, origin.y + vec.y, origin.z + vec.z);
+}
+
 } // blocks_agent

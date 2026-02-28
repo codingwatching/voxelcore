@@ -22,6 +22,7 @@
 #include "scripting/scripting.hpp"
 #include "settings.hpp"
 #include "voxels/Block.hpp"
+#include "voxels/blocks_agent.hpp"
 #include "voxels/Chunks.hpp"
 #include "voxels/voxel.hpp"
 #include "window/Camera.hpp"
@@ -448,10 +449,7 @@ void PlayerController::processRightClick(
         return;
     }
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, state.rotation);
-        if (!chunks.isSolidBlock(
-                coord.x + vec.x, coord.y + vec.y, coord.z + vec.z
-            )) {
+        if (!blocks_agent::check_grounding(chunks, def, state.rotation, coord)) {
             return;
         }
     }

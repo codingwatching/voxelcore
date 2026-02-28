@@ -206,6 +206,15 @@ template<> void ContentUnitLoader<Block>::loadUnit(
             def.defaults.model.type = BlockModelType::AABB;
             def.hitboxes = {AABB(def.size)};
         }
+
+        // grounding behaviour
+        if (root.has("grounding-behaviour")) {
+            std::string groundingBehaviourName = GroundingBehaviourMeta.getNameString(def.groundingBehaviour);
+            root.at("grounding-behaviour").get(groundingBehaviourName);
+            if (!GroundingBehaviourMeta.getItem(groundingBehaviourName, def.groundingBehaviour)) {
+                logger.error() << "unknown grounding behaviour: " << groundingBehaviourName;
+            }
+        }
     }
 
     // primitive properties

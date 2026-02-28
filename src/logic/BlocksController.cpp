@@ -106,10 +106,17 @@ void BlocksController::updateBlock(int x, int y, int z) {
     if (vox == nullptr) return;
     const auto& def = level.content.getIndices()->blocks.require(vox->id);
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, vox->state.rotation);
-        if (!blocks_agent::is_solid_at(chunks, x + vec.x, y + vec.y, z + vec.z)) {
-            breakBlock(nullptr, def, x, y, z);
-            return;
+        if (def.rt.extended) {
+            auto origin = blocks_agent::seek_origin(chunks, {x, y, z}, def, vox->state);
+            if (!blocks_agent::check_grounding(chunks, def, vox->state.rotation, origin)) {
+                breakBlock(nullptr, def, origin.x, origin.y, origin.z);
+                return;
+            }
+        } else {
+            if (!blocks_agent::check_grounding(chunks, def, vox->state.rotation, {x, y, z})) {
+                breakBlock(nullptr, def, x, y, z);
+                return;
+            }        
         }
     }
     if (def.rt.funcsset.update) {
