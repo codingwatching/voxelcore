@@ -431,14 +431,23 @@ void SlotView::clicked(Mousecode button) {
     ItemStack& grabbed = exchangeSlot->getStack();
     ItemStack& stack = *bound;
 
+    int action = -1;
+
     if (button == Mousecode::BUTTON_1) {
         performLeftClick(stack, grabbed);
+        action = 0;
     } else if (button == Mousecode::BUTTON_2) {
         performRightClick(stack, grabbed);
+        action = 1;
     }
+
     if (layout.updateFunc) {
         layout.updateFunc(layout.index, stack);
     }
+
+    const auto& input = gui.getInput();
+    action = action | (input.pressed(Keycode::LEFT_SHIFT) ? 2 : 0);
+    scripting::on_inventory_interact(inventoryId, layout.index, action);
 }
 
 void SlotView::onFocus() {

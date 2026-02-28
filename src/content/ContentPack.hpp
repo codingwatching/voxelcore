@@ -127,6 +127,7 @@ struct WorldFuncsSet {
     bool onchunkremove;
     bool oninventoryopen;
     bool oninventoryclosed;
+    bool oninventoryinteract;
 };
 
 class ContentPackRuntime {
