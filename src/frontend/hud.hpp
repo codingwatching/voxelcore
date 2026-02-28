@@ -203,6 +203,8 @@ public:
 
     std::shared_ptr<Inventory> getBlockInventory();
 
+    std::shared_ptr<Inventory> getSecondInventory();
+
     bool isContentAccess() const;
 
     void setContentAccess(bool flag);

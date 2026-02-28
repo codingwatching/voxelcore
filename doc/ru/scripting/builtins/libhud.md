@@ -55,6 +55,9 @@ hud.close(layoutid: string)
 -- Дает ID инвентаря открытого блока или 0.
 hud.get_block_inventory() -> int
 
+-- Дает ID второго открытого инвентаря (блок, виртуальный инвентарь...) или 0.
+hud.get_second_inventory() -> int
+
 -- Дает ID игрока, к которому привязан пользовательский интерфейс.
 hud.get_player() -> int
 

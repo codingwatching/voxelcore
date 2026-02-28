@@ -725,6 +725,16 @@ std::shared_ptr<Inventory> Hud::getBlockInventory() {
     return blockUI->getInventory();
 }
 
+std::shared_ptr<Inventory> Hud::getSecondInventory() {
+    if (blockUI) {
+        return blockUI->getInventory();
+    }
+    if (secondInvView) {
+        return secondInvView->getInventory();
+    }
+    return nullptr;
+}
+
 bool Hud::isContentAccess() const {
     return showContentPanel;
 }
