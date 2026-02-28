@@ -688,6 +688,10 @@ bool Hud::isInventoryOpen() const {
     return inventoryOpen;
 }
 
+bool Hud::isPlayerInventoryOpen() const {
+    return inventoryView != nullptr;
+}
+
 bool Hud::isPause() const {
     return pause;
 }

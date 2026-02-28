@@ -162,6 +162,10 @@ static int l_is_inventory_open(lua::State* L) {
     return lua::pushboolean(L, hud->isInventoryOpen());
 }
 
+static int l_is_player_inventory_open(lua::State* L) {
+    return lua::pushboolean(L, hud->isPlayerInventoryOpen());
+}
+
 static int l_is_content_access(lua::State* L) {
     return lua::pushboolean(L, hud->isContentAccess());
 }
@@ -217,6 +221,7 @@ const luaL_Reg hudlib[] = {
     {"resume", wrap_hud<l_resume>},
     {"is_paused", wrap_hud<l_is_paused>},
     {"is_inventory_open", wrap_hud<l_is_inventory_open>},
+    {"is_player_inventory_open", wrap_hud<l_is_player_inventory_open>},
     {"get_player", wrap_hud<l_get_player>},
     {"_is_content_access", wrap_hud<l_is_content_access>},
     {"_set_content_access", wrap_hud<l_set_content_access>},

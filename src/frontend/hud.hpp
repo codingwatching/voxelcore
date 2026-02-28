@@ -147,6 +147,8 @@ public:
     /// @brief Check if inventory mode on
     bool isInventoryOpen() const;
 
+    bool isPlayerInventoryOpen() const;
+
     /// @brief Check if pause mode on
     bool isPause() const;
 
