@@ -16,6 +16,11 @@
 #include "world/World.hpp"
 #include "objects/Player.hpp"
 #include "objects/Players.hpp"
+#include "util/random.hpp"
+
+#include <random>
+
+static inline constexpr int CHUNK_RANDOM_TICK_SEGMENTS = 4;
 
 BlocksController::BlocksController(const Level& level, Lighting* lighting)
     : level(level),
@@ -143,20 +148,36 @@ void BlocksController::onBlocksTick(int tickid, int parts) {
 }
 
 void BlocksController::randomTick(
-    const Chunk& chunk, int segments, const ContentIndices* indices
+    const Chunk& chunk, const ContentIndices* indices
 ) {
+    const int segments = CHUNK_RANDOM_TICK_SEGMENTS;
     const int segheight = CHUNK_H / segments;
 
+    static std::array<int, CHUNK_VOL / segments> randomPattern;
+    static bool randomPatternInitialized = false;
+    if (!randomPatternInitialized) {
+        randomPatternInitialized = true;
+        for (int i = 0; i < randomPattern.size(); i++) {
+            randomPattern[i] = i;
+        }
+        auto randomDevice = std::random_device{};
+        auto randomEngine =
+            util::seeded_random_engine<std::mt19937_64>(randomDevice);
+        std::shuffle(randomPattern.begin(), randomPattern.end(), randomEngine);
+    }
+
     for (int s = 0; s < segments; s++) {
-        for (int i = 0; i < 4; i++) {
+        int repetions = 4;
+        for (int i = 0; i < repetions; i++) {
             int segmentY = s * segheight;
-            if (segmentY  > chunk.top) {
+            if (segmentY > chunk.top) {
                 break;
             }
-            int bx = random.rand() % CHUNK_W;
-            int by = random.rand() % segheight + segmentY;
-            int bz = random.rand() % CHUNK_D;
-            const voxel& vox = chunk.voxels[vox_index(bx, by, bz)];
+            size_t index = randomPattern[(s * repetions + i + randomTickId) % randomPattern.size()];
+            int bx = index % CHUNK_W;
+            int bz = (index / CHUNK_W) % CHUNK_D;
+            int by = (index / (CHUNK_W * CHUNK_D)) + segmentY;
+            const voxel& vox = chunk.voxels[index + segmentY * CHUNK_W * CHUNK_D];
             auto& block = indices->blocks.require(vox.id);
             if (block.rt.funcsset.randupdate) {
                 scripting::random_update_block(
@@ -177,7 +198,6 @@ void BlocksController::randomTick(int tickid, int parts, uint padding) {
         const auto& chunks = *player->chunks;
         int width = chunks.getWidth();
         int height = chunks.getHeight();
-        int segments = 4;
 
         for (uint z = padding; z < height - padding; z++) {
             for (uint x = padding; x < width - padding; x++) {
@@ -193,7 +213,7 @@ void BlocksController::randomTick(int tickid, int parts, uint padding) {
                     continue;
                 }
                 chunk->lastRandomTickId = randomTickId;
-                randomTick(*chunk, segments, indices);
+                randomTick(*chunk, indices);
             }
         }
     }

@@ -1,16 +1,17 @@
 #include "api_lua.hpp"
 
+#include "../usertypes/lua_type_canvas.hpp"
 #include "assets/Assets.hpp"
 #include "assets/AssetsLoader.hpp"
+#include "coders/obj.hpp"
 #include "coders/png.hpp"
 #include "coders/vcm.hpp"
 #include "debug/Logger.hpp"
 #include "engine/Engine.hpp"
 #include "graphics/commons/Model.hpp"
-#include "graphics/core/Texture.hpp"
 #include "graphics/core/Atlas.hpp"
+#include "graphics/core/Texture.hpp"
 #include "util/Buffer.hpp"
-#include "../usertypes/lua_type_canvas.hpp"
 
 using namespace scripting;
 
@@ -74,6 +75,11 @@ static int l_parse_model(lua::State* L) {
     std::string skeletonName;
     if (lua::isstring(L, 4)) {
         skeletonName = lua::require_string(L, 4);
+    }
+
+    if (format == "obj") {
+        assets.store(obj::parse(name, string), name);
+        return 0;
     }
 
     if (format != "xml" && format != "vcm") {
