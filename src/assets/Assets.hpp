@@ -65,14 +65,14 @@ namespace assetload {
 }
 
 class Assets {
-    util::ObjectsKeeper& vault;
+    util::ObjectsKeeper* vault;
     std::vector<TextureAnimation> animations;
 
     using assets_map = std::unordered_map<std::string, std::shared_ptr<void>>;
     std::unordered_map<std::type_index, assets_map> assets;
     std::vector<assetload::setupfunc> setupFuncs;
 public:
-    Assets(util::ObjectsKeeper& vault);
+    Assets(util::ObjectsKeeper* vault);
     Assets(const Assets&) = delete;
     ~Assets();
 
@@ -82,8 +82,8 @@ public:
     template <class T>
     void store(std::unique_ptr<T> asset, const std::string& name) {
         auto& dst = assets[typeid(T)][name];
-        if (dst != nullptr) {
-            vault.keepAlive(std::move(dst));
+        if (vault != nullptr && dst != nullptr) {
+            vault->keepAlive(std::move(dst));
         }
         dst.reset(asset.release());
     }
@@ -91,8 +91,8 @@ public:
     template <class T>
     void store(std::shared_ptr<T> asset, const std::string& name) {
         auto& dst = assets[typeid(T)][name];
-        if (dst != nullptr) {
-            vault.keepAlive(std::move(dst));
+        if (vault != nullptr && dst != nullptr) {
+            vault->keepAlive(std::move(dst));
         }
         dst = std::move(asset);
     }

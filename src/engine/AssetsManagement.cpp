@@ -51,7 +51,9 @@ void AssetsManagement::loadAssets(Content* content) {
     logger.info() << "loading assets";
     Shader::preprocessor->setPaths(&paths.resPaths);
 
-    auto new_assets = std::make_unique<Assets>(assetsVault);
+    auto new_assets = std::make_unique<Assets>(
+        settings.system.preserveAssetsDuringFrame.get() ? &assetsVault : nullptr 
+    );
     AssetsLoader loader(engine, *new_assets, paths.resPaths);
     AssetsLoader::addDefaults(loader, content);
 
