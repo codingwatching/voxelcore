@@ -1,6 +1,7 @@
 #pragma once
 
 #include "assets/Assets.hpp"
+#include "util/ObjectsKeeper.hpp"
 
 #include <memory>
 
@@ -30,4 +31,5 @@ private:
     std::unique_ptr<Assets> assets;
     std::unique_ptr<AssetsLoader> backgroundLoader;
     std::shared_ptr<Task> backgroundLoaderTask;
+    util::ObjectsKeeper assetsVault;
 };

@@ -51,7 +51,9 @@ void AssetsManagement::loadAssets(Content* content) {
     logger.info() << "loading assets";
     Shader::preprocessor->setPaths(&paths.resPaths);
 
-    auto new_assets = std::make_unique<Assets>();
+    auto new_assets = std::make_unique<Assets>(
+        settings.system.preserveAssetsDuringFrame.get() ? &assetsVault : nullptr 
+    );
     AssetsLoader loader(engine, *new_assets, paths.resPaths);
     AssetsLoader::addDefaults(loader, content);
 
@@ -78,6 +80,7 @@ void AssetsManagement::loadAssets(Content* content) {
 }
 
 void AssetsManagement::update() {
+    assetsVault.clearKeepedObjects();
     if (backgroundLoaderTask) {
         backgroundLoaderTask->update();
     }
