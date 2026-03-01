@@ -241,6 +241,15 @@ Number of block inventory slots. Default - 0 (no inventory).
 
 Array of three integers. Default value is `[1, 1, 1]`.
 
+### *grounding-behaviour*
+
+Defines the behavior of the extended grounded block. Available behavior options:
+
+- "partial" - at least one segment must be grounded (default)
+- "complete" - all segments must be grounded
+- "origin" - origin segment must be grounded
+
+
 ## Block fields
 
 Block fields allow you to write more data unique to a specified voxel than the user bits allow.
