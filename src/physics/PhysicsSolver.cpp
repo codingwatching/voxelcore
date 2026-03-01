@@ -207,7 +207,7 @@ static bool calc_collision_neg_y(
         auto boxhalf = box->getHalfSize();
         if (box->getAABB().intersects(boxAABB)) {
             float newy = box->position.y + boxhalf.y + half.y;
-            if (pos.y < newy) {
+            if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
                 pos.y = newy;
             }
             groundVelocty = box->velocity;
@@ -236,7 +236,7 @@ static bool calc_collision_neg_y(
 
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
                 float newy = std::floor(coord.y) + half.y + aabb->max().y;
-                if (newy > pos.y) {
+                if (newy >= pos.y) {
                     vel.y = 0.0f;
                     pos.y = newy;
                 }
@@ -284,7 +284,7 @@ void PhysicsSolver::calcCollisions(
                 float y = (pos.y+half.y+E) + 0.5f;
                 if (auto aabb = chunks.isObstacleAt(x,y,z, boxAABB)){
                     float newy = std::floor(y) - half.y + aabb->min().y - E;
-                    if (pos.y > newy) {
+                    if (pos.y >= newy) {
                         vel.y = 0.0f;
                         pos.y = newy;
                         hitbox.collided[1] = true;
@@ -300,7 +300,7 @@ void PhysicsSolver::calcCollisions(
             auto boxhalf = box->getHalfSize();
             if (box->getAABB().intersects(boxAABB)) {
                 float newy = box->position.y - boxhalf.y - half.y;
-                if (pos.y > newy) {
+                if (pos.y > newy && glm::abs(pos.y - newy) < 0.5f) {
                     pos.y = newy;
                 }
                 if (vel.y > 0.0f) {
