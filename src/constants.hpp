@@ -33,6 +33,8 @@ inline constexpr int CHUNK_W = 16;
 inline constexpr int CHUNK_H = 256;
 inline constexpr int CHUNK_D = 16;
 
+inline constexpr int EXTENDED_BLOCK_LIMIT = CHUNK_W; // must not be greater than chunk width and depth
+
 inline constexpr uint VOXEL_USER_BITS = 8;
 inline constexpr uint VOXEL_USER_BITS_OFFSET = sizeof(blockstate_t)*8-VOXEL_USER_BITS;
 

@@ -12,6 +12,7 @@
 #include "presets/ParticlesPreset.hpp"
 #include "util/stringutil.hpp"
 #include "voxels/Block.hpp"
+#include "constants.hpp"
 
 using namespace data;
 
@@ -184,7 +185,11 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     if (auto found = root.at("emission")) {
         const auto& emissionarr = *found;
         for (size_t i = 0; i < 3; i++) {
-            def.emission[i] = glm::clamp(emissionarr[i].asInteger(), static_cast<integer_t>(0), static_cast<integer_t>(15));
+            def.emission[i] = glm::clamp(
+                emissionarr[i].asInteger(),
+                static_cast<integer_t>(0),
+                static_cast<integer_t>(15)
+            );
         }
     }
 
@@ -199,7 +204,16 @@ template<> void ContentUnitLoader<Block>::loadUnit(
                 "block " + util::quote(def.name) + ": invalid block size"
             );
         }
-        
+
+        if (def.size.x > EXTENDED_BLOCK_LIMIT ||
+            def.size.y > EXTENDED_BLOCK_LIMIT ||
+            def.size.z > EXTENDED_BLOCK_LIMIT) {
+            throw std::runtime_error(
+                "extended block " + util::quote(def.name) + " size limit " +
+                std::to_string(EXTENDED_BLOCK_LIMIT) + " exceeded"
+            );
+        }
+
         // should variant modify hitbox?
         if (def.defaults.model.type == BlockModelType::BLOCK &&
             (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
