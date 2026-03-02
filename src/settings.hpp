@@ -122,7 +122,10 @@ struct NetworkSettings {
 };
 
 struct SystemSettings {
+    /// @brief Max background assets loaders
     IntegerSetting maxBgAssetLoaders {3, -4, 16};
+    /// @brief Preserve assets during current frame from being destroyed
+    FlagSetting preserveAssetsDuringFrame {true};
 };
 
 struct EngineSettings {

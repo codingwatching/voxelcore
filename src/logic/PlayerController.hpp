@@ -89,5 +89,5 @@ public:
     void postUpdate(
         float delta, int windowHeight, const Input* inputEvents, bool pause
     );
-    Player* getPlayer();
+    Player& getPlayer();
 };
