@@ -22,5 +22,5 @@
 - [Свойства сущностей](entity-properties.md)
 - [Скриптинг](scripting.md)
 - [Стили текста](text-styles.md)
-- [Частицы](particles.md)
 - [Формат моделей VCM](vcm.md)
+- [Частицы](particles.md)

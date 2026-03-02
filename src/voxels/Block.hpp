@@ -140,6 +140,22 @@ VC_ENUM_METADATA(CullingMode)
     {"disabled", CullingMode::DISABLED},
 VC_ENUM_END
 
+/// @brief Grounding behaviour for extended blocks
+enum class GroundingBehaviour : uint8_t {
+    /// @brief at least one segment must be grounded
+    PARTIAL,
+    /// @brief all segments must be grounded
+    COMPLETE,
+    /// @brief origin segment must be grounded
+    ORIGIN
+};
+
+VC_ENUM_METADATA(GroundingBehaviour)
+    {"partial", GroundingBehaviour::PARTIAL},
+    {"complete", GroundingBehaviour::COMPLETE},
+    {"origin", GroundingBehaviour::ORIGIN},
+VC_ENUM_END
+
 /// @brief Common kit of block properties applied to groups of blocks
 struct BlockMaterial : Serializable {
     std::string name;
@@ -238,6 +254,9 @@ public:
 
     /// @brief Explicitly overriding 'solid' property if true assigned
     bool explictlySolid = false;
+
+    /// @brief Grounding behaviour
+    GroundingBehaviour groundingBehaviour = GroundingBehaviour::PARTIAL;
 
     /// @brief Set of block physical hitboxes
     std::vector<AABB> hitboxes {AABB()};

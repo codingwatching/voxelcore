@@ -100,6 +100,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
 
     builder.addSection("system");
     builder.add("max-bg-asset-loaders", &settings.system.maxBgAssetLoaders);
+    builder.add("preserve-assets-during-frame", &settings.system.preserveAssetsDuringFrame);
 }
 
 dv::value SettingsHandler::getValue(const std::string& name) const {
