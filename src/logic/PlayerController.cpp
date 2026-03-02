@@ -22,6 +22,7 @@
 #include "scripting/scripting.hpp"
 #include "settings.hpp"
 #include "voxels/Block.hpp"
+#include "voxels/blocks_agent.hpp"
 #include "voxels/Chunks.hpp"
 #include "voxels/voxel.hpp"
 #include "window/Camera.hpp"
@@ -252,18 +253,18 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
 }
 
 void PlayerController::updateFootsteps(float delta) {
-    const float pi = glm::pi<float>();
+    constexpr float GLM_PI = glm::pi<float>();
     auto hitbox = player.getHitbox();
     if (hitbox && hitbox->grounded) {
         const glm::vec3& vel = hitbox->velocity;
         float f = glm::length(glm::vec2(vel.x, vel.z));
         stepsTimer += delta * f * STEPS_SPEED;
-        if (stepsTimer >= pi) {
-            stepsTimer = fmod(stepsTimer, pi);
+        if (stepsTimer >= GLM_PI) {
+            stepsTimer = fmod(stepsTimer, GLM_PI);
             onFootstep(*hitbox);
         }
     } else {
-        stepsTimer = pi;
+        stepsTimer = GLM_PI;
     }
 }
 
@@ -448,10 +449,7 @@ void PlayerController::processRightClick(
         return;
     }
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, state.rotation);
-        if (!chunks.isSolidBlock(
-                coord.x + vec.x, coord.y + vec.y, coord.z + vec.z
-            )) {
+        if (!blocks_agent::check_grounding(chunks, def, state.rotation, coord)) {
             return;
         }
     }
@@ -556,6 +554,6 @@ void PlayerController::updateInteraction(const Input& inputEvents, float delta) 
     }
 }
 
-Player* PlayerController::getPlayer() {
-    return &player;
+Player& PlayerController::getPlayer() {
+    return player;
 }
