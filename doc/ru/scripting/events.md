@@ -189,6 +189,13 @@ function on_inventory_closed(invid: int, playerid: int)
 
 Вызывается при закрытии инвентаря.
 
+```lua
+function on_inventory_interact(invid: int, slot: int, action: int)
+```
+
+Вызывается при взаимодействии со слотом игрока.
+action отвечает за тип взаимодействия (0 - левый клик, 1 - правый клик, 2 - левый клик + шифт)
+
 
 ## События макета
 
