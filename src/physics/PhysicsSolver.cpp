@@ -66,8 +66,8 @@ static void calc_collision_pos(
         boxAABB.b.y -= stepHeight + E * 2;
 
         if (box->position[nx] > pos[nx] && box->getAABB().intersects(boxAABB)) {
-            float newnegx = box->position[nx] - boxhalf[nx] - half[nx] - E;
-            float newposx = box->position[nx] + boxhalf[nx] + half[nx] + E;
+            float newnegx = box->position[nx] - boxhalf[nx] - half[nx];
+            float newposx = box->position[nx] + boxhalf[nx] + half[nx];
             float newx;
             if (glm::abs(newnegx - pos[nx]) < glm::abs(newposx - pos[nx])) {
                 newx = newnegx;
@@ -79,7 +79,6 @@ static void calc_collision_pos(
                     vel[nx] = 0.0f;
                 }
                 pos[nx] = newx;
-                collided[nx] = true;
             }
         }
     }
@@ -138,8 +137,8 @@ static void calc_collision_neg(
         boxAABB.b.y -= stepHeight + E * 2;
 
         if (box->position[nx] < pos[nx] && box->getAABB().intersects(boxAABB)) {
-            float newnegx = box->position[nx] - boxhalf[nx] - half[nx] - E;
-            float newposx = box->position[nx] + boxhalf[nx] + half[nx] + E;
+            float newnegx = box->position[nx] - boxhalf[nx] - half[nx];
+            float newposx = box->position[nx] + boxhalf[nx] + half[nx];
             float newx;
             if (glm::abs(newnegx - pos[nx]) > glm::abs(newposx - pos[nx])) {
                 newx = newposx;
@@ -151,7 +150,6 @@ static void calc_collision_neg(
                     vel[nx] = 0.0f;
                 }
                 pos[nx] = newx;
-                collided[nx] = true;
             }
         }
     }
@@ -448,7 +446,7 @@ void PhysicsSolver::step(
         calcSubstep(chunks, hitbox, vel, pos, prevGrounded, dt);
     }
 
-    if (prevGrounded && !hitbox.grounded && vel.y <= 0.0f) {
+    if (prevGrounded && !hitbox.grounded) {
         vel += hitbox.groundVelocity;
         hitbox.groundVelocity = {};
     }
