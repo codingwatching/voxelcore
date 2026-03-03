@@ -208,7 +208,7 @@ static bool calc_collision_neg_y(
             if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
                 pos.y = newy;
             }
-            groundVelocty = box->velocity;
+            groundVelocty = (box->position - box->prevPosition) / box->delta;
             if (vel.y < 0.0f) {
                 vel.y = 0.0f;
                 return true;
@@ -362,8 +362,14 @@ void PhysicsSolver::calcSubstep(
     glm::vec3& vel,
     glm::vec3& pos,
     bool prevGrounded,
-    float dt
+    float dt,
+    int substeps
 ) {
+    if (hitbox.grounded) {
+        pos.x += hitbox.groundVelocity.x * dt * substeps;
+        pos.z += hitbox.groundVelocity.z * dt * substeps;
+    }
+
     auto initpos = pos;
     auto half = hitbox.getHalfSize();
     float gravityScale = hitbox.gravityScale;
@@ -434,6 +440,10 @@ void PhysicsSolver::step(
     uint substeps,
     entityid_t entity
 ) {
+    hitbox.prevPosition = hitbox.position;
+    hitbox.substeps = substeps;
+    hitbox.delta = delta;
+    
     float dt = delta / static_cast<float>(substeps);
     float linearDamping = hitbox.linearDamping * hitbox.friction;
 
@@ -443,18 +453,18 @@ void PhysicsSolver::step(
     bool prevGrounded = hitbox.grounded;
     hitbox.grounded = false;
     for (uint i = 0; i < substeps; i++) {
-        calcSubstep(chunks, hitbox, vel, pos, prevGrounded, dt);
-    }
-
-    if (prevGrounded && !hitbox.grounded) {
-        vel += hitbox.groundVelocity;
-        hitbox.groundVelocity = {};
+        calcSubstep(chunks, hitbox, vel, pos, prevGrounded, dt, substeps);
     }
 
     vel.x /= 1.0f + delta * linearDamping;
     vel.z /= 1.0f + delta * linearDamping;
     if (hitbox.verticalDamping > 0.0f) {
         vel.y /= 1.0f + delta * linearDamping * hitbox.verticalDamping;
+    }
+    if (prevGrounded && !hitbox.grounded) {
+        auto appliedVelocity = hitbox.groundVelocity;
+        vel += appliedVelocity;
+        hitbox.groundVelocity = {};
     }
 
     AABB aabb;

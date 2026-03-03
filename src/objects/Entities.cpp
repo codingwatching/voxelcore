@@ -316,30 +316,36 @@ void Entities::updatePhysics(float delta) {
 
     auto view = registry->view<EntityId, Transform, Rigidbody>();
     auto physics = level.physics.get();
-    for (auto [entity, eid, transform, rigidbody] : view.each()) {
-        if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::STATIC) {
-            continue;
-        }
-        auto& hitbox = rigidbody.hitbox;
-        auto prevVel = hitbox.velocity;
-        bool grounded = hitbox.grounded;
 
-        float vel = glm::length(prevVel);
-        int substeps = static_cast<int>(delta * vel * 20);
-        substeps = std::min(100, std::max(2, substeps));
-        physics->step(*level.chunks, hitbox, delta, substeps, eid.uid);
-        hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f)
-                              ? 8.0f
-                              : (!grounded ? 2.0f : 10.0f);
-        hitbox.scale = transform.size;
-        transform.setPos(hitbox.position);
-        if (hitbox.grounded && !grounded) {
-            scripting::on_entity_grounded(
-                *get(eid.uid), glm::length(prevVel - hitbox.velocity)
-            );
-        }
-        if (!hitbox.grounded && grounded) {
-            scripting::on_entity_fall(*get(eid.uid));
+    for (int solid = false; solid <= true; solid++) {
+        for (auto [entity, eid, transform, rigidbody] : view.each()) {
+            if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::STATIC) {
+                continue;
+            }
+            if (eid.def.solid == solid) {
+                continue;
+            }
+            auto& hitbox = rigidbody.hitbox;
+            auto prevVel = hitbox.velocity;
+            bool grounded = hitbox.grounded;
+
+            float vel = glm::length(prevVel);
+            int substeps = static_cast<int>(delta * vel * 20);
+            substeps = std::min(100, std::max(2, substeps));
+            physics->step(*level.chunks, hitbox, delta, substeps, eid.uid);
+            hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f)
+                                ? 8.0f
+                                : (!grounded ? 2.0f : 10.0f);
+            hitbox.scale = transform.size;
+            transform.setPos(hitbox.position);
+            if (hitbox.grounded && !grounded) {
+                scripting::on_entity_grounded(
+                    *get(eid.uid), glm::length(prevVel - hitbox.velocity)
+                );
+            }
+            if (!hitbox.grounded && grounded) {
+                scripting::on_entity_fall(*get(eid.uid));
+            }
         }
     }
 }

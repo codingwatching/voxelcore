@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "maths/aabb.hpp"
 #include "typedefs.hpp"
 #include "util/EnumMetadata.hpp"
@@ -8,6 +10,7 @@
 #include <string>
 #include <functional>
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 
 enum class SensorType {
     AABB,
@@ -62,6 +65,13 @@ struct Hitbox {
     bool crouching = false;
     float stepHeight = 0.5f;
     glm::vec3 groundVelocity {};
+    
+    // garbage tbh
+    glm::vec3 prevPosition {};
+    int substeps = 1;
+    float delta = 0.0f;
+
+    static inline constexpr float TELEPORT_THRESOLD_SQR = 0.5f;
 
     Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
 
@@ -71,5 +81,12 @@ struct Hitbox {
 
     glm::vec3 getHalfSize() const {
         return halfsize * scale;
+    }
+
+    void setPos(const glm::vec3& vec) {
+        position = vec;
+        if (glm::distance2(position, prevPosition) >= TELEPORT_THRESOLD_SQR) {
+            prevPosition = vec;
+        }
     }
 };

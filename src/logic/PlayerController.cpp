@@ -229,8 +229,8 @@ PlayerController::PlayerController(
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
-    auto pos = hitbox.position;
-    auto half = hitbox.halfsize;
+    const auto& pos = hitbox.position;
+    const auto& half = hitbox.getHalfSize();
 
     for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
         for (int offsetX = -1; offsetX <= 1; offsetX++) {
