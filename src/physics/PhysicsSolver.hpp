@@ -43,7 +43,7 @@ private:
         Hitbox& hitbox,
         glm::vec3& vel,
         glm::vec3& pos,
-        const glm::vec3 half,
+        const glm::vec3& half,
         float stepHeight
     );
 
