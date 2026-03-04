@@ -281,7 +281,6 @@ void Entities::preparePhysics(float delta) {
     auto& physics = *level.physics;
     auto& solidHitboxes = physics.getSolidHitboxesWriteable();
 
-
     if (sensorsTickClock.update(delta)) {
         auto part = sensorsTickClock.getPart();
         auto parts = sensorsTickClock.getParts();
@@ -330,7 +329,7 @@ void Entities::updatePhysics(float delta) {
             bool grounded = hitbox.grounded;
 
             float vel = glm::length(prevVel);
-            int substeps = static_cast<int>(delta * vel * 20);
+            int substeps = static_cast<int>(delta * (vel + 2.0f) * 20);
             substeps = std::min(100, std::max(2, substeps));
             physics->step(*level.chunks, hitbox, delta, substeps, eid.uid);
             hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f)
