@@ -41,8 +41,8 @@ static float calc_step_height(
     return stepHeight;
 }
 
-template <int nx, int ny, int nz>
-static void calc_collision_pos(
+template <int nx, int ny, int nz, int sign>
+static void calc_collision(
     Hitbox& hitbox,
     const GlobalChunks& chunks,
     const std::vector<Hitbox*>& solidHitboxes,
@@ -58,32 +58,32 @@ static void calc_collision_pos(
             continue;
         }
         auto boxhalf = box->getHalfSize();
-        auto boxAABB = AABB(pos - half, pos + half);
+        auto aabb = AABB(pos - half, pos + half);
         glm::vec3 scale(1.0f);
         scale[nz] = 1.0f - E * 8.0f;
         scale[ny] = 1.0f - E * 2.0f;
-        boxAABB.scale(scale);
-        boxAABB = boxAABB + offset;
-        boxAABB.b.y -= stepHeight + E * 2;
+        aabb.scale(scale);
+        aabb = aabb + offset;
+        aabb.b.y -= stepHeight + E * 2;
 
-        if (box->position[nx] > pos[nx] && box->getAABB().intersects(boxAABB)) {
+        if ((box->position[nx] - pos[nx]) * sign > 0.0f && box->getAABB().intersects(aabb)) {
             float newnegx = box->position[nx] - boxhalf[nx] - half[nx];
             float newposx = box->position[nx] + boxhalf[nx] + half[nx];
             float newx;
-            if (glm::abs(newnegx - pos[nx]) < glm::abs(newposx - pos[nx])) {
-                newx = newnegx;
+            if ((glm::abs(newnegx - pos[nx]) - glm::abs(newposx - pos[nx]))*sign < 0.0f) {
+                newx = sign > 0 ? newnegx : newposx;
             } else {
                 continue;
             }
-            if (pos[nx] > newx) {
-                if (vel[nx] > 0.0f) {
+            if ((pos[nx] - newx) * sign > 0.0f) {
+                if (vel[nx] * sign > 0.0f) {
                     vel[nx] = 0.0f;
                 }
                 pos[nx] = newx;
             }
         }
     }
-    if (vel[nx] <= 0.0f && hitbox.groundVelocity[nx] <= 0.0f) {
+    if (vel[nx] * sign <= 0.0f && hitbox.groundVelocity[nx] * sign <= 0.0f) {
         return;
     }
     for (int iy = 0; iy <= glm::ceil(((half - offset * 0.5f)[ny] - E) * 2); iy++) {
@@ -91,18 +91,19 @@ static void calc_collision_pos(
         coord[ny] = ((pos + offset)[ny] - half[ny] + E) + iy;
         for (int iz = 0; iz <= glm::ceil((half[nz] - E) * 2); iz++) {
             coord[nz] = (pos[nz] - half[nz] + E) + iz;
-            coord[nx] = pos[nx] + half[nx] + E * 2;
+            coord[nx] = pos[nx] + (half[nx] + E * 2) * sign;
 
-            auto boxAABB = AABB(pos - half, pos + half);
+            auto aabb = AABB(pos - half, pos + half);
             glm::vec3 scale(1.0f);
             scale[nz] = 1.0f - E * 8.0f;
-            boxAABB.scale(scale);
-            boxAABB = boxAABB + offset;
-            boxAABB.b.y -= stepHeight + E * 2;
+            aabb.scale(scale);
+            aabb = aabb + offset;
+            aabb.b.y -= stepHeight + E * 2;
 
-            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
-                float newx = std::floor(coord[nx]) - half[nx] + aabb->min()[nx];
-                if (pos[nx] > newx) {
+            if (const auto obstacle = chunks.isObstacleAt(coord.x, coord.y, coord.z, aabb)) {
+                float newx = std::floor(coord[nx]) - half[nx] * sign +
+                             (sign > 0 ? obstacle->min() : obstacle->max())[nx];
+                if ((pos[nx] - newx) * sign > 0.0f) {
                     vel[nx] = 0.0f;
                     pos[nx] = newx;
                 }
@@ -110,78 +111,6 @@ static void calc_collision_pos(
             }
         }
     }
-}
-
-template <int nx, int ny, int nz>
-static void calc_collision_neg(
-    Hitbox& hitbox,
-    const GlobalChunks& chunks,
-    const std::vector<Hitbox*>& solidHitboxes,
-    const glm::vec3& half,
-    float stepHeight
-) {
-    auto& pos = hitbox.position;
-    auto& vel = hitbox.velocity;
-
-    glm::vec3 offset(0.0f, stepHeight + E, 0.0f);
-    for (auto box : solidHitboxes) {
-        if (glm::distance2(box->position, pos) < E) {
-            continue;
-        }
-        auto boxhalf = box->getHalfSize();
-        auto boxAABB = AABB(pos - half, pos + half);
-        glm::vec3 scale(1.0f);
-        scale[nz] = 1.0f - E * 8.0f;
-        scale[ny] = 1.0f - E * 2.0f;
-        boxAABB.scale(scale);
-        boxAABB = boxAABB + offset;
-        boxAABB.b.y -= stepHeight + E * 2;
-
-        if (box->position[nx] < pos[nx] && box->getAABB().intersects(boxAABB)) {
-            float newnegx = box->position[nx] - boxhalf[nx] - half[nx];
-            float newposx = box->position[nx] + boxhalf[nx] + half[nx];
-            float newx;
-            if (glm::abs(newnegx - pos[nx]) > glm::abs(newposx - pos[nx])) {
-                newx = newposx;
-            } else {
-                continue;
-            }
-            if (pos[nx] < newx) {
-                if (vel[nx] < 0.0f) {
-                    vel[nx] = 0.0f;
-                }
-                pos[nx] = newx;
-            }
-        }
-    }
-    if (vel[nx] >= 0.0f && hitbox.groundVelocity[nx] >= 0.0f) {
-        return;
-    }
-    for (int iy = 0; iy <= glm::ceil(((half - offset * 0.5f)[ny] - E) * 2); iy++) {
-        glm::vec3 coord;
-        coord[ny] = ((pos + offset)[ny] - half[ny] + E) + iy;
-        for (int iz = 0; iz <= glm::ceil((half[nz] - E) * 2); iz++) {
-            coord[nz] = (pos[nz] - half[nz] + E) + iz;
-            coord[nx] = pos[nx] - half[nx] - E * 2;
-
-            auto boxAABB = AABB(pos - half, pos + half);
-            glm::vec3 scale(1.0f);
-            scale[nz] = 1.0f - E * 8.0f;
-            boxAABB.scale(scale);
-            boxAABB = boxAABB + offset;
-            boxAABB.b.y -= stepHeight + E * 2;
-
-            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
-                float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx];
-                if (pos[nx] < newx) {
-                    vel[nx] = 0.0f;
-                    pos[nx] = newx;
-                }
-                return;
-            }
-        }
-    }
-    return;
 }
 
 static bool calc_collision_neg_y(
@@ -196,14 +125,14 @@ static bool calc_collision_neg_y(
         if (glm::distance2(box->position, pos) < E) {
             continue;
         }
-        auto boxAABB = AABB(pos - half, pos + half);
+        auto aabb = AABB(pos - half, pos + half);
         glm::vec3 scale(1.0f);
         scale.x = 1.0f - E * 4.0f;
         scale.z = 1.0f - E * 4.0f;
-        boxAABB.scale(scale);
+        aabb.scale(scale);
 
         auto boxhalf = box->getHalfSize();
-        if (box->position.y < pos.y && box->getAABB().intersects(boxAABB)) {
+        if (box->position.y < pos.y && box->getAABB().intersects(aabb)) {
             float newy = box->position.y + boxhalf.y + half.y;
             if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
                 pos.y = newy;
@@ -226,14 +155,14 @@ static bool calc_collision_neg_y(
             coord.z = (pos.z - half.z + E) + iz;
             coord.y = pos.y - half.y - E * 2;
 
-            auto boxAABB = AABB(pos - half, pos + half);
+            auto aabb = AABB(pos - half, pos + half);
             glm::vec3 scale(1.0f);
             scale.x = 1.0f - E * 4.0f;
             scale.z = 1.0f - E * 4.0f;
-            boxAABB.scale(scale);
+            aabb.scale(scale);
 
-            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
-                float newy = std::floor(coord.y) + half.y + aabb->max().y;
+            if (const auto obstacle = chunks.isObstacleAt(coord.x, coord.y, coord.z, aabb)) {
+                float newy = std::floor(coord.y) + half.y + obstacle->max().y;
                 if (newy >= pos.y) {
                     vel.y = 0.0f;
                     pos.y = newy;
@@ -258,14 +187,14 @@ void PhysicsSolver::calcCollisions(
 
     auto prevPos = pos;
 
-    calc_collision_neg<0, 1, 2>(hitbox, chunks, solidHitboxes, half, stepHeight);
-    calc_collision_pos<0, 1, 2>(hitbox, chunks, solidHitboxes, half, stepHeight);
+    calc_collision<0, 1, 2, -1>(hitbox, chunks, solidHitboxes, half, stepHeight);
+    calc_collision<0, 1, 2, 1>(hitbox, chunks, solidHitboxes, half, stepHeight);
 
     float xpos = pos.x;
     pos.x = prevPos.x;
 
-    calc_collision_neg<2, 1, 0>(hitbox, chunks, solidHitboxes, half, stepHeight);
-    calc_collision_pos<2, 1, 0>(hitbox, chunks, solidHitboxes, half, stepHeight);
+    calc_collision<2, 1, 0, -1>(hitbox, chunks, solidHitboxes, half, stepHeight);
+    calc_collision<2, 1, 0, 1>(hitbox, chunks, solidHitboxes, half, stepHeight);
     pos.x = xpos;
 
     if (calc_collision_neg_y(chunks, solidHitboxes, pos, vel, half, hitbox.groundVelocity)) {
