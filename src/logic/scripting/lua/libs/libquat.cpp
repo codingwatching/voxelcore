@@ -49,8 +49,8 @@ static int l_from_euler(lua::State *L)
     uint argc = lua::check_argc(L, 1, 2);
     glm::vec3 euler = lua::tovec3(L, 1);
 
-    if (argc == 1) return lua::pushquat(L, glm::quat(euler));
-    return lua::setquat(L, 2, glm::quat(euler));
+    if (argc == 2) return lua::setquat(L, 2, glm::quat(euler));
+    return lua::pushquat(L, glm::quat(euler));
 }
 
 const luaL_Reg quatlib[] = {
