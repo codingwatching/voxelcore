@@ -44,8 +44,7 @@ static int l_tostring(lua::State* L) {
     return lua::pushstring(L, ss.str());
 }
 
-static int l_from_euler(lua::State *L)
-{
+static int l_from_euler(lua::State *L) {
     uint argc = lua::check_argc(L, 1, 2);
     glm::vec3 euler = lua::tovec3(L, 1);
 
