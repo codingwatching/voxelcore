@@ -150,6 +150,20 @@ static int l_set_linear_damping(lua::State* L) {
     return 0;
 }
 
+static int l_set_material(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        entity->getRigidbody().hitbox.material = lua::require_string(L, 2);
+    }
+    return 0;
+}
+
+static int l_get_material(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        return lua::pushstring(L, entity->getRigidbody().hitbox.material);
+    }
+    return 0;
+}
+
 const luaL_Reg rigidbodylib[] = {
     {"is_enabled", lua::wrap<l_is_enabled>},
     {"set_enabled", lua::wrap<l_set_enabled>},
@@ -169,5 +183,7 @@ const luaL_Reg rigidbodylib[] = {
     {"set_crouching", lua::wrap<l_set_crouching>},
     {"get_body_type", lua::wrap<l_get_body_type>},
     {"set_body_type", lua::wrap<l_set_body_type>},
+    {"set_material", lua::wrap<l_set_material>},
+    {"get_material", lua::wrap<l_get_material>},
     {nullptr, nullptr}
 };

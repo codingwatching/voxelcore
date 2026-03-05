@@ -32,6 +32,8 @@ local Rigidbody = {__index={
     set_crouching=function(self, b) return __rigidbody.set_crouching(self.eid, b) end,
     get_body_type=function(self) return __rigidbody.get_body_type(self.eid) end,
     set_body_type=function(self, s) return __rigidbody.set_body_type(self.eid, s) end,
+    get_material=function(self) return __rigidbody.get_material(self.eid) end,
+    set_material=function(self, s) return __rigidbody.set_material(self.eid, s) end,
 }}
 
 local function new_Rigidbody(eid)
