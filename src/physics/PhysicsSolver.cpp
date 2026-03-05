@@ -145,7 +145,7 @@ static bool calc_collision_neg_y(
             if (vel.y < 0.0f) {
                 vel.y = 0.0f;
                 if (hitbox.groundMaterial.empty()) {
-                    hitbox.groundMaterial = hitbox.material;
+                    hitbox.groundMaterial = box->material;
                 }
                 return true;
             }
