@@ -64,11 +64,13 @@ struct Hitbox {
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;
+    std::string material;
+
     glm::vec3 groundVelocity {};
+    std::string groundMaterial;
     
     // garbage tbh
     glm::vec3 prevPosition {};
-    int substeps = 1;
     float delta = 0.0f;
 
     static inline constexpr float TELEPORT_THRESOLD_SQR = 0.5f;

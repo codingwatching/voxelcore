@@ -116,13 +116,14 @@ static void calc_collision(
 }
 
 static bool calc_collision_neg_y(
+    Hitbox& hitbox,
     const GlobalChunks& chunks,
     const std::vector<Hitbox*>& solidHitboxes,
-    glm::vec3& pos,
-    glm::vec3& vel,
-    const glm::vec3& half,
-    glm::vec3& groundVelocty
+    const glm::vec3& half
 ) {
+    auto& pos = hitbox.position;
+    auto& vel = hitbox.velocity;
+
     for (auto box : solidHitboxes) {
         if (glm::distance2(box->position, pos) < E) {
             continue;
@@ -139,9 +140,13 @@ static bool calc_collision_neg_y(
             if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
                 pos.y = newy;
             }
-            groundVelocty = (box->position - box->prevPosition) / box->delta;
+            hitbox.groundVelocity =
+                (box->position - box->prevPosition) / box->delta;
             if (vel.y < 0.0f) {
                 vel.y = 0.0f;
+                if (hitbox.groundMaterial.empty()) {
+                    hitbox.groundMaterial = hitbox.material;
+                }
                 return true;
             }
         }
@@ -149,7 +154,7 @@ static bool calc_collision_neg_y(
     if (vel.y >= 0.0f) {
         return false;
     }
-    groundVelocty = {};
+    hitbox.groundVelocity = {};
     for (int ix = 0; ix <= glm::ceil((half.x - E) * 2); ix++) {
         glm::vec3 coord;
         coord.x = (pos.x - half.x + E) + ix;
@@ -200,7 +205,7 @@ void PhysicsSolver::calcCollisions(
     calc_collision<2, 1, 0, 1>(hitbox, chunks, solidHitboxes, half, stepHeight);
     pos.x = xpos;
 
-    if (calc_collision_neg_y(chunks, solidHitboxes, pos, vel, half, hitbox.groundVelocity)) {
+    if (calc_collision_neg_y(hitbox, chunks, solidHitboxes, half)) {
         hitbox.grounded = true;
     }
     
@@ -369,8 +374,8 @@ void PhysicsSolver::step(
     entityid_t entity
 ) {
     hitbox.prevPosition = hitbox.position;
-    hitbox.substeps = substeps;
     hitbox.delta = delta;
+    hitbox.groundMaterial.clear();
     
     float dt = delta / static_cast<float>(substeps);
     float linearDamping = hitbox.linearDamping * hitbox.friction;
