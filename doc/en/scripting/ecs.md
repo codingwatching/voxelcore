@@ -114,6 +114,11 @@ body:set_crouching(enabled: bool)
 body:get_body_type() -> str
 -- Sets the physical body type
 body:set_body_type(type: str)
+
+-- Returns the body material (same as for blocks)
+body:get_material() -> str
+-- Sets the body material
+body:set_material(material: str)
 ```
 
 ### Skeleton
