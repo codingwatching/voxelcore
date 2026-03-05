@@ -213,9 +213,6 @@ Element must be in direct sub-element of *inventory*.
 ## *slots-grid*
 
 - `start-index` - inventory slot index of the first slot. Type: integer
-- `rows` - number of grid rows (unnecessary if *cols* and *count* specified). Type: integer
-- `cols` - number of grid columns (unnecessary if *rows* and *count* specified). Type: integer
-- `count` - total number of slots in grid (unnecessary if *rows* and *cols* specified). Type: integer
 - `interval` - visual slots interval. Type: number
 - `padding` - grid padding (not slots interval). Type: number. (*deprecated*)
 - `sharefunc` - Lua event called on <btn>LMB</btn> + <btn>Shift</btn>. Inventory id and slot index passed as arguments.
@@ -223,3 +220,8 @@ Element must be in direct sub-element of *inventory*.
 - `onrightclick` - Lua event called on <btn>RMB</btn> click. Inventory id and slot index passed as arguments.
 - `taking` - the ability to take an item from a slot.
 - `placing` - the ability to put an item in a slot.
+
+Slots configuration (just specify two attributes):
+- `rows` - ​​number of rows. Type: integer
+- `cols` - number of columns. Type: integer
+- `count` - total number of slots. Type: integer
