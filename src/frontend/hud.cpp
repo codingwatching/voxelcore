@@ -272,7 +272,7 @@ void Hud::updateWorldGenDebug() {
     const auto& chunks = *player.chunks;
     uint padding = engine.getSettings().chunks.padding.get();
     auto generator =
-        frontend.getController()->getChunksController()->getGenerator();
+        frontend.getController().getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
     
     int width = debugImgWorldGen->getWidth();
@@ -294,7 +294,7 @@ void Hud::updateWorldGenDebug() {
 
             bool isInLoadingZone =
                 frontend.getController()
-                    ->getChunksController()
+                    .getChunksController()
                     ->isInLoadingZone(player, padding, ax + ox, az + oz);
 
             data[(flippedZ * width + x) * 4 + 1] =

@@ -229,26 +229,8 @@ PlayerController::PlayerController(
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
-    const auto& pos = hitbox.position;
-    const auto& half = hitbox.getHalfSize();
-
-    for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
-        for (int offsetX = -1; offsetX <= 1; offsetX++) {
-            int x = std::floor(pos.x + half.x * offsetX);
-            int y = std::floor(pos.y - half.y * 1.1f);
-            int z = std::floor(pos.z + half.z * offsetZ);
-            auto vox = player.chunks->get(x, y, z);
-            if (vox) {
-                auto& def = level.content.getIndices()->blocks.require(vox->id);
-                if (!def.obstacle) {
-                    continue;
-                }
-                blocksController.onBlockInteraction(
-                    &player, glm::ivec3(x, y, z), def, BlockInteraction::step
-                );
-                return;
-            }
-        }
+    if (footstepCallback) {
+        footstepCallback(hitbox);
     }
 }
 
@@ -556,4 +538,8 @@ void PlayerController::updateInteraction(const Input& inputEvents, float delta) 
 
 Player& PlayerController::getPlayer() {
     return player;
+}
+
+void PlayerController::setFootstepCallback(FootstepCallback&& callback) {
+    footstepCallback = std::move(callback);
 }
