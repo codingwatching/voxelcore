@@ -1,27 +1,28 @@
 #define VC_ENABLE_REFLECTION
 #include "Entities.hpp"
 
-#include <entt/entity/registry.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <sstream>
-
 #include "assets/Assets.hpp"
 #include "content/Content.hpp"
 #include "data/dv_util.hpp"
 #include "debug/Logger.hpp"
 #include "engine/Engine.hpp"
+#include "Entity.hpp"
+#include "EntityDef.hpp"
+#include "graphics/commons/Model.hpp"
 #include "graphics/core/DrawContext.hpp"
 #include "graphics/core/LineBatch.hpp"
-#include "graphics/commons/Model.hpp"
 #include "graphics/render/ModelBatch.hpp"
 #include "logic/scripting/scripting.hpp"
 #include "maths/FrustumCulling.hpp"
 #include "maths/rays.hpp"
-#include "EntityDef.hpp"
-#include "Entity.hpp"
-#include "rigging.hpp"
+#include "maths/util.hpp"
 #include "physics/PhysicsSolver.hpp"
+#include "rigging.hpp"
 #include "world/Level.hpp"
+
+#include <entt/entity/registry.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <sstream>
 
 static debug::Logger logger("entities");
 
@@ -336,7 +337,14 @@ void Entities::updatePhysics(float delta) {
                                 ? 8.0f
                                 : (!grounded ? 2.0f : 10.0f);
             hitbox.scale = transform.size;
-            transform.setPos(hitbox.position);
+            if (util::is_nan_or_inf(hitbox.position)) {
+                logger.error()
+                    << "something bad happened in physics engine (entity "
+                    << eid.def.name << "#" << eid.uid << ")";
+                hitbox.position = transform.pos;
+            } else {
+                transform.setPos(hitbox.position);
+            }
             if (hitbox.grounded && !grounded) {
                 scripting::on_entity_grounded(
                     *get(eid.uid), glm::length(prevVel - hitbox.velocity)

@@ -140,8 +140,10 @@ static bool calc_collision_neg_y(
             if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
                 pos.y = newy;
             }
-            hitbox.groundVelocity =
-                (box->position - box->prevPosition) / box->delta;
+            if (glm::abs(box->delta) > 1e-5f) {
+                hitbox.groundVelocity =
+                    (box->position - box->prevPosition) / box->delta;
+            }
             if (vel.y < 0.0f) {
                 vel.y = 0.0f;
                 if (hitbox.groundMaterial.empty()) {
@@ -300,6 +302,9 @@ void PhysicsSolver::calcSubstep(
 ) {
     if (hitbox.grounded) {
         pos.x += hitbox.groundVelocity.x * dt * substeps;
+        if (hitbox.groundVelocity.y < 0.0f) {
+            pos.y += hitbox.groundVelocity.y * dt * substeps;
+        }
         pos.z += hitbox.groundVelocity.z * dt * substeps;
     }
 
