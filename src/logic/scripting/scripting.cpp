@@ -540,22 +540,6 @@ void scripting::on_inventory_closed(const Player* player, const Inventory& inven
     }
 }
 
-void scripting::on_inventory_interact(int invid, int slot, int action) {
-    auto args = [invid, slot, action](lua::State* L) {
-        lua::pushinteger(L, invid);
-        lua::pushinteger(L, slot);
-        lua::pushinteger(L, action);
-        return 3;
-    };
-    for (auto& [packid, pack] : content->getPacks()) {
-        if (pack->worldfuncsset.oninventoryinteract) {
-            lua::emit_event(
-                lua::get_main_state(), packid + ":.inventoryinteract", args
-            );
-        }
-    }
-}
-
 void scripting::on_player_tick(Player* player, int tps) {
     auto args = [=](lua::State* L) {
         lua::pushinteger(L, player ? player->getId() : -1);
@@ -777,8 +761,6 @@ void scripting::load_world_script(
         register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
     funcsset.oninventoryclosed =
         register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
-    funcsset.oninventoryinteract =
-        register_event(env, "on_inventory_interact", prefix + ":.inventoryinteract");
 }
 
 void scripting::load_layout_script(
