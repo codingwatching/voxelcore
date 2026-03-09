@@ -287,6 +287,7 @@ void Entities::preparePhysics(float delta) {
         auto parts = sensorsTickClock.getParts();
 
         auto& sensors = physics.getSensorsWriteable();
+        sensors.clear();
 
         auto view = registry->view<EntityId, Transform, Rigidbody>();
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
@@ -339,7 +340,7 @@ void Entities::updatePhysics(float delta) {
             hitbox.scale = transform.size;
             if (util::is_nan_or_inf(hitbox.position)) {
                 logger.error()
-                    << "something bad happened in physics engine (entity "
+                    << "physics simulation produced nan or inf (entity "
                     << eid.def.name << "#" << eid.uid << ")";
                 hitbox.position = transform.pos;
             } else {
