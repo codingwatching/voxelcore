@@ -106,7 +106,7 @@ static void calc_collision(
             if (const auto obstacle = chunks.isObstacleAt(coord.x, coord.y, coord.z, aabb)) {
                 float newx = std::floor(coord[nx]) - half[nx] * sign +
                              (sign > 0 ? obstacle->min() : obstacle->max())[nx];
-                if ((pos[nx] - newx) * sign > 0.0f) {
+                if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < MAX_FIX) {
                     vel[nx] = 0.0f;
                     pos[nx] = newx;
                 }
