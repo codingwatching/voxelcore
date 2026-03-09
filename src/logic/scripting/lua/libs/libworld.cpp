@@ -25,11 +25,15 @@
 using namespace scripting;
 namespace fs = std::filesystem;
 
-static WorldInfo& require_world_info() {
+static Level& require_level() {
     if (level == nullptr) {
-        throw std::runtime_error("no world open");
+        throw std::runtime_error("world is not open");
     }
-    return level->getWorld()->getInfo();
+    return *level;
+}
+
+static WorldInfo& require_world_info() {
+    return require_level().getWorld()->getInfo();
 }
 
 static int l_is_open(lua::State* L) {
