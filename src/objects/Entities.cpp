@@ -320,7 +320,8 @@ void Entities::updatePhysics(float delta) {
 
     for (int solid = false; solid <= true; solid++) {
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
-            if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::STATIC) {
+            if (!rigidbody.enabled ||
+                rigidbody.hitbox.type == BodyType::STATIC) {
                 continue;
             }
             if (eid.def.solid == solid) {

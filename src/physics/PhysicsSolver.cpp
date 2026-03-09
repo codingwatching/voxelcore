@@ -12,7 +12,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
-inline const float E = 0.03f;
+inline constexpr float E = 0.03f;
+inline constexpr float MAX_FIX = 0.15f;
 
 static debug::Logger logger("physics-solver");
 
@@ -78,7 +79,7 @@ static void calc_collision(
         } else {
             continue;
         }
-        if ((pos[nx] - newx) * sign > 0.0f) {
+        if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < MAX_FIX) {
             if (vel[nx] * sign > 0.0f) {
                 vel[nx] = 0.0f;
             }
@@ -137,7 +138,7 @@ static bool calc_collision_neg_y(
         auto boxhalf = box->getHalfSize();
         if (box->position.y < pos.y && box->getAABB().intersects(aabb)) {
             float newy = box->position.y + boxhalf.y + half.y;
-            if (pos.y < newy && glm::abs(pos.y - newy) < 0.5f) {
+            if (pos.y < newy && glm::abs(pos.y - newy) < boxhalf.y) {
                 pos.y = newy;
             }
             if (glm::abs(box->delta) > 1e-5f) {
@@ -210,7 +211,7 @@ void PhysicsSolver::calcCollisions(
     if (calc_collision_neg_y(hitbox, chunks, solidHitboxes, half)) {
         hitbox.grounded = true;
     }
-    
+
     if (vel.y > 0.0f){
         AABB boxAABB = AABB(-half, +half);
         boxAABB.scale(glm::vec3(1.0f - E * 4, 1.0f + E * 2, 1.0f - E * 4));
