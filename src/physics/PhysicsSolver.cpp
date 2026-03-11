@@ -13,11 +13,13 @@
 #include <glm/gtx/norm.hpp>
 
 inline constexpr float E = 0.03f;
-inline constexpr float MAX_FIX = 0.15f;
+inline constexpr float MAX_FIX = 0.05f;
 
 static debug::Logger logger("physics-solver");
 
-PhysicsSolver::PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity) : chunks(chunks), gravity(std::move(gravity)) {}
+PhysicsSolver::PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity)
+    : chunks(chunks), gravity(std::move(gravity)) {
+}
 
 static float calc_step_height(
     const GlobalChunks& chunks, 
