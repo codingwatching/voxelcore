@@ -1,7 +1,5 @@
 #include "Hitbox.hpp"
 
-#include <stdexcept>
-
 Hitbox::Hitbox(
     entityid_t entity, BodyType type, glm::vec3 position, glm::vec3 halfsize
 )

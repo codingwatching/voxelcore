@@ -58,4 +58,6 @@ private:
         float dt,
         int substeps
     );
+
+    void updateSensors(Hitbox& hitbox);
 };

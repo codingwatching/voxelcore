@@ -392,9 +392,8 @@ void PhysicsSolver::step(
 
     for (auto hitbox : hitboxes) {
         float linearDamping = hitbox->linearDamping * hitbox->friction;
-        glm::vec3& pos = hitbox->position;
-        glm::vec3& vel = hitbox->velocity;
 
+        glm::vec3& vel = hitbox->velocity;
         vel.x /= 1.0f + delta * linearDamping;
         vel.z /= 1.0f + delta * linearDamping;
         if (hitbox->verticalDamping > 0.0f) {
@@ -406,36 +405,40 @@ void PhysicsSolver::step(
             hitbox->groundVelocity = {};
         }
         
-        AABB aabb;
-        aabb.a = pos - hitbox->getHalfSize();
-        aabb.b = pos + hitbox->getHalfSize();
-        for (size_t i = 0; i < sensors.size(); i++) {
-            auto& sensor = *sensors[i];
-            if (sensor.entity == hitbox->entity) {
-                continue;
-            }
-            bool triggered = false;
-            switch (sensor.type) {
-                case SensorType::AABB:
-                    triggered = aabb.intersects(sensor.calculated.aabb);
-                    break;
-                case SensorType::RADIUS:
-                    triggered = glm::distance2(
-                        pos, glm::vec3(sensor.calculated.radial))
-                        < sensor.calculated.radial.w;
-                    break;
-            }
-            if (!triggered) {
-                continue;
-            }
-            if (sensor.prevEntered.find(hitbox->entity) == sensor.prevEntered.end()) {
-                sensor.enterCallback(sensor.entity, sensor.index, hitbox->entity);
-            }
-            sensor.nextEntered.insert(hitbox->entity);
-        }
+        updateSensors(*hitbox);
         hitbox->friction = glm::abs(hitbox->gravityScale <= 1e-7f)
                         ? 8.0f
                         : (!hitbox->prevGrounded ? 2.0f : 10.0f);
+    }
+}
+
+
+void PhysicsSolver::updateSensors(Hitbox& hitbox) {
+    auto aabb = hitbox.getAABB();
+
+    for (size_t i = 0; i < sensors.size(); i++) {
+        auto& sensor = *sensors[i];
+        if (sensor.entity == hitbox.entity) {
+            continue;
+        }
+        bool triggered = false;
+        switch (sensor.type) {
+            case SensorType::AABB:
+                triggered = aabb.intersects(sensor.calculated.aabb);
+                break;
+            case SensorType::RADIUS:
+                triggered = glm::distance2(
+                    hitbox.position, glm::vec3(sensor.calculated.radial))
+                    < sensor.calculated.radial.w;
+                break;
+        }
+        if (!triggered) {
+            continue;
+        }
+        if (sensor.prevEntered.find(hitbox.entity) == sensor.prevEntered.end()) {
+            sensor.enterCallback(sensor.entity, sensor.index, hitbox.entity);
+        }
+        sensor.nextEntered.insert(hitbox.entity);
     }
 }
 
