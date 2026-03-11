@@ -15,12 +15,9 @@ struct Sensor;
 
 class PhysicsSolver {
 public:
-    PhysicsSolver(glm::vec3 gravity);
-    void step(
-        const GlobalChunks& chunks,
-        float delta,
-        uint substeps
-    );
+    PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity);
+
+    void step(const GlobalChunks& chunks, float delta, uint substeps);
 
     auto& getSensorsWriteable() {
         return sensors;
@@ -36,13 +33,13 @@ public:
 
     void removeSensor(Sensor* sensor);
 private:
+    const GlobalChunks& chunks;
     glm::vec3 gravity;
     std::vector<Sensor*> sensors;
     std::vector<Hitbox*> solidHitboxes;
     std::vector<Hitbox*> hitboxes;
 
     void calcCollisions(
-        const GlobalChunks& chunks,
         Hitbox& hitbox,
         glm::vec3& vel,
         glm::vec3& pos,
@@ -51,13 +48,10 @@ private:
     );
 
     void calcSubstep(
-        const GlobalChunks& chunks,
-        Hitbox& hitbox,
-        glm::vec3& vel,
-        glm::vec3& pos,
-        float dt,
-        int substeps
+        Hitbox& hitbox, glm::vec3& vel, glm::vec3& pos, float dt, int substeps
     );
+
+    bool calcCollisionNegY(Hitbox& hitbox, const glm::vec3& half);
 
     void updateSensors(Hitbox& hitbox);
 };
