@@ -141,13 +141,10 @@ static bool calc_collision_neg_y(
             if (pos.y < newy && glm::abs(pos.y - newy) < boxhalf.y) {
                 pos.y = newy;
             }
-            if (glm::abs(box->delta) > 1e-5f) {
-                hitbox.groundVelocity =
-                    (box->position - box->prevPosition) / box->delta;
-            }
+            hitbox.groundVelocity = box->position - box->prevPosition;
             if (vel.y < 0.0f) {
                 vel.y = 0.0f;
-                if (hitbox.groundMaterial.empty()) {
+                if (hitbox.groundMaterial.empty() && !box->material.empty()) {
                     hitbox.groundMaterial = box->material;
                 }
                 return true;
@@ -297,16 +294,15 @@ void PhysicsSolver::calcSubstep(
     Hitbox& hitbox,
     glm::vec3& vel,
     glm::vec3& pos,
-    bool prevGrounded,
     float dt,
     int substeps
 ) {
-    if (hitbox.grounded) {
-        pos.x += hitbox.groundVelocity.x * dt * substeps;
+    if (glm::length2(hitbox.groundVelocity) > 1e-6f) {
+        pos.x += hitbox.groundVelocity.x;
         if (hitbox.groundVelocity.y < 0.0f) {
-            pos.y += hitbox.groundVelocity.y * dt * substeps;
+            pos.y += hitbox.groundVelocity.y;
         }
-        pos.z += hitbox.groundVelocity.z * dt * substeps;
+        pos.z += hitbox.groundVelocity.z;
     }
 
     auto initpos = pos;
@@ -320,7 +316,7 @@ void PhysicsSolver::calcSubstep(
             vel,
             pos,
             half,
-            (prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f
+            (hitbox.prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f
         );
     }
 
@@ -374,64 +370,72 @@ void PhysicsSolver::calcSubstep(
 
 void PhysicsSolver::step(
     const GlobalChunks& chunks,
-    Hitbox& hitbox,
     float delta,
-    uint substeps,
-    entityid_t entity
+    uint substeps
 ) {
-    hitbox.prevPosition = hitbox.position;
-    hitbox.delta = delta;
-    hitbox.groundMaterial.clear();
+    for (auto hitbox : hitboxes) {
+        hitbox->groundMaterial.clear();
+        hitbox->prevGrounded = hitbox->grounded;
+        hitbox->grounded = false;
+        hitbox->prevVelocity = hitbox->velocity;
+    }
     
     float dt = delta / static_cast<float>(substeps);
-    float linearDamping = hitbox.linearDamping * hitbox.friction;
-
-    glm::vec3& pos = hitbox.position;
-    glm::vec3& vel = hitbox.velocity;
-   
-    bool prevGrounded = hitbox.grounded;
-    hitbox.grounded = false;
     for (uint i = 0; i < substeps; i++) {
-        calcSubstep(chunks, hitbox, vel, pos, prevGrounded, dt, substeps);
-    }
-
-    vel.x /= 1.0f + delta * linearDamping;
-    vel.z /= 1.0f + delta * linearDamping;
-    if (hitbox.verticalDamping > 0.0f) {
-        vel.y /= 1.0f + delta * linearDamping * hitbox.verticalDamping;
-    }
-    if (prevGrounded && !hitbox.grounded) {
-        auto appliedVelocity = hitbox.groundVelocity;
-        vel += appliedVelocity;
-        hitbox.groundVelocity = {};
-    }
-
-    AABB aabb;
-    aabb.a = pos - hitbox.getHalfSize();
-    aabb.b = pos + hitbox.getHalfSize();
-    for (size_t i = 0; i < sensors.size(); i++) {
-        auto& sensor = *sensors[i];
-        if (sensor.entity == entity) {
-            continue;
+        for (auto hitbox : hitboxes) {
+            glm::vec3& pos = hitbox->position;
+            glm::vec3& vel = hitbox->velocity;
+            hitbox->prevPosition = hitbox->position;
+            calcSubstep(chunks, *hitbox, vel, pos, dt, substeps);
         }
+    }
 
-        bool triggered = false;
-        switch (sensor.type) {
-            case SensorType::AABB:
-                triggered = aabb.intersects(sensor.calculated.aabb);
-                break;
-            case SensorType::RADIUS:
-                triggered = glm::distance2(
-                    pos, glm::vec3(sensor.calculated.radial))
-                     < sensor.calculated.radial.w;
-                break;
+    for (auto hitbox : hitboxes) {
+        float linearDamping = hitbox->linearDamping * hitbox->friction;
+        glm::vec3& pos = hitbox->position;
+        glm::vec3& vel = hitbox->velocity;
+
+        vel.x /= 1.0f + delta * linearDamping;
+        vel.z /= 1.0f + delta * linearDamping;
+        if (hitbox->verticalDamping > 0.0f) {
+            vel.y /= 1.0f + delta * linearDamping * hitbox->verticalDamping;
         }
-        if (triggered) {
-            if (sensor.prevEntered.find(entity) == sensor.prevEntered.end()) {
-                sensor.enterCallback(sensor.entity, sensor.index, entity);
+        if (hitbox->prevGrounded && !hitbox->grounded) {
+            auto appliedVelocity = hitbox->groundVelocity / dt;
+            vel += appliedVelocity;
+            hitbox->groundVelocity = {};
+        }
+        
+        AABB aabb;
+        aabb.a = pos - hitbox->getHalfSize();
+        aabb.b = pos + hitbox->getHalfSize();
+        for (size_t i = 0; i < sensors.size(); i++) {
+            auto& sensor = *sensors[i];
+            if (sensor.entity == hitbox->entity) {
+                continue;
             }
-            sensor.nextEntered.insert(entity);
+            bool triggered = false;
+            switch (sensor.type) {
+                case SensorType::AABB:
+                    triggered = aabb.intersects(sensor.calculated.aabb);
+                    break;
+                case SensorType::RADIUS:
+                    triggered = glm::distance2(
+                        pos, glm::vec3(sensor.calculated.radial))
+                        < sensor.calculated.radial.w;
+                    break;
+            }
+            if (!triggered) {
+                continue;
+            }
+            if (sensor.prevEntered.find(hitbox->entity) == sensor.prevEntered.end()) {
+                sensor.enterCallback(sensor.entity, sensor.index, hitbox->entity);
+            }
+            sensor.nextEntered.insert(hitbox->entity);
         }
+        hitbox->friction = glm::abs(hitbox->gravityScale <= 1e-7f)
+                        ? 8.0f
+                        : (!hitbox->prevGrounded ? 2.0f : 10.0f);
     }
 }
 

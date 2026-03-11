@@ -51,6 +51,7 @@ VC_ENUM_METADATA(BodyType)
 VC_ENUM_END
 
 struct Hitbox {
+    entityid_t entity;
     BodyType type;
     glm::vec3 position;
     glm::vec3 halfsize;
@@ -65,17 +66,18 @@ struct Hitbox {
     bool crouching = false;
     float stepHeight = 0.5f;
     std::string material;
-
-    glm::vec3 groundVelocity {};
     std::string groundMaterial;
+    glm::vec3 groundVelocity {};
     
-    // garbage tbh
     glm::vec3 prevPosition {};
-    float delta = 0.0f;
+    glm::vec3 prevVelocity {};
+    bool prevGrounded = false;
 
     static inline constexpr float TELEPORT_THRESOLD_SQR = 0.5f;
 
-    Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
+    Hitbox(
+        entityid_t entity, BodyType type, glm::vec3 position, glm::vec3 halfsize
+    );
 
     AABB getAABB() const {
         return AABB(position - halfsize, position + halfsize);

@@ -18,10 +18,8 @@ public:
     PhysicsSolver(glm::vec3 gravity);
     void step(
         const GlobalChunks& chunks,
-        Hitbox& hitbox,
         float delta,
-        uint substeps,
-        entityid_t entity
+        uint substeps
     );
 
     auto& getSensorsWriteable() {
@@ -32,11 +30,16 @@ public:
         return solidHitboxes;
     }
 
+    auto& getHitboxesWriteable() {
+        return hitboxes;
+    }
+
     void removeSensor(Sensor* sensor);
 private:
     glm::vec3 gravity;
     std::vector<Sensor*> sensors;
     std::vector<Hitbox*> solidHitboxes;
+    std::vector<Hitbox*> hitboxes;
 
     void calcCollisions(
         const GlobalChunks& chunks,
@@ -52,7 +55,6 @@ private:
         Hitbox& hitbox,
         glm::vec3& vel,
         glm::vec3& pos,
-        bool prevGrounded,
         float dt,
         int substeps
     );
