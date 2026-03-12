@@ -30,14 +30,15 @@ static float calc_step_height(
     AABB aabb(-half, +half);
     aabb.scale(glm::vec3(1.0f - E * 2, 1.0f, 1.0f - E * 2));
     aabb = aabb + pos + glm::vec3(0.0f, stepHeight, 0.0f);
-    if (stepHeight > 0.0f) {
-        for (int ix = 0; ix <= glm::ceil((half.x - E) * 2); ix++) {
-            float x = (pos.x - half.x) + ix;
-            for (int iz = 0; iz <= glm::ceil((half.z - E) * 2); iz++) {
-                float z = (pos.z - half.z) + iz;
-                if (chunks.isObstacleAt(x, pos.y + half.y + stepHeight, z, aabb)) {
-                    return 0.0f;
-                }
+    if (stepHeight <= 0.0f) {
+        return stepHeight;
+    }
+    for (int ix = 0; ix <= glm::ceil((half.x - E) * 2); ix++) {
+        float x = (pos.x - half.x) + ix;
+        for (int iz = 0; iz <= glm::ceil((half.z - E) * 2); iz++) {
+            float z = (pos.z - half.z) + iz;
+            if (chunks.isObstacleAt(x, pos.y + half.y + stepHeight, z, aabb)) {
+                return 0.0f;
             }
         }
     }
@@ -293,11 +294,9 @@ void PhysicsSolver::calcSubstep(
     int substeps
 ) {
     if (glm::length2(hitbox.groundVelocity) > 1e-6f) {
-        pos.x += hitbox.groundVelocity.x;
         if (hitbox.groundVelocity.y < 0.0f) {
             pos.y += hitbox.groundVelocity.y;
         }
-        pos.z += hitbox.groundVelocity.z;
     }
 
     auto initpos = pos;
@@ -386,8 +385,10 @@ void PhysicsSolver::step(
         float linearDamping = hitbox->linearDamping * hitbox->friction;
 
         glm::vec3& vel = hitbox->velocity;
-        vel.x /= 1.0f + delta * linearDamping;
-        vel.z /= 1.0f + delta * linearDamping;
+        auto diff = hitbox->groundVelocity / dt - vel;
+        vel.x += diff.x * delta * linearDamping;
+        vel.z += diff.z * delta * linearDamping;
+
         if (hitbox->verticalDamping > 0.0f) {
             vel.y /= 1.0f + delta * linearDamping * hitbox->verticalDamping;
         }
