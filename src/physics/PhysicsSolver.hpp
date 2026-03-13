@@ -44,14 +44,13 @@ private:
         glm::vec3& vel,
         glm::vec3& pos,
         const glm::vec3& half,
-        float stepHeight
+        float stepHeight,
+        float dt
     );
 
-    void calcSubstep(
-        Hitbox& hitbox, glm::vec3& vel, glm::vec3& pos, float dt, int substeps
-    );
+    void calcSubstep(Hitbox& hitbox, glm::vec3& vel, glm::vec3& pos, float dt);
 
-    bool calcCollisionNegY(Hitbox& hitbox, const glm::vec3& half);
+    bool calcCollisionNegY(Hitbox& hitbox, const glm::vec3& half, float dt);
 
     void updateSensors(Hitbox& hitbox);
 };

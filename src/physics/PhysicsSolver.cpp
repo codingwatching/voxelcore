@@ -119,7 +119,9 @@ static void calc_collision(
     }
 }
 
-bool PhysicsSolver::calcCollisionNegY(Hitbox& hitbox, const glm::vec3& half) {
+bool PhysicsSolver::calcCollisionNegY(
+    Hitbox& hitbox, const glm::vec3& half, float dt
+) {
     auto& pos = hitbox.position;
     auto& vel = hitbox.velocity;
 
@@ -140,8 +142,8 @@ bool PhysicsSolver::calcCollisionNegY(Hitbox& hitbox, const glm::vec3& half) {
                 pos.y = newy;
             }
             hitbox.groundVelocity = box->position - box->prevPosition;
-            if (vel.y < 0.0f) {
-                vel.y = 0.0f;
+            if (vel.y < hitbox.groundVelocity.y / dt) {
+                vel.y = hitbox.groundVelocity.y / dt * (1.0f - E);
                 if (hitbox.groundMaterial.empty() && !box->material.empty()) {
                     hitbox.groundMaterial = box->material;
                 }
@@ -185,9 +187,9 @@ void PhysicsSolver::calcCollisions(
     glm::vec3& vel,
     glm::vec3& pos,
     const glm::vec3& half,
-    float stepHeight
+    float stepHeight,
+    float dt
 ) {
-    hitbox.yCollided = false;
     stepHeight = calc_step_height(chunks, pos, half, stepHeight);
 
     auto prevPos = pos;
@@ -202,7 +204,7 @@ void PhysicsSolver::calcCollisions(
     calc_collision<2, 1, 0, 1>(hitbox, chunks, solidHitboxes, half, stepHeight);
     pos.x = xpos;
 
-    if (calcCollisionNegY(hitbox, half)) {
+    if (calcCollisionNegY(hitbox, half, dt)) {
         hitbox.grounded = true;
     }
 
@@ -221,7 +223,6 @@ void PhysicsSolver::calcCollisions(
                     if (pos.y >= newy) {
                         vel.y = 0.0f;
                         pos.y = newy;
-                        hitbox.yCollided = true;
                     }
                     break;
                 }
@@ -243,10 +244,6 @@ void PhysicsSolver::calcCollisions(
                 }
             }
         }
-    }
-
-    if (hitbox.yCollided) {
-        pos.y = prevPos.y;
     }
 
     // step on
@@ -287,18 +284,8 @@ void PhysicsSolver::calcCollisions(
 }
 
 void PhysicsSolver::calcSubstep(
-    Hitbox& hitbox,
-    glm::vec3& vel,
-    glm::vec3& pos,
-    float dt,
-    int substeps
+    Hitbox& hitbox, glm::vec3& vel, glm::vec3& pos, float dt
 ) {
-    if (glm::length2(hitbox.groundVelocity) > 1e-6f) {
-        if (hitbox.groundVelocity.y < 0.0f) {
-            pos.y += hitbox.groundVelocity.y;
-        }
-    }
-
     auto initpos = pos;
     auto half = hitbox.getHalfSize();
     float gravityScale = hitbox.gravityScale;
@@ -309,7 +296,9 @@ void PhysicsSolver::calcSubstep(
             vel,
             pos,
             half,
-            (hitbox.prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f
+            (hitbox.prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight
+                                                         : 0.0f,
+            dt
         );
     }
 
@@ -375,9 +364,8 @@ void PhysicsSolver::step(
     for (uint i = 0; i < substeps; i++) {
         for (auto hitbox : hitboxes) {
             glm::vec3& pos = hitbox->position;
-            glm::vec3& vel = hitbox->velocity;
             hitbox->prevPosition = hitbox->position;
-            calcSubstep(*hitbox, vel, pos, dt, substeps);
+            calcSubstep(*hitbox, hitbox->velocity, pos, dt);
         }
     }
 
@@ -392,9 +380,7 @@ void PhysicsSolver::step(
         if (hitbox->verticalDamping > 0.0f) {
             vel.y /= 1.0f + delta * linearDamping * hitbox->verticalDamping;
         }
-        if (hitbox->prevGrounded && !hitbox->grounded) {
-            auto appliedVelocity = hitbox->groundVelocity / dt;
-            vel += appliedVelocity;
+        if (!hitbox->grounded) {
             hitbox->groundVelocity = {};
         }
         
