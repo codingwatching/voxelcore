@@ -305,10 +305,6 @@ void PhysicsSolver::calcSubstep(
     vel += gravity * dt * gravityScale;
     pos += vel * dt + gravity * gravityScale * dt * dt * 0.5f;
 
-    if (hitbox.grounded && pos.y < initpos.y) {
-        pos.y = initpos.y;
-    }
-
     // crouching
     if (!hitbox.crouching || !hitbox.grounded) {
         return;
@@ -322,7 +318,7 @@ void PhysicsSolver::calcSubstep(
         checkPos.z = axis == 0 ? initpos.z : pos.z;
 
         AABB boxAABB(checkPos - half, checkPos + half);
-        boxAABB.scale(glm::vec3(1.0f - E * 4, 1.0f, 1.0f - E * 4));
+        boxAABB.scale(glm::vec3(1.0f - E * 4, 1.5f, 1.0f - E * 4));
         for (int ix = 0; ix <= glm::ceil((half.x - E) * 2); ix++) {
             float x = (pos.x - half.x + E) + ix;
             for (int iz = 0; iz <= glm::ceil((half.z - E) * 2); iz++){
@@ -337,7 +333,7 @@ void PhysicsSolver::calcSubstep(
             if (glm::distance2(box->position, pos) < E) {
                 continue;
             }
-            if (box->getAABB().intersects(boxAABB)) {
+            if (box->position.y < pos.y && box->getAABB().intersects(boxAABB)) {
                 hitbox.grounded = true;
                 break;
             }
