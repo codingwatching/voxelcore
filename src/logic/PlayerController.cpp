@@ -44,7 +44,9 @@ namespace {
     const float CROUCH_SHIFT_Y = -0.2f;
 }
 
-CameraControl::CameraControl(Player& player, const CameraSettings& settings)
+CameraControl::CameraControl(
+    Player& player, const CameraSettings& settings
+)
     : player(player),
       camera(player.fpCamera),
       settings(settings),
@@ -195,18 +197,30 @@ void CameraControl::update(
 
     refreshPosition();
 
+    auto castRay = [](Player& player, Camera& camera, const glm::vec3& front)
+         -> glm::vec3 {
+        auto blockEnd = player.chunks->rayCastToObstacle(camera.position, front, 3.0f);
+        auto entityRay = player.getLevel().entities->rayCast(
+            camera.position, front, 3.0f, player.getEntity(), true
+        );
+        if (entityRay.has_value() &&
+            entityRay->distance < glm::distance(camera.position, blockEnd)) {
+            return (camera.position + front * entityRay->distance);
+        } else {
+            return blockEnd;
+        }
+    };
+
     camera->updateVectors();
     if (player.currentCamera == spCamera) {
         spCamera->position =
-            chunks.rayCastToObstacle(camera->position, camera->front, 3.0f) -
-            0.4f * camera->front;
+            castRay(player, *camera, camera->front) - 0.4f * camera->front;
         spCamera->dir = -camera->dir;
         spCamera->front = -camera->front;
         spCamera->right = -camera->right;
     } else if (player.currentCamera == tpCamera) {
-        tpCamera->position =
-            chunks.rayCastToObstacle(camera->position, -camera->front, 3.0f) +
-            0.4f * camera->front;
+        tpCamera->position = castRay(player, *camera, camera->front * -1.0f) +
+                             0.4f * camera->front;
         tpCamera->dir = camera->dir;
         tpCamera->front = camera->front;
         tpCamera->right = camera->right;

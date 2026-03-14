@@ -162,7 +162,11 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
 }
 
 std::optional<Entities::RaycastResult> Entities::rayCast(
-    glm::vec3 start, glm::vec3 dir, float maxDistance, entityid_t ignore
+    glm::vec3 start,
+    glm::vec3 dir,
+    float maxDistance,
+    entityid_t ignore,
+    bool solidOnly
 ) {
     Ray ray(start, dir);
     auto view = registry->view<EntityId, Transform, Rigidbody>();
@@ -171,7 +175,7 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::ivec3 foundNormal;
 
     for (auto [entity, eid, transform, body] : view.each()) {
-        if (eid.uid == ignore || !body.enabled) {
+        if (eid.uid == ignore || !body.enabled || (solidOnly && !eid.def.solid)) {
             continue;
         }
         auto& hitbox = body.hitbox;
