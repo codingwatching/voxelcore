@@ -14,7 +14,6 @@
 #include "VoxelsVolume.hpp"
 
 #include <algorithm>
-#include <algorithm>
 #include <glm/glm.hpp>
 #include <set>
 #include <stdexcept>
@@ -468,8 +467,8 @@ void get_voxels(
 );
 
 template <class Storage>
-inline const AABB* is_obstacle_at(
-    const Storage& chunks, float x, float y, float z
+inline std::optional<AABB> is_obstacle_at(
+    const Storage& chunks, float x, float y, float z, const AABB& aabb
 ) {
     int ix = std::floor(x);
     int iy = std::floor(y);
@@ -477,30 +476,34 @@ inline const AABB* is_obstacle_at(
     voxel* v = get(chunks, ix, iy, iz);
     if (v == nullptr) {
         if (iy >= CHUNK_H) {
-            return nullptr;
+            return std::nullopt;
         } else {
-            static const AABB empty;
-            return &empty;
+            return AABB();
         }
     }
     const auto& def = chunks.getContentIndices().blocks.require(v->id);
-    if (def.obstacle) {
-        glm::ivec3 offset {};
-        if (v->state.segment) {
-            glm::ivec3 point(ix, iy, iz);
-            offset = seek_origin(chunks, point, def, v->state) - point;
-        }
-        const auto& boxes =
-            def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
-        for (const auto& hitbox : boxes) {
-            if (hitbox.contains(
-                {x - ix - offset.x, y - iy - offset.y, z - iz - offset.z}
-            )) {
-                return &hitbox;
-            }
+    if (!def.obstacle) {
+        return std::nullopt;
+    }
+    glm::ivec3 offset {};
+    if (v->state.segment) {
+        glm::ivec3 point(ix, iy, iz);
+        offset = seek_origin(chunks, point, def, v->state) - point;
+    }
+    const auto& boxes =
+        def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
+
+    for (const auto& hitbox : boxes) {
+        if (hitbox.intersects(aabb - glm::ivec3(ix, iy, iz))) {
+            return hitbox + offset;
         }
     }
-    return nullptr;
+    return std::nullopt;
+}
+
+template <class Storage>
+inline std::optional<AABB> is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+    return is_obstacle_at(chunks, x, y, z, AABB({x, y, z}, {x + 1, y + 1, z + 1}));
 }
 
 /// @brief Check block grounding

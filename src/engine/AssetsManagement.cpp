@@ -18,6 +18,8 @@ AssetsManagement::AssetsManagement(Engine& engine)
 
 AssetsManagement::~AssetsManagement() {
     finishBackgroundLoader();
+    assets.reset();
+    assetsVault.clearKeepedObjects();
 }
 
 const Assets* AssetsManagement::getStorage() const {
