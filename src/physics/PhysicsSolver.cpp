@@ -26,6 +26,12 @@ static glm::vec3 calc_collsion_velocity_result(
 ) {
     const auto& vA = a.velocity;
     const auto& vB = b.velocity;
+    if (glm::isinf(a.mass)) {
+        return vA;
+    }
+    if (glm::isinf(b.mass)) {
+        return vA * -a.elasticity + vB;
+    }
     const auto& mA = a.mass;
     const auto& mB = b.mass;
     return (mA * vA + mB * vB + a.elasticity * mB * (vB - vA)) / (mA + mB);

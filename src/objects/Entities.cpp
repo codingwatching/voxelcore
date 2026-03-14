@@ -22,6 +22,7 @@
 
 #include <entt/entity/registry.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <limits>
 #include <sstream>
 
 static debug::Logger logger("entities");
@@ -318,6 +319,9 @@ void Entities::preparePhysics(float delta) {
         if (!eid.def.solid) {
             continue;
         }
+        rigidbody.hitbox.mass = eid.def.bodyType == BodyType::DYNAMIC
+                                    ? eid.def.mass
+                                    : std::numeric_limits<float>::infinity();
         solidHitboxes.emplace_back(&rigidbody.hitbox);
     }
 }
