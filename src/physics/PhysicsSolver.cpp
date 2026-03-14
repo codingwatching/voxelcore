@@ -105,9 +105,7 @@ static void calc_collision(
             auto velB = calc_collsion_velocity_result(*box, hitbox);
             if ((vel[nx] - box->velocity[nx]) * sign > 0.0f) {
                 vel[nx] = velA[nx];
-                vel[nz] = velA[nz];
                 box->velocity[nx] = velB[nx];
-                box->velocity[nz] = velB[nz];
             }
             pos[nx] = newx;
         }
