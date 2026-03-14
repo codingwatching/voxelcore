@@ -64,6 +64,8 @@ struct Hitbox {
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;
+    float mass = 1.0f;
+    float elasticity = 0.0f;
     std::string material;
     std::string groundMaterial;
     glm::vec3 groundVelocity {};

@@ -141,9 +141,18 @@ bool PhysicsSolver::calcCollisionNegY(
             if (pos.y < newy && glm::abs(pos.y - newy) < boxhalf.y) {
                 pos.y = newy;
             }
+            const auto& vA = hitbox.velocity;
+            const auto& vB = box->velocity;
+            const auto& mA = hitbox.mass;
+            const auto& mB = box->mass;
+
+            auto velA = (mA * vA + mB * vB + hitbox.elasticity * mB * (vB - vA)) / (mA + mB);
+            auto velB = (mA * vA + mB * vB + box->elasticity * mA * (vA - vB)) / (mA + mB);
+
             hitbox.groundVelocity = box->position - box->prevPosition;
             if (vel.y < hitbox.groundVelocity.y / dt) {
-                vel.y = hitbox.groundVelocity.y / dt * (1.0f - E);
+                vel.y = velA.y;
+                box->velocity.y = velB.y;
                 if (hitbox.groundMaterial.empty() && !box->material.empty()) {
                     hitbox.groundMaterial = box->material;
                 }
@@ -171,8 +180,9 @@ bool PhysicsSolver::calcCollisionNegY(
             if (const auto obstacle =
                     chunks.isObstacleAt(coord.x, coord.y, coord.z, aabb)) {
                 float newy = std::floor(coord.y) + half.y + obstacle->max().y;
+
                 if (newy >= pos.y) {
-                    vel.y = 0.0f;
+                    vel.y = -hitbox.elasticity * vel.y;
                     pos.y = newy;
                 }
                 return true;
