@@ -21,6 +21,16 @@ PhysicsSolver::PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity)
     : chunks(chunks), gravity(std::move(gravity)) {
 }
 
+static glm::vec3 calc_collsion_velocity_result(
+    const Hitbox& a, const Hitbox& b
+) {
+    const auto& vA = a.velocity;
+    const auto& vB = b.velocity;
+    const auto& mA = a.mass;
+    const auto& mB = b.mass;
+    return (mA * vA + mB * vB + a.elasticity * mB * (vB - vA)) / (mA + mB);
+}
+
 static float calc_step_height(
     const GlobalChunks& chunks, 
     const glm::vec3& pos, 
@@ -44,6 +54,8 @@ static float calc_step_height(
     }
     return stepHeight;
 }
+
+// todo: reduce code duplication
 
 template <int nx, int ny, int nz, int sign>
 static void calc_collision(
@@ -83,8 +95,13 @@ static void calc_collision(
             continue;
         }
         if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < MAX_FIX) {
-            if (vel[nx] * sign > 0.0f) {
-                vel[nx] = 0.0f;
+            auto velA = calc_collsion_velocity_result(hitbox, *box);
+            auto velB = calc_collsion_velocity_result(*box, hitbox);
+            if ((vel[nx] - box->velocity[nx]) * sign > 0.0f) {
+                vel[nx] = velA[nx];
+                vel[nz] = velA[nz];
+                box->velocity[nx] = velB[nx];
+                box->velocity[nz] = velB[nz];
             }
             pos[nx] = newx;
         }
@@ -110,7 +127,7 @@ static void calc_collision(
                 float newx = std::floor(coord[nx]) - half[nx] * sign +
                              (sign > 0 ? obstacle->min() : obstacle->max())[nx];
                 if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < MAX_FIX) {
-                    vel[nx] = 0.0f;
+                    vel[nx] = -hitbox.elasticity * vel[nx];
                     pos[nx] = newx;
                 }
                 return;
@@ -141,13 +158,9 @@ bool PhysicsSolver::calcCollisionNegY(
             if (pos.y < newy && glm::abs(pos.y - newy) < boxhalf.y) {
                 pos.y = newy;
             }
-            const auto& vA = hitbox.velocity;
-            const auto& vB = box->velocity;
-            const auto& mA = hitbox.mass;
-            const auto& mB = box->mass;
 
-            auto velA = (mA * vA + mB * vB + hitbox.elasticity * mB * (vB - vA)) / (mA + mB);
-            auto velB = (mA * vA + mB * vB + box->elasticity * mA * (vA - vB)) / (mA + mB);
+            auto velA = calc_collsion_velocity_result(hitbox, *box);
+            auto velB = calc_collsion_velocity_result(*box, hitbox);
 
             hitbox.groundVelocity = box->position - box->prevPosition;
             if (vel.y < hitbox.groundVelocity.y / dt) {
@@ -231,7 +244,7 @@ void PhysicsSolver::calcCollisions(
                 if (auto aabb = chunks.isObstacleAt(x, y, z, boxAABB)) {
                     float newy = std::floor(y) - half.y + aabb->min().y - E;
                     if (pos.y >= newy) {
-                        vel.y = 0.0f;
+                        vel.y = -hitbox.elasticity * vel.y;
                         pos.y = newy;
                     }
                     break;
@@ -248,8 +261,11 @@ void PhysicsSolver::calcCollisions(
                 if (pos.y > newy && glm::abs(pos.y - newy) < 0.5f) {
                     pos.y = newy;
                 }
-                if (vel.y > 0.0f) {
-                    vel.y = 0.0f;
+                auto velA = calc_collsion_velocity_result(hitbox, *box);
+                auto velB = calc_collsion_velocity_result(*box, hitbox);
+                if (vel.y > hitbox.groundVelocity.y / dt) {
+                    vel.y = velA.y;
+                    box->velocity.y = velB.y;
                     break;
                 }
             }
