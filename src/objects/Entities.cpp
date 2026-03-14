@@ -316,9 +316,9 @@ void Entities::preparePhysics(float delta) {
             continue;
         }
         rigidbody.hitbox.mass = eid.def.bodyType == BodyType::DYNAMIC
-                            ? eid.def.mass
+                            ? rigidbody.mass
                             : std::numeric_limits<float>::infinity();
-        rigidbody.hitbox.elasticity = eid.def.elasticity;
+        rigidbody.hitbox.elasticity = rigidbody.elasticity;
         hitboxes.emplace_back(&rigidbody.hitbox);
         if (!eid.def.solid) {
             continue;
