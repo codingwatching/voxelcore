@@ -315,13 +315,14 @@ void Entities::preparePhysics(float delta) {
         if (eid.destroyFlag || !rigidbody.enabled) {
             continue;
         }
+        rigidbody.hitbox.mass = eid.def.bodyType == BodyType::DYNAMIC
+                            ? eid.def.mass
+                            : std::numeric_limits<float>::infinity();
+        rigidbody.hitbox.elasticity = eid.def.elasticity;
         hitboxes.emplace_back(&rigidbody.hitbox);
         if (!eid.def.solid) {
             continue;
         }
-        rigidbody.hitbox.mass = eid.def.bodyType == BodyType::DYNAMIC
-                                    ? eid.def.mass
-                                    : std::numeric_limits<float>::infinity();
         solidHitboxes.emplace_back(&rigidbody.hitbox);
     }
 }
