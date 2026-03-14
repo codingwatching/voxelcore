@@ -13,7 +13,7 @@
 #include <glm/gtx/norm.hpp>
 
 inline constexpr float E = 0.03f;
-inline constexpr float MAX_FIX = 0.05f;
+inline constexpr float MAX_FIX = 0.1f;
 
 static debug::Logger logger("physics-solver");
 
