@@ -44,7 +44,9 @@ namespace {
     const float CROUCH_SHIFT_Y = -0.2f;
 }
 
-CameraControl::CameraControl(Player& player, const CameraSettings& settings)
+CameraControl::CameraControl(
+    Player& player, const CameraSettings& settings
+)
     : player(player),
       camera(player.fpCamera),
       settings(settings),
@@ -195,18 +197,30 @@ void CameraControl::update(
 
     refreshPosition();
 
+    auto castRay = [](Player& player, Camera& camera, const glm::vec3& front)
+         -> glm::vec3 {
+        auto blockEnd = player.chunks->rayCastToObstacle(camera.position, front, 3.0f);
+        auto entityRay = player.getLevel().entities->rayCast(
+            camera.position, front, 3.0f, player.getEntity(), true
+        );
+        if (entityRay.has_value() &&
+            entityRay->distance < glm::distance(camera.position, blockEnd)) {
+            return (camera.position + front * entityRay->distance);
+        } else {
+            return blockEnd;
+        }
+    };
+
     camera->updateVectors();
     if (player.currentCamera == spCamera) {
         spCamera->position =
-            chunks.rayCastToObstacle(camera->position, camera->front, 3.0f) -
-            0.4f * camera->front;
+            castRay(player, *camera, camera->front) - 0.4f * camera->front;
         spCamera->dir = -camera->dir;
         spCamera->front = -camera->front;
         spCamera->right = -camera->right;
     } else if (player.currentCamera == tpCamera) {
-        tpCamera->position =
-            chunks.rayCastToObstacle(camera->position, -camera->front, 3.0f) +
-            0.4f * camera->front;
+        tpCamera->position = castRay(player, *camera, camera->front * -1.0f) +
+                             0.4f * camera->front;
         tpCamera->dir = camera->dir;
         tpCamera->front = camera->front;
         tpCamera->right = camera->right;
@@ -229,26 +243,8 @@ PlayerController::PlayerController(
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
-    auto pos = hitbox.position;
-    auto half = hitbox.halfsize;
-
-    for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
-        for (int offsetX = -1; offsetX <= 1; offsetX++) {
-            int x = std::floor(pos.x + half.x * offsetX);
-            int y = std::floor(pos.y - half.y * 1.1f);
-            int z = std::floor(pos.z + half.z * offsetZ);
-            auto vox = player.chunks->get(x, y, z);
-            if (vox) {
-                auto& def = level.content.getIndices()->blocks.require(vox->id);
-                if (!def.obstacle) {
-                    continue;
-                }
-                blocksController.onBlockInteraction(
-                    &player, glm::ivec3(x, y, z), def, BlockInteraction::step
-                );
-                return;
-            }
-        }
+    if (footstepCallback) {
+        footstepCallback(hitbox);
     }
 }
 
@@ -556,4 +552,8 @@ void PlayerController::updateInteraction(const Input& inputEvents, float delta) 
 
 Player& PlayerController::getPlayer() {
     return player;
+}
+
+void PlayerController::setFootstepCallback(FootstepCallback&& callback) {
+    footstepCallback = std::move(callback);
 }

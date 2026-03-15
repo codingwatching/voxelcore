@@ -344,9 +344,10 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
 static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context& ctx) {
     std::string name = root.attr("name", "").getText();
 
+    glm::vec3 movement {};
     glm::mat4 tsf(1.0f);
     if (root.has("move")) {
-        tsf = glm::translate(tsf, root.attr("move").asVec3());
+        movement = root.attr("move").asVec3();
     }
     if (root.has("rotate")) {
         auto text = root.attr("rotate").getText();
@@ -371,7 +372,7 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context&
         }
         builder.pop();
     } else {
-        glm::vec3 origin = builder.getTransform() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        glm::vec3 origin = builder.getTransform() * glm::vec4(movement, 1.0f);
         size_t boneIndex = ctx.boneIndex++;
 
         std::vector<std::unique_ptr<Bone>> bones;

@@ -68,7 +68,7 @@ LevelScreen::LevelScreen(
     );
 
     frontend = std::make_unique<LevelFrontend>(
-        engine, player, controller.get(), settings
+        engine, *playerController, *controller, settings
     );
     renderer = std::make_unique<WorldRenderer>(
         engine, *frontend, *player

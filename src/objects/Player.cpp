@@ -114,7 +114,7 @@ void Player::teleport(glm::vec3 position) {
     this->position = position;
 
     if (auto entity = level.entities->get(eid)) {
-        entity->getRigidbody().hitbox.position = position;
+        entity->getRigidbody().hitbox.setPos(position);
         entity->getTransform().setPos(position);
         entity->setInterpolatedPosition(position);
     }
