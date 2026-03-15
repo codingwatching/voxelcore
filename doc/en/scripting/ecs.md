@@ -119,6 +119,16 @@ body:set_body_type(type: str)
 body:get_material() -> str
 -- Sets the body material
 body:set_material(material: str)
+
+-- Returns the body's mass
+body:get_mass() -> number
+-- Sets the body's mass
+body:set_mass(mass: number)
+
+-- Returns the body's elasticity
+body:get_elasticity() -> number
+-- Sets the body's elasticity
+body:set_elasticity(elasticity: number)
 ```
 
 ### Skeleton
