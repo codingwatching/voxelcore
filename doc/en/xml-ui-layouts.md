@@ -193,6 +193,14 @@ Example of list description:
 - `selected` - initially selected value. Default: "".
 - `onselect` - function to which the user-selected value is passed
 
+## *bindbox*
+
+An element for displaying and editing key or mouse button bindings.
+
+- `font` - font name. Type: string.
+- `binding` - binding name. Type: string.
+- `padding` - padding between text and element borders. Type: number. Default: 6
+
 # Inventory elements
 
 ## *inventory*
