@@ -1,16 +1,15 @@
 #pragma once
 
-#include <stdlib.h>
-
-#include <glm/glm.hpp>
-#include <memory>
-#include <set>
-#include <vector>
-
 #include "typedefs.hpp"
 #include "voxel.hpp"
 #include "constants.hpp"
 #include "util/AreaMap2D.hpp"
+
+#include <stdlib.h>
+#include <glm/glm.hpp>
+#include <memory>
+#include <set>
+#include <vector>
 
 class VoxelRenderer;
 

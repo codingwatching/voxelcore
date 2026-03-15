@@ -31,7 +31,7 @@ static int l_set_pos(lua::State* L) {
         auto vec = lua::tovec3(L, 2);
         check_valid(vec);
         entity->getTransform().setPos(vec);
-        entity->getRigidbody().hitbox.position = vec;
+        entity->getRigidbody().hitbox.setPos(vec);
     }
     return 0;
 }

@@ -98,6 +98,7 @@ A panel that controls the size and position of two elements. Allows the user to 
 
 Inner text is a button text.
 
+- `font` - font name
 - `text-align` - inner text alignment (*left/center/right*). Type: string.
 
 ## *checkbox*
@@ -108,6 +109,7 @@ Inner text is a button text.
 
 ## *label*
 
+- `font` - font name
 - `text-align` - text alignment (*left/center/right*). Type: string.
 - `valign` - vertical text alignment: top/center/bottom.
 - `supplier` - text supplier (called every frame).
@@ -131,6 +133,7 @@ Inner text is a button text.
 
 Inner text - initially entered text
 
+- `font` - font name
 - `placeholder` - placeholder text (used if the text field is empty)
 - `hint` - text displayed if the text field is empty (not sent to consumer, sub-consumer and validator).
 - `supplier` - text supplier (called every frame)
@@ -190,6 +193,14 @@ Example of list description:
 - `selected` - initially selected value. Default: "".
 - `onselect` - function to which the user-selected value is passed
 
+## *bindbox*
+
+An element for displaying and editing key or mouse button bindings.
+
+- `font` - font name. Type: string.
+- `binding` - binding name. Type: string.
+- `padding` - padding between text and element borders. Type: number. Default: 6
+
 # Inventory elements
 
 ## *inventory*
@@ -213,9 +224,6 @@ Element must be in direct sub-element of *inventory*.
 ## *slots-grid*
 
 - `start-index` - inventory slot index of the first slot. Type: integer
-- `rows` - number of grid rows (unnecessary if *cols* and *count* specified). Type: integer
-- `cols` - number of grid columns (unnecessary if *rows* and *count* specified). Type: integer
-- `count` - total number of slots in grid (unnecessary if *rows* and *cols* specified). Type: integer
 - `interval` - visual slots interval. Type: number
 - `padding` - grid padding (not slots interval). Type: number. (*deprecated*)
 - `sharefunc` - Lua event called on <btn>LMB</btn> + <btn>Shift</btn>. Inventory id and slot index passed as arguments.
@@ -223,3 +231,8 @@ Element must be in direct sub-element of *inventory*.
 - `onrightclick` - Lua event called on <btn>RMB</btn> click. Inventory id and slot index passed as arguments.
 - `taking` - the ability to take an item from a slot.
 - `placing` - the ability to put an item in a slot.
+
+Slots configuration (just specify two attributes):
+- `rows` - ​​number of rows. Type: integer
+- `cols` - number of columns. Type: integer
+- `count` - total number of slots. Type: integer

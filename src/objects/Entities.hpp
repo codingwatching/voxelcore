@@ -88,12 +88,14 @@ public:
     /// @param dir Ray direction normalized vector
     /// @param maxDistance Max ray length
     /// @param ignore Ignored entity ID
+    /// @param solidOnly If true, only entities with solid hitboxes will be checked
     /// @return An optional structure containing entity, normal and distance
     std::optional<RaycastResult> rayCast(
         glm::vec3 start,
         glm::vec3 dir,
         float maxDistance,
-        entityid_t ignore = -1
+        entityid_t ignore = -1,
+        bool solidOnly = false
     );
 
     void loadEntities(dv::value map);
