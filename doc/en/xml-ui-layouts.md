@@ -98,6 +98,7 @@ A panel that controls the size and position of two elements. Allows the user to 
 
 Inner text is a button text.
 
+- `font` - font name
 - `text-align` - inner text alignment (*left/center/right*). Type: string.
 
 ## *checkbox*
@@ -108,6 +109,7 @@ Inner text is a button text.
 
 ## *label*
 
+- `font` - font name
 - `text-align` - text alignment (*left/center/right*). Type: string.
 - `valign` - vertical text alignment: top/center/bottom.
 - `supplier` - text supplier (called every frame).
@@ -131,6 +133,7 @@ Inner text is a button text.
 
 Inner text - initially entered text
 
+- `font` - font name
 - `placeholder` - placeholder text (used if the text field is empty)
 - `hint` - text displayed if the text field is empty (not sent to consumer, sub-consumer and validator).
 - `supplier` - text supplier (called every frame)
