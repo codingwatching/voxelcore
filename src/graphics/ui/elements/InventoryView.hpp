@@ -56,6 +56,17 @@ namespace gui {
             ItemStack stack {};
             std::wstring countStr;
         } cache;
+
+        enum InteractionMode {
+            PRIMARY = 0,
+            SECONDARY = 1
+        };
+
+        enum InteractionAction {
+            PUT = 0,
+            TAKE = 1,
+            SHARE = 2,
+        };
     
         const Content* content = nullptr;
         SlotLayout layout;
