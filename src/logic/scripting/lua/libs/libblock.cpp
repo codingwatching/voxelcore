@@ -100,7 +100,7 @@ static int l_seek_origin(lua::State* L) {
     auto z = lua::tointeger(L, 3);
     const auto& level = require_level();
     const auto& vox = blocks_agent::require(*level.chunks, x, y, z);
-    auto& def = indices->blocks.require(vox.id);
+    const auto& def = indices->blocks.require(vox.id);
     return lua::pushivec_stack(
         L, blocks_agent::seek_origin(*level.chunks, {x, y, z}, def, vox.state)
     );

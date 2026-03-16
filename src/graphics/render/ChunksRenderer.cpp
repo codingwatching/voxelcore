@@ -126,12 +126,12 @@ const ChunkMesh* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
     glm::ivec2 key(chunk->x, chunk->z);
-    chunk->flags.modified = false;
     if (important) {
         ChunkMesh mesh {};
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
         meshes[key] = std::move(mesh);
+        chunk->flags.modified = false;
         return &meshes[key];
     }
     if (inwork.find(key) != inwork.end() ||
@@ -140,6 +140,7 @@ const ChunkMesh* ChunksRenderer::render(
          lowPriority)) {
         return nullptr;
     }
+    chunk->flags.modified = false;
     enqueuedInFrame++;
     auto voxelsBuffer = prepareVoxelsVolume(*chunk);
     threadPool.enqueueJob({chunk, std::move(voxelsBuffer)});
