@@ -94,9 +94,9 @@ WorldRenderer::WorldRenderer(
         assets, level, *player.chunks, engine.getSettings().graphics
       )),
       texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
-      blockWraps(
-          std::make_unique<BlockWrapsRenderer>(assets, level, *player.chunks)
-      ) {
+      blockWraps(std::make_unique<BlockWrapsRenderer>(
+          assets, level.content, *player.chunks
+      )) {
     auto& settings = engine.getSettings();
     level.events->listen(
         LevelEventType::CHUNK_HIDDEN,
@@ -214,7 +214,7 @@ void WorldRenderer::renderOpaque(
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunksRenderer->drawChunks(camera, shader);
-    blockWraps->draw(ctx, player);
+    blockWraps->draw(ctx);
 
     int cloudsQuality = settings.graphics.cloudsQuality.get();
     if (cloudsQuality > 0) {

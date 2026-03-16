@@ -34,10 +34,14 @@ static int l_set_pos(lua::State* L) {
 
 static int l_set_texture(lua::State* L) {
     if (auto wrapper = renderer->blockWraps->get(lua::tointeger(L, 1))) {
+        const char* newTexture = lua::require_string(L, 2);
+
         for (int i = 0; i < wrapper->textureFaces.size(); i++) {
-            wrapper->textureFaces[i] = lua::require_string(L, 2);
+            if (wrapper->textureFaces[i] != newTexture) {
+                wrapper->textureFaces[i] = newTexture;
+                wrapper->dirtySides = 0xFF;
+            }
         }
-        wrapper->dirtySides = 0xFF;
     }
     return 0;
 }
@@ -52,7 +56,7 @@ static int l_set_faces(lua::State* L) {
                     wrapper->dirtySides |= (1 << i);
                 }
             } else {
-                auto texture = lua::require_string(L, 2 + i);;
+                auto texture = lua::require_string(L, 2 + i);
                 if ((wrapper->cullingBits & (1 << i)) == 0x0
                  || wrapper->textureFaces[i] != texture) {
                     wrapper->cullingBits |= (1 << i);
@@ -73,7 +77,6 @@ static int l_set_tints(lua::State* L) {
                 wrapper->tints[i] = lua::tovec3(L, 2 + i);
             }
         }
-        wrapper->dirtySides = 0xFF;
     }
     return 0;
 }

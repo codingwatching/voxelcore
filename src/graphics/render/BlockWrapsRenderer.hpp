@@ -9,13 +9,9 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
-#include <map>
-#include <glm/vec4.hpp>
 
 class Assets;
-class Player;
-class Level;
-struct voxel;
+class Content;
 class Chunks;
 class Texture;
 class DrawContext;
@@ -36,24 +32,25 @@ struct BlockWrapper {
 
 class BlockWrapsRenderer {
     const Assets& assets;
-    const Level& level;
+    const Content& content;
     const Chunks& chunks;
     std::unique_ptr<MainBatch> batch;
 
-    std::multimap<const Texture*, BlockWrapper*> renderOrder;
+    std::unordered_map<const Texture*, std::vector<BlockWrapper*>> renderOrder;
     std::unordered_map<u64id_t, std::unique_ptr<BlockWrapper>> wrappers;
     u64id_t nextWrapper = 1;
 
     void draw(BlockWrapper& wrapper, const Texture* texture);
 
     void refreshWrapper(BlockWrapper& wrapper);
+    void clearOrder(const BlockWrapper* const wrapper);
 public:
     BlockWrapsRenderer(
-        const Assets& assets, const Level& level, const Chunks& chunks
+        const Assets& assets, const Content& content, const Chunks& chunks
     );
     ~BlockWrapsRenderer();
 
-    void draw(const DrawContext& ctx, const Player& player);
+    void draw(const DrawContext& ctx);
 
     u64id_t add(
         const glm::ivec3& position,
