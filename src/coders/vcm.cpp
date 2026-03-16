@@ -366,6 +366,7 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context&
     }
 
     if (name.empty()) {
+        tsf = glm::translate(tsf, movement);
         builder.push(std::move(tsf));
         for (const auto& elem : root.getElements()) {
             perform_element(*elem, builder, ctx);
@@ -374,6 +375,7 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context&
     } else {
         glm::vec3 origin = builder.getTransform() * glm::vec4(movement, 1.0f);
         size_t boneIndex = ctx.boneIndex++;
+        tsf = builder.getTransform() * tsf;
 
         std::vector<std::unique_ptr<Bone>> bones;
         Context boneContext {ctx.vcmModel, bones, ctx.boneIndex};
