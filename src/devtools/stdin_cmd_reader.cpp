@@ -4,6 +4,7 @@
 #include "logic/CommandsInterpreter.hpp"
 #include "coders/json.hpp"
 #include "debug/Logger.hpp"
+#include "util/platform.hpp"
 
 #include <thread>
 #include <iostream>
@@ -18,7 +19,12 @@ void cmd::start_stdin_cmd_reader(Engine& engine) {
         logger.info() << "reader thread started";
         
         std::string line;
-        while (std::getline(std::cin, line)) {
+        while (true) {
+            if (!platform::stdin_has_data()) {
+                platform::sleep(10);
+                continue;
+            }
+            std::getline(std::cin, line);
             if (line.empty()) {
                 continue;
             }
