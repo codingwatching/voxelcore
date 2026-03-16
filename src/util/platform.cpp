@@ -14,8 +14,10 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <conio.h>
 #pragma comment(lib, "winmm.lib")
 #else
+#include <sys/poll.h>
 #include <unistd.h>
 #endif
 
@@ -288,5 +290,16 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
             std::to_string(res)
         );
     }
+#endif
+}
+
+bool platform::stdin_has_data() {
+#ifdef _WIN32
+    return _kbhit();
+#else
+    struct pollfd fds;
+    fds.fd = STDIN_FILENO;
+    fds.events = POLLIN;
+    return poll(&fds, 1, 0) == 1;
 #endif
 }
