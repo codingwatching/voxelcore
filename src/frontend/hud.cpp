@@ -688,6 +688,10 @@ bool Hud::isInventoryOpen() const {
     return inventoryOpen;
 }
 
+bool Hud::isPlayerInventoryOpen() const {
+    return inventoryView != nullptr;
+}
+
 bool Hud::isPause() const {
     return pause;
 }
@@ -723,6 +727,16 @@ std::shared_ptr<Inventory> Hud::getBlockInventory() {
         return nullptr;
     }
     return blockUI->getInventory();
+}
+
+std::shared_ptr<Inventory> Hud::getSecondInventory() {
+    if (blockUI) {
+        return blockUI->getInventory();
+    }
+    if (secondInvView) {
+        return secondInvView->getInventory();
+    }
+    return nullptr;
 }
 
 bool Hud::isContentAccess() const {

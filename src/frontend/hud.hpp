@@ -147,6 +147,8 @@ public:
     /// @brief Check if inventory mode on
     bool isInventoryOpen() const;
 
+    bool isPlayerInventoryOpen() const;
+
     /// @brief Check if pause mode on
     bool isPause() const;
 
@@ -202,6 +204,8 @@ public:
     Player* getPlayer() const;
 
     std::shared_ptr<Inventory> getBlockInventory();
+
+    std::shared_ptr<Inventory> getSecondInventory();
 
     bool isContentAccess() const;
 
