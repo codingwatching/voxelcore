@@ -222,7 +222,7 @@ function on_hud_close(playerid: int)
 Called on world close (before saving)
 
 ```lua
-function on_inventory_interact(invid: int, slot: int, mode: int, action: int)
+function on_inventory_interact(invid: int, slot: int, action: int, mode: int)
 ```
 
 Triggered when a player interacts with inventory slots.

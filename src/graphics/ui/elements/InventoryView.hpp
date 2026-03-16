@@ -56,17 +56,6 @@ namespace gui {
             ItemStack stack {};
             std::wstring countStr;
         } cache;
-
-        enum InteractionMode {
-            PRIMARY = 0,
-            SECONDARY = 1
-        };
-
-        enum InteractionAction {
-            PUT = 0,
-            TAKE = 1,
-            SHARE = 2,
-        };
     
         const Content* content = nullptr;
         SlotLayout layout;
@@ -122,6 +111,18 @@ namespace gui {
         size_t getIndex() const;
 
         static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
+
+        enum class InteractionMode {
+            PRIMARY = 0,
+            SECONDARY = 1
+        };
+
+        enum class InteractionAction {
+            PUT = 0,
+            TAKE = 1,
+            SHARE = 2,
+            UNDEFINED,
+        };
     };
 
     class InventoryView final : public gui::Container {

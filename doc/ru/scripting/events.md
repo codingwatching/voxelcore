@@ -231,7 +231,7 @@ function on_hud_close(playerid: int)
 Вызывается при выходе из мира, перед его сохранением.
 
 ```lua
-function on_inventory_interact(invid: int, slot: int, mode: int, action: int)
+function on_inventory_interact(invid: int, slot: int, action: int, mode: int)
 ```
 
 Вызывается при взаимодействии игрока с любым слотом
