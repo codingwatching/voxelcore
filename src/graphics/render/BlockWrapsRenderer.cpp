@@ -102,10 +102,13 @@ void BlockWrapsRenderer::refreshWrapper(BlockWrapper& wrapper) {
         wrapper.texRegions[i] = texRegion;
         wrapper.uvRegions[i] = texRegion.region;
 
-        auto& wrappers = renderOrder[texRegion.texture];
-        if (std::find(wrappers.begin(), wrappers.end(), &wrapper) ==
-            wrappers.end()) {
-            wrappers.emplace_back(&wrapper);
+        auto range = renderOrder.equal_range(texRegion.texture);
+        auto it =
+            std::find_if(range.first, range.second, [&wrapper](auto& elem) {
+                return elem.second == &wrapper;
+            });
+        if (it == range.second) {
+            renderOrder.emplace(texRegion.texture, &wrapper);
         }
     }
     wrapper.dirtySides = 0x0;
@@ -147,12 +150,9 @@ void BlockWrapsRenderer::draw(const DrawContext& pctx) {
             refreshWrapper(*wrapper);
         }
     }
-
-    for (const auto& [texture, wrappersArray] : renderOrder) {
+    for (const auto& [texture, wrapper] : renderOrder) {
         batch->setTexture(texture);
-        for (auto wrapper : wrappersArray) {
-            draw(*wrapper, texture);
-        }
+        draw(*wrapper, texture);
     }
     batch->flush();
 }
@@ -192,11 +192,7 @@ void BlockWrapsRenderer::remove(u64id_t id) {
 void BlockWrapsRenderer::clearOrder(const BlockWrapper* const wrapper) {
     auto it = renderOrder.begin();
     while (it != renderOrder.end()) {
-        it->second.erase(
-            std::remove(it->second.begin(), it->second.end(), wrapper),
-            it->second.end()
-        );
-        if (it->second.empty()) {
+        if (it->second == wrapper) {
             it = renderOrder.erase(it);
         } else {
             ++it;
