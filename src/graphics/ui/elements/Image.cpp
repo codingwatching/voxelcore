@@ -34,8 +34,8 @@ void Image::draw(const DrawContext& pctx, const Assets& assets) {
 
     auto textureRegion = refreshTexture(assets);
     
-    batch->setRegion(textureRegion.region);
     batch->texture(textureRegion.texture);
+    batch->setRegion(textureRegion.region);
     batch->rect(
         pos.x,
         pos.y,
