@@ -312,10 +312,11 @@ void Entities::preparePhysics(float delta) {
 
     auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, rigidbody] : view.each()) {
-        if (eid.destroyFlag || !rigidbody.enabled) {
+        auto bodyType = rigidbody.hitbox.type;
+        if (eid.destroyFlag || !rigidbody.enabled || bodyType == BodyType::STATIC) {
             continue;
         }
-        rigidbody.hitbox.mass = eid.def.bodyType == BodyType::DYNAMIC
+        rigidbody.hitbox.mass = bodyType == BodyType::DYNAMIC
                             ? rigidbody.mass
                             : std::numeric_limits<float>::infinity();
         rigidbody.hitbox.elasticity = rigidbody.elasticity;
