@@ -149,7 +149,7 @@ gui.load_document(
 
 -- Загружает шаблон в лояут
 gui.template(
-    -- имя шаблона в layouts/templates без пути и расширения 
+    -- имя шаблона в /layouts/templates без пути и расширения 
     name: string,
     -- таблица переменных (может быть использована в разметке)
     -- * Пр: <label>%{text}</label>

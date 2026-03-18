@@ -9,25 +9,19 @@ print(document.some_button.text) -- where 'some_button' is an element id
 document.some_button.text = "new text"
 ```
 
-```python
+```lua
+-- Returns translated text.
 gui.str(text: str, context: str) -> str
-```
 
-Returns translated text.
-
-```python
+-- Returns size of the main container (window).
 gui.get_viewport() -> {int, int}
-```
 
-Returns size of the main container (window).
-
-```python
+-- Returns environment (global variables table) of the specified document.
 gui.get_env(document: str) -> table
 ```
 
-Returns environment (global variables table) of the specified document.
-
 ```lua
+-- Returns information about all loaded locales (res/texts/*).
 gui.get_locales_info() -> table of tables {
   name: str
  }
@@ -37,8 +31,6 @@ gui.get_locales_info() -> table of tables {
 --       name: str # locale display name
 --   }
 ```
-
-Returns information about all loaded locales (res/texts/\*).
 
 ## Frames
 
@@ -71,18 +63,18 @@ gui.set_active_frame(
 )
 ```
 
+## Markup
+
 ```lua
+-- Removes markup from text.
 gui.clear_markup(
     -- markup language ("md" - Markdown)
     language: str,
     -- text with markup
     text: str
 ) -> str
-```
 
-Removes markup from text.
-
-```lua
+-- Escapes markup in text.
 gui.escape_markup(
     -- markup language ("md" - Markdown)
     language: str,
@@ -91,20 +83,44 @@ gui.escape_markup(
 ) -> str
 ```
 
-Escapes markup in text.
+
+## Dialog windows
 
 ```lua
+-- Displays a message box. Doesn't stop code execution.
+gui.show_message(
+    message: string -- message (not automatically translated, use gui.str(...))
+    on_ok: function() -> nil -- called when closing
+)
+
+-- Asks for confirmation of the action. Doesn't stop code execution.
+gui.ask(
+    -- message (not automatically translated, use gui.str(...))
+    message: string,
+    -- function called on confirmation
+    on_confirm: function() -> nil,
+    -- function called on rejection/cancellation
+    [optional] on_deny: function() -> nil,
+    -- confirm button text (default: "Yes")
+    -- use an empty string for the default value if you want to specify no_text.
+    [optional] yes_text: string
+    -- reject button text (default: "No")
+    [optional] no_text: string
+)
+```
+
+## Dialog menu pages (legacy)
+
+```lua
+-- Displays a message box. Non-blocking.
 gui.alert(
     -- message (not automatically translated, use gui.str(...))
     message: str,
     -- function called on close
     on_ok: function() -> nil
 )
-```
 
-Displays a message box. **Non-blocking**.
-
-```lua
+-- Requests confirmation from the user for an action. Non-blocking.
 gui.confirm(
     -- message (does not translate automatically, use gui.str(...))
     message: str,
@@ -120,9 +136,10 @@ gui.confirm(
 )
 ```
 
-Requests confirmation from the user for an action. **Non-blocking**.
+## Documents and templates
 
 ```lua
+-- Loads a UI document with its script, returns the name of the document if successfully loaded.
 gui.load_document(
     -- Path to the xml file of the page. Example: `core:layouts/pages/main.xml`
     path: str,
@@ -130,13 +147,24 @@ gui.load_document(
     name: str
     -- Table of parameters passed to the on_open event
     args: table
-) --> str
+) -> str
+
+-- Loads a template into the layout
+gui.template(
+    -- template name in /layouts/templates without path and extension
+    name: str,
+    -- variable table (can be used in markup)
+    -- * Ex: <label>%{text}</label>
+    -- * text in this case is the value from params with the text key
+    params: table,
+    -- table, available in events as the global variable DATA
+    [optional] data: table
+) -> str
 ```
 
-Loads a UI document with its script, returns the name of the document if successfully loaded.
+## Root document
 
 ```lua
+-- Root UI document
 gui.root: Document
 ```
-
-Root UI document
