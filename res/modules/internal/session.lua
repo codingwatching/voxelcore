@@ -1,7 +1,7 @@
 local entries = {}
 local this = {}
 
-function this.get_entry(name)
+function this.get(name)
     local entry = entries[name]
     if entry == nil then
         entry = {}
@@ -10,7 +10,11 @@ function this.get_entry(name)
     return entry
 end
 
-function this.reset_entry(name)
+function this.has(name)
+    return entries[name] ~= nil
+end
+
+function this.reset(name)
     entries[name] = nil
 end
 
