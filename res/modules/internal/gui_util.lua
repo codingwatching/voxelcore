@@ -169,9 +169,11 @@ function gui.show_input_dialog(text, actual_callback, validator, confirm_text)
 end
 
 
-function gui.ask(text, on_yes, on_no)
+function gui.ask(text, on_yes, on_no, yes_text, no_text)
     on_yes = on_yes or function() end
     on_no = on_no or function() end
+    yes_text = yes_text == "" and "Yes" or (yes_text or "Yes")
+    no_text = no_text or "No"
 
     local id = "dialog_"..random.uuid()
 
@@ -188,11 +190,12 @@ function gui.ask(text, on_yes, on_no)
             <panel color='#507090E0' size='600' padding='16'
                    gravity='center-center' interval='4'>
                 <label margin='4'>%s</label>
-                <button onclick='DATA.on_yes()'>@Yes</button>
-                <button onclick='DATA.on_no()'>@No</button>
+                <button onclick='DATA.on_yes()'>@%s</button>
+                <button onclick='DATA.on_no()'>@%s</button>
             </panel>
         </container>
-    ]], id, string.escape_xml(text)), {on_yes=yes_callback, on_no=no_callback})
+    ]], id, string.escape_xml(text)), {on_yes=yes_callback, on_no=no_callback},
+        string.escape_xml(yes_text), string.escape_xml(no_text))
     input.add_callback("key:escape", no_callback, gui.root[id])
 end
 
