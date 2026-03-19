@@ -46,6 +46,9 @@ inline constexpr float CHUNKS_MAP_MAX_LOAD_FACTOR = 0.1f;
 /// @brief chunk volume (count of voxels per Chunk)
 inline constexpr int CHUNK_VOL = (CHUNK_W * CHUNK_H * CHUNK_D);
 
+/// @brief default player spawn radius (see GeneratorDef::playerSpawnRadius)
+inline constexpr float DEFAULT_PLAYER_SPAWN_RADIUS = 100.0f;
+
 /// @brief block id used to mark non-existing voxel (voxel of missing chunk)
 inline constexpr blockid_t BLOCK_VOID = std::numeric_limits<blockid_t>::max();
 /// @brief item id used to mark non-existing item (error)
