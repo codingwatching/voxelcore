@@ -214,6 +214,8 @@ struct GeneratorDef {
     uint heightsBPD = 4;
 
     float playerSpawnRadius = DEFAULT_PLAYER_SPAWN_RADIUS;
+    int playerMinSpawnHeight = CHUNK_H / 4;
+    int playerMaxSpawnHeight = CHUNK_H;
 
     /// @brief Biome parameter maps interpolation method
     InterpolationType biomesInterpolation = InterpolationType::LINEAR;

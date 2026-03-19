@@ -128,7 +128,9 @@ void Player::attemptToChooseSpawnpoint() {
     const auto& generatorDef =
         level.content.generators.require(level.getWorld()->getGenerator());
 
-    glm::vec3 newpos {0.0f, random.randFloat() * 100 + 100, 0.0f};
+    int minHeight = generatorDef.playerMinSpawnHeight;
+    int maxHeight = generatorDef.playerMaxSpawnHeight;
+    glm::vec3 newpos {0.0f, random.randFloat() * (maxHeight - minHeight + 1) + minHeight, 0.0f};
     double angle = random.randDouble() * glm::two_pi<double>();
     double radius = glm::sqrt(random.randDouble());
     newpos.x += glm::cos(angle) * generatorDef.playerSpawnRadius * radius;
