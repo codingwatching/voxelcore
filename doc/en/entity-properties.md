@@ -112,6 +112,10 @@ Defines the entity's elasticity (affects the bounce on collision).
 
 Defines the maximum height of an obstacle an entity can step onto without jumping.
 
+### *material*
+
+Defines the entity's material (same as for blocks).
+
 ## View
 
 ### *skeleton-name*
