@@ -54,6 +54,9 @@ The main properties described in the configuration file:
 - **heights-bpd** - number of blocks per point of the height map. Default: 4.
 - **wide-structs-chunks-radius** - maximum radius for placing 'wide' structures, measured in chunks.
 - **heightmap-inputs** - an array of parameter map numbers that will be passed by the inputs table to the height map generation function.
+- **player-spawn-radius** - radius of the player spawn zone.
+- **player-min-spawn-height**, **player-max-spawn-height** - specifying the **preferred** vertical spawn zone.
+  Specifying a minimum height allows you to minimize the chance of spawning in underground voids, just as specifying a maximum allows you to minimize the chance of spawning on suspiciously dense cloud.
 
 ## Global variables
 

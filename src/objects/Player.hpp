@@ -7,6 +7,7 @@
 #include "settings.hpp"
 #include "voxels/voxel.hpp"
 #include "util/Interpolation.hpp"
+#include "maths/util.hpp"
 
 class Chunks;
 class Camera;
@@ -63,6 +64,9 @@ class Player : public Serializable {
     entityid_t selectedEid = 0;
 
     glm::vec3 rotation {};
+    util::PseudoRandom random;
+
+    void attemptToChooseSpawnpoint();
 public:
     util::VecInterpolation<3, float, true> rotationInterpolation {true};
 
@@ -87,8 +91,6 @@ public:
     void updateEntity();
     void updateSelectedEntity();
     void postUpdate();
-
-    void attemptToFindSpawnpoint();
 
     void setChosenSlot(int index);
 
