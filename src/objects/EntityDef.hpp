@@ -39,6 +39,9 @@ struct EntityDef {
     /// @brief Skeleton ID
     std::string skeletonName = name;
 
+    /// @brief Solid entity material material
+    std::string material;
+
     /// @brief Does entity prevent blocks setup
     bool blocking = true;
 
