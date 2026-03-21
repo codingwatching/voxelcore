@@ -30,10 +30,10 @@ end
 function apply()
     time.post_runnable(function ()
         app.reconfig_packs(add_packs, rem_packs)
+        if mode ~= "world" then
+            menu:back()
+        end
     end)
-    if mode ~= "world" then
-        menu:back()
-    end
 end
 
 function reposition_func(_pack)
