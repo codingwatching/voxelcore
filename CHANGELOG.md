@@ -78,6 +78,7 @@ Table of contents:
 - entity.rigidbody:set_elasticity
 - entity.rigidbody:set_mass
 - entity.rigidbody:set_material
+- entity.rigidbody:get_ground_vel
 - gfx.blockwraps.set_faces
 - gfx.blockwraps.set_tints
 - gui.close_menu
