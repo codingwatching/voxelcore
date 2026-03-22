@@ -165,7 +165,7 @@ namespace scripting {
     void on_content_initialization();
 
     /// @brief Called on Content loading
-    void on_content_loading();
+    void on_scripts_loading();
 
     /// @brief Called on Content loading finish
     void on_content_loaded();

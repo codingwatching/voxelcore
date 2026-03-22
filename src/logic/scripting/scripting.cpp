@@ -637,11 +637,11 @@ void scripting::on_content_initialization() {
     }
 }
 
-void scripting::on_content_loading() {
+void scripting::on_scripts_loading() {
     auto L = lua::get_main_state();
     
     for (auto& pack : content_control->getAllContentPacks()) {
-        lua::emit_event(L, pack.id + ":.oncontentloading", [](auto L) {
+        lua::emit_event(L, pack.id + ":.onscriptsloading", [](auto L) {
             return 0;
         });
     }
@@ -804,7 +804,7 @@ void scripting::load_main_script(
     lua::pop(lua::get_main_state(), load_script(env, "main", file, fileName));
 
     register_event(env, "on_content_initialization", prefix + ":.oncontentinitialization");
-    register_event(env, "on_content_loading", prefix + ":.oncontentloading");
+    register_event(env, "on_scripts_loading", prefix + ":.onscriptsloading");
     register_event(env, "on_content_loaded", prefix + ":.oncontentloaded");
 }
 

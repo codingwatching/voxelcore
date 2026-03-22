@@ -497,7 +497,7 @@ void ContentLoader::loadWorldScript(ContentPackRuntime& runtime) {
 }
 
 void ContentLoader::loadScripts(Content& content) {
-    scripting::on_content_loading();
+    scripting::on_scripts_loading();
     load_scripts(content, content.blocks);
     load_scripts(content, content.items);
 

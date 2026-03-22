@@ -130,7 +130,9 @@ struct WorldFuncsSet {
 };
 
 struct MainFuncsSet {
-    bool oncontentloading;
+    bool oncontentinitialization;
+    bool onscriptsloading;
+    bool oncontentloaded;
 };
 
 class ContentPackRuntime {
