@@ -27,7 +27,6 @@ struct BlockFuncNamesCache;
 struct ItemFuncsSet;
 struct ItemFuncNamesCache;
 struct WorldFuncsSet;
-struct MainFuncsSet;
 struct UserComponent;
 struct UiDocScript;
 class BlocksController;
@@ -161,9 +160,6 @@ namespace scripting {
     /// @brief Called on UI view close
     void on_ui_close(UiDocument* layout, Inventory* inventory);
 
-    /// @brief Called before loading
-    void on_content_initialization();
-
     /// @brief Called on Content loading
     void on_scripts_loading();
 
@@ -231,12 +227,11 @@ namespace scripting {
         WorldFuncsSet& funcsset
     );
 
-    void load_main_script(
+    void load_content_script(
         const scriptenv& env,
         const std::string& packid,
         const io::path& file,
-        const std::string& fileName,
-        MainFuncsSet& funcsset
+        const std::string& fileName
     );
 
     /// @brief Load script associated with an UiDocument

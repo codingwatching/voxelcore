@@ -129,19 +129,12 @@ struct WorldFuncsSet {
     bool oninventoryclosed;
 };
 
-struct MainFuncsSet {
-    bool oncontentinitialization;
-    bool onscriptsloading;
-    bool oncontentloaded;
-};
-
 class ContentPackRuntime {
     ContentPack info;
     ContentPackStats stats {};
     scriptenv env;
 public:
     WorldFuncsSet worldfuncsset {};
-    MainFuncsSet mainfuncsset {};
 
     ContentPackRuntime(ContentPack info, scriptenv env);
     ~ContentPackRuntime();

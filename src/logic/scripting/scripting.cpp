@@ -627,16 +627,6 @@ void scripting::on_ui_close(UiDocument* layout, Inventory* inventory) {
     });
 }
 
-void scripting::on_content_initialization() {
-    auto L = lua::get_main_state();
-    
-    for (auto& pack : content_control->getAllContentPacks()) {
-        lua::emit_event(L, pack.id + ":.oncontentinitialization", [](auto L) {
-            return 0;
-        });
-    }
-}
-
 void scripting::on_scripts_loading() {
     auto L = lua::get_main_state();
     
@@ -793,17 +783,15 @@ void scripting::load_world_script(
         register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
 }
 
-void scripting::load_main_script(
+void scripting::load_content_script(
     const scriptenv& senv,
     const std::string& prefix,
     const io::path& file,
-    const std::string& fileName,
-    MainFuncsSet& funcsset
+    const std::string& fileName
 ) {
     int env = *senv;
-    lua::pop(lua::get_main_state(), load_script(env, "main", file, fileName));
+    lua::pop(lua::get_main_state(), load_script(env, "content", file, fileName));
 
-    register_event(env, "on_content_initialization", prefix + ":.oncontentinitialization");
     register_event(env, "on_scripts_loading", prefix + ":.onscriptsloading");
     register_event(env, "on_content_loaded", prefix + ":.oncontentloaded");
 }

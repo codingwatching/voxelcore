@@ -334,15 +334,13 @@ void ContentLoader::load() {
 
     fixPackIndices();
 
-    loadMainScript(*runtime);
+    loadContentScript(*runtime);
 
     auto folder = pack->folder;
 
     builder.defaults = paths.readCombinedObject(
         EnginePaths::CONFIG_DEFAULTS.string()
     );
-
-    scripting::on_content_initialization();
 
     // Load world generators
     io::path generatorsDir = folder / "generators";
@@ -466,17 +464,16 @@ void ContentLoader::reloadScript(const Content& content, ItemDef& item) {
     load_script(content, item);
 }
 
-void ContentLoader::loadMainScript(ContentPackRuntime& runtime) {
+void ContentLoader::loadContentScript(ContentPackRuntime& runtime) {
     const auto& pack = runtime.getInfo();
     const auto& folder = pack.folder;
-    io::path scriptFile = folder / "scripts/main.lua";
+    io::path scriptFile = folder / "scripts/content.lua";
     if (io::is_regular_file(scriptFile)) {
-        scripting::load_main_script(
+        scripting::load_content_script(
             runtime.getEnvironment(),
             pack.id,
             scriptFile,
-            pack.id + ":scripts/main.lua",
-            runtime.mainfuncsset
+            pack.id + ":scripts/content.lua"
         );
     }
 }
