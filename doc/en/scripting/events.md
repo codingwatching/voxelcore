@@ -180,6 +180,22 @@ function on_inventory_closed(invid: int, playerid: int)
 
 Called when the inventory is closed.
 
+### CONTENT events
+
+Callbacks specified in *content.lua* script.
+
+```lua
+function on_scripts_loading()
+```
+
+Called before the content pack scripts are loaded
+
+```lua
+function on_content_loaded()
+```
+
+Called after the content pack has been fully loaded
+
 ## Layout events
 
 Script *layouts/layout_name.xml.lua* events.
@@ -201,7 +217,6 @@ Called on element removed from the screen.
 ## HUD events
 
 Callbacks specified in *hud.lua* script.
-
 
 ```lua
 function on_hud_open(playerid: int)
