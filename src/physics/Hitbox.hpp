@@ -67,10 +67,7 @@ struct Hitbox {
     float elasticity = 0.0f;
     std::string material;
     std::string groundMaterial;
-
-    // FIXME: only one must survive
     glm::vec3 groundVelocity {};
-    glm::vec3 actualGroundVelocity {};
     
     glm::vec3 prevPosition {};
     glm::vec3 prevVelocity {};
@@ -98,6 +95,6 @@ struct Hitbox {
     }
 
     glm::vec3 getSurfaceVelocity() const {
-        return velocity - actualGroundVelocity;
+        return velocity - groundVelocity;
     }
 };
