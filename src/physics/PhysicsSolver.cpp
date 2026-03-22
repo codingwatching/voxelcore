@@ -396,10 +396,11 @@ void PhysicsSolver::step(
     }
 
     for (auto hitbox : hitboxes) {
-        float linearDamping = hitbox->linearDamping * hitbox->friction;
+        float linearDamping = hitbox->linearDamping;
 
         glm::vec3& vel = hitbox->velocity;
-        auto diff = hitbox->groundVelocity / dt - vel;
+        hitbox->actualGroundVelocity = hitbox->groundVelocity / dt;
+        auto diff = hitbox->actualGroundVelocity - vel;
         vel.x += diff.x * delta * linearDamping;
         vel.z += diff.z * delta * linearDamping;
 
@@ -411,9 +412,6 @@ void PhysicsSolver::step(
         }
         
         updateSensors(*hitbox);
-        hitbox->friction = glm::abs(hitbox->gravityScale <= 1e-7f)
-                        ? 8.0f
-                        : (!hitbox->prevGrounded ? 2.0f : 10.0f);
     }
 }
 

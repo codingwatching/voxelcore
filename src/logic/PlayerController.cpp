@@ -107,7 +107,7 @@ glm::vec3 CameraControl::updateCameraShaking(
     glm::vec3 offset {};
     const float k = CAM_SHAKE_DELTA_K;
     const float ov = CAM_SHAKE_OFFSET_Y;
-    const glm::vec3& vel = hitbox.velocity;
+    auto vel = hitbox.getSurfaceVelocity();
 
     if (settings.shaking.get()) {
         shake = shake * (1.0f - delta * k);
@@ -252,7 +252,7 @@ void PlayerController::updateFootsteps(float delta) {
     constexpr float GLM_PI = glm::pi<float>();
     auto hitbox = player.getHitbox();
     if (hitbox && hitbox->grounded) {
-        const glm::vec3& vel = hitbox->velocity;
+        glm::vec3 vel = hitbox->getSurfaceVelocity();
         float f = glm::length(glm::vec2(vel.x, vel.z));
         stepsTimer += delta * f * STEPS_SPEED;
         if (stepsTimer >= GLM_PI) {
