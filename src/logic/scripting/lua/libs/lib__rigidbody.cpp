@@ -192,6 +192,14 @@ static int l_set_elasticity(lua::State* L) {
     return 0;
 }
 
+static int l_get_ground_vel(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        return lua::pushvec3(L, entity->getRigidbody().hitbox.groundVelocity);
+    }
+    return 0;
+}
+
+
 const luaL_Reg rigidbodylib[] = {
     {"is_enabled", lua::wrap<l_is_enabled>},
     {"set_enabled", lua::wrap<l_set_enabled>},
@@ -217,5 +225,6 @@ const luaL_Reg rigidbodylib[] = {
     {"set_mass", lua::wrap<l_set_mass>},
     {"get_elasticity", lua::wrap<l_get_elasticity>},
     {"set_elasticity", lua::wrap<l_set_elasticity>},
+    {"get_ground_vel", lua::wrap<l_get_ground_vel>},
     {nullptr, nullptr}
 };

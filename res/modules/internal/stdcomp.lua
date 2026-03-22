@@ -38,6 +38,7 @@ local Rigidbody = {__index={
     get_elasticity=function(self) return __rigidbody.get_elasticity(self.eid) end,
     set_mass=function(self, v) return __rigidbody.set_mass(self.eid, v) end,
     set_elasticity=function(self, v) return __rigidbody.set_elasticity(self.eid, v) end,
+    get_ground_vel=function(self) return __rigidbody.get_ground_vel(self.eid) end,
 }}
 
 local function new_Rigidbody(eid)
