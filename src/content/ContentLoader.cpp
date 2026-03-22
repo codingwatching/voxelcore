@@ -334,11 +334,15 @@ void ContentLoader::load() {
 
     fixPackIndices();
 
+    loadMainScript(*runtime);
+
     auto folder = pack->folder;
 
     builder.defaults = paths.readCombinedObject(
         EnginePaths::CONFIG_DEFAULTS.string()
     );
+
+    scripting::on_content_initialization();
 
     // Load world generators
     io::path generatorsDir = folder / "generators";
@@ -462,6 +466,21 @@ void ContentLoader::reloadScript(const Content& content, ItemDef& item) {
     load_script(content, item);
 }
 
+void ContentLoader::loadMainScript(ContentPackRuntime& runtime) {
+    const auto& pack = runtime.getInfo();
+    const auto& folder = pack.folder;
+    io::path scriptFile = folder / "scripts/main.lua";
+    if (io::is_regular_file(scriptFile)) {
+        scripting::load_main_script(
+            runtime.getEnvironment(),
+            pack.id,
+            scriptFile,
+            pack.id + ":scripts/main.lua",
+            runtime.mainfuncsset
+        );
+    }
+}
+
 void ContentLoader::loadWorldScript(ContentPackRuntime& runtime) {
     const auto& pack = runtime.getInfo();
     const auto& folder = pack.folder;
@@ -478,6 +497,7 @@ void ContentLoader::loadWorldScript(ContentPackRuntime& runtime) {
 }
 
 void ContentLoader::loadScripts(Content& content) {
+    scripting::on_content_loading();
     load_scripts(content, content.blocks);
     load_scripts(content, content.items);
 
@@ -486,7 +506,7 @@ void ContentLoader::loadScripts(Content& content) {
         const auto& pack = runtime->getInfo();
         const auto& folder = pack.folder;
         
-        // Load main world script
+        // Load world script
         loadWorldScript(*runtime);
 
         // Load entity components
@@ -501,6 +521,8 @@ void ContentLoader::loadScripts(Content& content) {
             );
         });
     }
+
+    scripting::on_content_loaded();
 }
 
 void ContentLoader::loadResources(ResourceType type, const dv::value& list) {
