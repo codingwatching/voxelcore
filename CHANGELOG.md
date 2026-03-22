@@ -94,6 +94,7 @@ Table of contents:
 
 now documented:
 
+- audio.input.get_input_info
 - gui.ask
 - gui.show_message
 
