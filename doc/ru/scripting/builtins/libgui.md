@@ -67,7 +67,7 @@ gui.set_active_frame(
     id: str,
     -- Функция-поставщик позиции курсора во фрейме.
     -- Используется для пользовательской проекции (например в 3D)
-    [опционально] cursorLocator
+    [опционально] cursorLocator: function() -> number, number
 )
 ```
 

@@ -59,7 +59,7 @@ gui.set_active_frame(
     id: str,
     -- Function providing the cursor position in the frame.
     -- Used for custom projection (e.g., in 3D)
-    [optional] cursorLocator
+    [optional] cursorLocator: function() -> number, number
 )
 ```
 
