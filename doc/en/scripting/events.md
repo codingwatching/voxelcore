@@ -198,7 +198,7 @@ function on_close(invid: int)
 
 Called on element removed from the screen.
 
-## CONTENT events
+## Content events
 
 Callbacks specified in *content.lua* script.
 

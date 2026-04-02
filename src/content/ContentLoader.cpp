@@ -503,7 +503,6 @@ void ContentLoader::loadScripts(Content& content) {
         const auto& pack = runtime->getInfo();
         const auto& folder = pack.folder;
         
-        // Load world script
         loadWorldScript(*runtime);
 
         // Load entity components
