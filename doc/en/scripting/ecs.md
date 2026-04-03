@@ -32,7 +32,9 @@ entity:require_component(name: str) -> component
 -- Enables/disables the component
 entity:set_enabled(name: str, enable: bool)
 
--- Returns id of player the entity is bound
+-- Returns id of player the entity is bound, otherwise -1 is returned.
+-- At components initialization -1 is also returned,
+-- since the binding occurs after initialization.
 entity:get_player() -> int or nil
 ```
 
