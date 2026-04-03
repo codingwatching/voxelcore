@@ -152,6 +152,17 @@ function on_block_interact(blockid, x, y, z, playerid) -> bool
 
 Called on block RMB click interaction. Prevents block placing if **true** returned.
 
+```lua
+function on_entity_spawned(uid)
+```
+Called after an entity is spawned.
+
+```lua
+function on_entity_despawned(uid)
+```
+
+Called after an entity is removed. At the time of the call, the entity with the given uid has already been deleted.
+
 ### Chunk Events (world.lua)
 
 ```lua

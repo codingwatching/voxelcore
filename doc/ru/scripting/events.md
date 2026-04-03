@@ -157,6 +157,18 @@ function on_block_interact(blockid, x, y, z, playerid) -> bool
 Вызывается при нажатии на блок ПКМ. Предотвращает установку блоков, если возвращает `true`
 
 ```lua
+function on_entity_spawned(uid)
+```
+
+Вызывается после спавна сущности
+
+```lua
+function on_entity_despawned(uid)
+```
+
+Вызывается после удаления сущности, на момент вызова события сущность с переданным uid уже удалена
+
+```lua
 function on_player_tick(playerid: int, tps: int)
 ```
 

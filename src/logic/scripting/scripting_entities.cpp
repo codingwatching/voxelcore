@@ -129,6 +129,8 @@ void scripting::on_entity_spawn(
     for (auto& component : components) {
         create_component(L, -1, *component, args, saved);
     }
+
+    scripting::on_entity_spawned(eid);
 }
 
 static void process_entity_callback(
@@ -171,9 +173,13 @@ void scripting::on_entity_despawn(const Entity& entity) {
         entity, "on_despawn", &EntityFuncsSet::on_despawn, nullptr
     );
     auto L = lua::get_main_state();
+    entityid_t uid = entity.getUID();
+
     lua::get_from(L, "stdcomp", "remove_Entity", true);
-    lua::pushinteger(L, entity.getUID());
+    lua::pushinteger(L, uid);
     lua::call(L, 1, 0);
+
+    scripting::on_entity_despawned(uid);
 }
 
 void scripting::on_entity_grounded(const Entity& entity, float force) {
