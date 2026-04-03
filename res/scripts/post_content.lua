@@ -16,6 +16,13 @@ end
 -- remove undefined properties and build tags set
 local function process_properties(lib)
     for id, props in pairs(lib.properties) do
+        if props.parent then
+            for propname, value in pairs(lib.properties[block.index(props.parent)]) do
+                if not props[propname] then
+                    props[propname] = value
+                end
+            end
+        end
         for propname, _ in pairs(props) do
             if not table.has(names, propname) then
                 props[propname] = nil
