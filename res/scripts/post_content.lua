@@ -17,7 +17,8 @@ end
 local function process_properties(lib)
     for id, props in pairs(lib.properties) do
         if props.parent then
-            for propname, value in pairs(lib.properties[block.index(props.parent)]) do
+            local parent_props = lib.properties[block.index(props.parent)] or {}
+            for propname, value in pairs(parent_props) do
                 if not props[propname] then
                     props[propname] = value
                 end
