@@ -155,7 +155,7 @@ void Entities::loadEntity(const dv::value& map, Entity entity) {
     std::string skeletonName = skeleton->config->getName();
     map.at("skeleton-name").get(skeletonName);
     if (skeletonName != skeleton->config->getName()) {
-        skeleton->config = assets->get<rigging::SkeletonConfig>(skeletonName);
+        skeleton->config = assets->getShared<rigging::SkeletonConfig>(skeletonName);
     }
     if (auto foundSkeleton = map.at(COMP_SKELETON)) {
         skeleton->deserialize(*foundSkeleton);
@@ -470,7 +470,7 @@ void Entities::render(
             continue;
         }
 
-        const auto* rigConfig = skeleton.config;
+        const auto& rigConfig = skeleton.config;
         if (rigConfig) {
             rigConfig->render(
                 assets, batch, skeleton, transform.rot, pos, size
@@ -482,7 +482,9 @@ void Entities::render(
 bool Entities::hasBlockingInside(AABB aabb) {
     auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, body] : view.each()) {
-        if (eid.def.blocking && aabb.intersects(body.hitbox.getAABB(), -0.05f)) {
+        AABB bodyAABB(body.hitbox.getAABB());
+        bodyAABB.scale({1, 0.95f, 1});
+        if (eid.def.blocking && aabb.intersects(bodyAABB)) {
             return true;
         }
     }

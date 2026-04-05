@@ -113,7 +113,9 @@ WorldRenderer::WorldRenderer(
         content.getDefaults()["hand-skeleton"].asString()
     );
     hands = std::make_unique<HandsRenderer>(
-        assets, *modelBatch, skeletons->createSkeleton("hand", &skeletonConfig)
+        assets,
+        *modelBatch,
+        skeletons->createSkeleton("hand", skeletonConfig.shared_from_this())
     );
     shadowMapping = std::make_unique<Shadows>(level);
     debugLines = std::make_unique<DebugLinesRenderer>(level);
