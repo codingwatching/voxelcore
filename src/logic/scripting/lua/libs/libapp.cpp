@@ -362,7 +362,7 @@ static int l_start_debug_instance(lua::State* L) {
         args.emplace_back(io::resolve(std::string(projectPath)).string());
     }
 
-    platform::new_engine_instance(std::move(args));
+    platform::new_engine_instance(std::move(args), "");
     return lua::pushinteger(L, port);
 }
 
