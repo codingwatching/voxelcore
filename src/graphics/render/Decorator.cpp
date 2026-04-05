@@ -66,9 +66,7 @@ Decorator::Decorator(
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
-            util::str2wstr_utf8(player->getName()),
-            playerNamePreset,
-            player->getPosition()
+            player->getName(), playerNamePreset, player->getPosition()
         ));
     }
 }
@@ -296,9 +294,7 @@ void Decorator::updateTextNotes() {
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
-            util::str2wstr_utf8(player->getName()),
-            playerNamePreset,
-            player->getPosition()
+            player->getName(), playerNamePreset, player->getPosition()
         ));
     }
 
@@ -315,6 +311,9 @@ void Decorator::updateTextNotes() {
                 position = entity->getInterpolatedPosition();
             }
             note->setPosition(position + glm::vec3(0, 1, 0));
+            if (note->getText() != player->getName()) {
+                note->setText(player->getName());
+            }
             ++textsIter;
         }
     }

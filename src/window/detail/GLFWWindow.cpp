@@ -294,6 +294,7 @@ public:
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         } else {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetCursor(window, nullptr);
         }
         cursorLocked = !cursorLocked;
     }
