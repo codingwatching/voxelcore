@@ -7,6 +7,8 @@
 #include <sstream>
 #include <stdexcept>
 
+static std::locale locale("en_US.UTF-8");
+
 std::string util::escape(std::string_view s, bool escapeUnicode) {
     std::stringstream ss;
     ss << '"';
@@ -507,39 +509,34 @@ double util::parse_double(const std::string& str, size_t offset, size_t len) {
 
 std::wstring util::lower_case(const std::wstring& str) {
     std::wstring result = str;
-    static const std::locale loc("");
     for (uint i = 0; i < result.length(); i++) {
-        result[i] = static_cast<wchar_t>(std::tolower(str[i], loc));
+        result[i] = static_cast<wchar_t>(std::tolower(str[i], locale));
     }
     return result;
 }
 
 std::wstring util::upper_case(const std::wstring& str) {
     std::wstring result = str;
-    static const std::locale loc("");
     for (uint i = 0; i < result.length(); i++) {
-        result[i] = static_cast<wchar_t>(std::toupper(str[i], loc));
+        result[i] = static_cast<wchar_t>(std::toupper(str[i], locale));
     }
     return result;
 }
 
 std::wstring util::capitalized(const std::wstring& str) {
     if (str.empty()) return str;
-    static const std::locale loc("");
-    return std::wstring({static_cast<wchar_t>(std::toupper(str[0], loc))}) +
+    return std::wstring({static_cast<wchar_t>(std::toupper(str[0], locale))}) +
            str.substr(1);
 }
 
 std::string util::capitalized(const std::string& str) {
     if (str.empty()) return str;
-    static const std::locale loc("");
-    return std::string({static_cast<char>(std::toupper(str[0], loc))}) +
+    return std::string({static_cast<char>(std::toupper(str[0], locale))}) +
            str.substr(1);
 }
 
 std::wstring util::pascal_case(const std::wstring& str) {
     if (str.empty()) return str;
-    static const std::locale loc("");
     std::wstring result = str;
     bool upper = true;
     for (uint i = 0; i < result.length(); i++) {
@@ -547,7 +544,7 @@ std::wstring util::pascal_case(const std::wstring& str) {
         if (c <= ' ') {
             upper = true;
         } else if (upper) {
-            result[i] = static_cast<wchar_t>(std::toupper(str[i], loc));
+            result[i] = static_cast<wchar_t>(std::toupper(str[i], locale));
             upper = false;
         }
     }
