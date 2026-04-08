@@ -6,7 +6,8 @@
 #include "objects/Entity.hpp"
 #include "objects/Player.hpp"
 #include "util/stringutil.hpp"
-#include "content/ContentControl.hpp"
+#include "content/Content.hpp"
+#include "content/ContentPack.hpp"
 
 using namespace scripting;
 
@@ -131,15 +132,13 @@ void scripting::on_entity_spawn(
         create_component(L, -1, *component, args, saved);
     }
 
-    for (auto& pack : scripting::content_control->getAllContentPacks()) {
-        lua::emit_event(
-            L,
-            pack.id + ":.entityspawn",
-            [&](lua::State* L) {
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onentityspawn) {
+            lua::emit_event(L, packid + ":.entityspawn", [&](lua::State* L) {
                 lua::pushinteger(L, eid);
                 return 1;
-            }
-        );
+            });
+        }
     }
 }
 
@@ -186,15 +185,13 @@ void scripting::on_entity_despawn(const Entity& entity) {
     auto L = lua::get_main_state();
     entityid_t uid = entity.getUID();
 
-    for (auto& pack : content_control->getAllContentPacks()) {
-        lua::emit_event(
-            L,
-            pack.id + ":.entitydespawn",
-            [&](lua::State* L) {
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onentitydespawn) {
+            lua::emit_event(L, packid + ":.entitydespawn", [&](lua::State* L) {
                 lua::pushinteger(L, uid);
                 return 1;
-            }
-        );
+            });
+        }
     }
 
     lua::get_from(L, "stdcomp", "remove_Entity", true);
