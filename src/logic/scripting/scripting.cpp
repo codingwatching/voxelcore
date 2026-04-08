@@ -781,6 +781,10 @@ void scripting::load_world_script(
         register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
     funcsset.oninventoryclosed =
         register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
+    funcsset.onentityspawn =
+        register_event(env, "on_entity_spawn", prefix + ":.entityspawn");
+    funcsset.onentitydespawn =
+        register_event(env, "on_entity_despawn", prefix + ":.entitydespawn");
 }
 
 void scripting::load_content_script(
