@@ -112,9 +112,6 @@ namespace scripting {
 
     void on_player_tick(Player* player, int tps);
 
-    void on_entity_spawned(entityid_t eid);
-    void on_entity_despawned(entityid_t eid);
-
     /// @brief Called on RMB click with the item selected
     /// @return true if prevents default action
     bool on_item_use(Player* player, const ItemDef& item);

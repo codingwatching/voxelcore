@@ -6,6 +6,7 @@
 #include "objects/Entity.hpp"
 #include "objects/Player.hpp"
 #include "util/stringutil.hpp"
+#include "content/ContentControl.hpp"
 
 using namespace scripting;
 
@@ -130,7 +131,16 @@ void scripting::on_entity_spawn(
         create_component(L, -1, *component, args, saved);
     }
 
-    scripting::on_entity_spawned(eid);
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.entityspawn",
+            [&](lua::State* L) {
+                lua::pushinteger(L, eid);
+                return 1;
+            }
+        );
+    }
 }
 
 static void process_entity_callback(
@@ -172,14 +182,24 @@ void scripting::on_entity_despawn(const Entity& entity) {
     process_entity_callback(
         entity, "on_despawn", &EntityFuncsSet::on_despawn, nullptr
     );
+
     auto L = lua::get_main_state();
     entityid_t uid = entity.getUID();
+
+    for (auto& pack : content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.entitydespawn",
+            [&](lua::State* L) {
+                lua::pushinteger(L, uid);
+                return 1;
+            }
+        );
+    }
 
     lua::get_from(L, "stdcomp", "remove_Entity", true);
     lua::pushinteger(L, uid);
     lua::call(L, 1, 0);
-
-    scripting::on_entity_despawned(uid);
 }
 
 void scripting::on_entity_grounded(const Entity& entity, float force) {
