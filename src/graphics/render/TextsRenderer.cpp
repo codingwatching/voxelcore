@@ -71,10 +71,9 @@ void TextsRenderer::renderNote(
     if (preset.displayMode == NoteDisplayMode::PROJECTED) {
         float scale = 1.0f;
         if (glm::abs(preset.perspective) > 0.0001f) {
-            float scale2 = scale /
-                (glm::distance(camera.position, pos) *
-                            util::sqr(camera.zoom) *
-                            glm::sqrt(glm::tan(camera.getFov() * 0.5f)));
+            float scale2 =
+                scale / (glm::distance(camera.position, pos) * camera.zoom *
+                         glm::sqrt(glm::tan(camera.getFov() * 0.5f)));
             scale = scale2 * preset.perspective +
                     scale * (1.0f - preset.perspective);
         }
