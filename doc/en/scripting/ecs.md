@@ -180,6 +180,10 @@ rig:get_color() -> vec3
 rig:set_color(color: vec3)
 ```
 
+> [!WARNING]
+> When an entity moves outside the loaded area, it is removed, triggering the event.
+> When it re-enters the loaded area, the entity is spawned again.
+
 ## Component events
 
 ```lua
