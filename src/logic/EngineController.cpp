@@ -321,7 +321,10 @@ static void reconfig_packs_outside(
     }
     for (const auto& id : packsToRemove) {
         manager.exclude(id);
-        names.erase(std::find(names.begin(), names.end(), id));
+        auto it = std::find(names.begin(), names.end(), id);
+        if (it != names.end()) {
+            names.erase(it);
+        }
     }
     names = manager.assemble(names);
     contentControl.setContentPacksRaw(manager.getAll(names));
