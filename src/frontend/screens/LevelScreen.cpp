@@ -173,7 +173,7 @@ void LevelScreen::saveWorldPreview() {
         int previewSize = settings.ui.worldPreviewSize.get();
 
         // camera special copy for world preview
-        Camera& camera = *player.fpCamera;
+        Camera camera = *player.fpCamera;
         camera.setFov(glm::radians(70.0f));
 
         DrawContext pctx(nullptr, engine.getWindow(), batch.get());
