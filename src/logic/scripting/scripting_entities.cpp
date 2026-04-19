@@ -94,7 +94,7 @@ static void create_component(
     auto compenv = create_component_environment(
         std::move(parentEnv), -1, component.name
     );
-    lua::get_from(L, lua::CHUNKS_TABLE, component.name, true);
+    lua::get_from_registry(L, lua::CHUNKS_TABLE, component.name, true);
     lua::pushenv(L, *compenv);
 
     if (args != nullptr) {

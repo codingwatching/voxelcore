@@ -123,10 +123,10 @@ void lua::init_state(State* L, StateType stateType) {
     setglobal(L, env_name(0));
 
     createtable(L, 0, 0);
-    setglobal(L, LAMBDAS_TABLE);
+    setregistry(L, LAMBDAS_TABLE);
 
     createtable(L, 0, 0);
-    setglobal(L, CHUNKS_TABLE);
+    setregistry(L, CHUNKS_TABLE);
 
     initialize_libs_extends(L);
 

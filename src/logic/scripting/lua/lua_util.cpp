@@ -220,7 +220,7 @@ void lua::dump_stack(State* L) {
 static std::shared_ptr<std::string> create_lambda_handler(State* L) {
     auto ptr = reinterpret_cast<ptrdiff_t>(topointer(L, -1));
     auto name = util::mangleid(ptr);
-    requireglobal(L, LAMBDAS_TABLE);
+    reguireregistry(L, LAMBDAS_TABLE);
     pushvalue(L, -2);
     setfield(L, name);
     pop(L, 2);
@@ -229,7 +229,7 @@ static std::shared_ptr<std::string> create_lambda_handler(State* L) {
         new std::string(name),
         [=](std::string* name) {
             auto L = lua::get_main_state();
-            requireglobal(L, LAMBDAS_TABLE);
+            reguireregistry(L, LAMBDAS_TABLE);
             pushnil(L);
             setfield(L, *name);
             pop(L);
@@ -242,8 +242,9 @@ runnable lua::create_runnable(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() {
         auto L = lua::get_main_state();
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return;
+        }
         call_nothrow(L, 0, 0);
         pop(L);
     };
@@ -252,8 +253,9 @@ runnable lua::create_runnable(State* L) {
 KeyCallback lua::create_simple_handler(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() -> bool {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return false;
+        }
         int top = gettop(L) - 1;
         if (call_nothrow(L, 0)) {
             int nres = gettop(L) - top;
@@ -271,8 +273,9 @@ KeyCallback lua::create_simple_handler(State* L) {
 scripting::common_func lua::create_lambda(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=](const std::vector<dv::value>& args) -> dv::value {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return nullptr;
+        }
         int top = gettop(L) - 1;
         for (const auto& arg : args) {
             pushvalue(L, arg);
@@ -294,8 +297,9 @@ scripting::common_func lua::create_lambda(State* L) {
 scripting::common_func lua::create_lambda_nothrow(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=](const std::vector<dv::value>& args) -> dv::value {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return nullptr;
+        }
         int top = gettop(L) - 1;
         for (const auto& arg : args) {
             pushvalue(L, arg);

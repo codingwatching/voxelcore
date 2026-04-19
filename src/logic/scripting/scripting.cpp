@@ -742,7 +742,7 @@ void scripting::load_entity_component(
     std::string src = io::read_string(file);
     logger.info() << "script (component) " << file.string();
     lua::loadbuffer(L, *env, src, fileName);
-    lua::store_in(L, lua::CHUNKS_TABLE, name);
+    lua::store_in_registry(L, lua::CHUNKS_TABLE, name);
 }
 
 void scripting::load_world_script(
