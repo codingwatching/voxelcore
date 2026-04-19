@@ -114,6 +114,14 @@ struct ContentPack {
             default: return "";
         }
     }
+
+    static std::string_view getPrefix(std::string_view path) {
+        size_t pos = path.find(':');
+        if (pos == std::string::npos) {
+            return "";
+        }
+        return path.substr(0, pos);
+    }
 };
 
 struct WorldFuncsSet {

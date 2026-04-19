@@ -1,5 +1,6 @@
 #include "scripting.hpp"
 
+#include "debug/Logger.hpp"
 #include "lua/lua_engine.hpp"
 #include "objects/Entities.hpp"
 #include "objects/EntityDef.hpp"
@@ -11,6 +12,7 @@
 
 using namespace scripting;
 
+static debug::Logger logger("scripting-entities");
 static inline const std::string STDCOMP = "stdcomp";
 
 [[nodiscard]] static scriptenv create_component_environment(
@@ -61,9 +63,19 @@ static void create_component(
     const dv::value& args,
     const dv::value& saved
 ) {
+    auto parentEnv = get_root_environment();
+    auto prefix = ContentPack::getPrefix(component.name);
+    const auto& content = *scripting::content;
+    if (auto runtime = content.getPackRuntime(std::string(prefix))) {
+        parentEnv = runtime->getEnvironment();
+    } else {
+        logger.warning() << "pack environment is not available for "
+                         << component.name;
+    }
+    logger.debug() << "creating instance of component " << component.name;
     lua::pushvalue(L, entityIdx);
     auto compenv = create_component_environment(
-        get_root_environment(), -1, component.name
+        std::move(parentEnv), -1, component.name
     );
     lua::get_from(L, lua::CHUNKS_TABLE, component.name, true);
     lua::pushenv(L, *compenv);
