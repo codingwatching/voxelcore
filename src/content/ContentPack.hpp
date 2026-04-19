@@ -85,7 +85,6 @@ struct ContentPack {
     static inline const io::path GENERATORS_FOLDER = "generators";
     static const std::vector<std::string> RESERVED_NAMES;
 
-    static bool is_pack(const io::path& folder);
     static ContentPack read(const io::path& folder);
 
     static void scanFolder(
