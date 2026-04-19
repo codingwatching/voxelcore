@@ -26,7 +26,6 @@ function on_save()
 end
 
 if not VC_HEADLESS then
-    local SCALE = 0.3
     local scale = {1, 1, 1}
     local rotation = mat4.rotate({
         math.random(), math.random(), math.random()
@@ -35,8 +34,8 @@ if not VC_HEADLESS then
     do
         local matrix = mat4.idt()
         rig:set_model(0, item.model_name(dropitem.id))
-        local bodysize = math.min(scale[1], scale[2], scale[3]) * SCALE
-        body:set_size({scale[1] * SCALE, bodysize, scale[3] * SCALE})
+        local bodysize = math.min(scale[1], scale[2], scale[3])
+        body:set_size({scale[1], bodysize, scale[3]})
         mat4.mul(matrix, rotation, matrix)
         mat4.scale(matrix, scale, matrix)
         rig:set_matrix(0, matrix)
@@ -103,9 +102,7 @@ function on_sensor_enter(index, oid)
     if timer < 0.0 and index == 0 then
         entity:despawn()
         inventory.add(player.get_inventory(pid), dropitem.id, dropitem.count, dropitem.data)
-        if not VC_HEADLESS then
-            audio.play_sound_2d("events/pickup", 0.5, 0.8 + math.random() * 0.4, "regular")
-        end
+        audio.play_sound_2d("events/pickup", 0.5, 0.8 + math.random() * 0.4, "regular")
     end
     if index == 1 then
         target = oid
