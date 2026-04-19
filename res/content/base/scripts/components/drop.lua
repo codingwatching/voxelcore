@@ -2,7 +2,6 @@ local tsf = entity.transform
 local body = entity.rigidbody
 local rig = entity.skeleton
 
-inair = true
 target = -1
 timer = 0.3
 
@@ -20,40 +19,59 @@ if SAVED_DATA.item then
     dropitem.data = SAVED_DATA.data
 end
 
-local DROP_SCALE = 0.3
-local scale = {1, 1, 1}
-local rotation = mat4.rotate({
-    math.random(), math.random(), math.random()
-}, 360)
-
 function on_save()
     SAVED_DATA.item = item.name(dropitem.id)
     SAVED_DATA.count = dropitem.count
     SAVED_DATA.data = dropitem.data
 end
 
-do -- setup visuals
-    local matrix = mat4.idt()
-    rig:set_model(0, item.model_name(dropitem.id))
-    local bodysize = math.min(scale[1], scale[2], scale[3]) * DROP_SCALE
-    body:set_size({scale[1] * DROP_SCALE, bodysize, scale[3] * DROP_SCALE})
-    mat4.mul(matrix, rotation, matrix)
-    mat4.scale(matrix, scale, matrix)
-    rig:set_matrix(0, matrix)
+if not VC_HEADLESS then
+    local SCALE = 0.3
+    local scale = {1, 1, 1}
+    local rotation = mat4.rotate({
+        math.random(), math.random(), math.random()
+    }, 360)
+
+    do
+        local matrix = mat4.idt()
+        rig:set_model(0, item.model_name(dropitem.id))
+        local bodysize = math.min(scale[1], scale[2], scale[3]) * SCALE
+        body:set_size({scale[1] * SCALE, bodysize, scale[3] * SCALE})
+        mat4.mul(matrix, rotation, matrix)
+        mat4.scale(matrix, scale, matrix)
+        rig:set_matrix(0, matrix)
+    end
+
+    local inair = true
+
+    function on_grounded()
+        local matrix = mat4.idt()
+        mat4.rotate(matrix, {0, 1, 0}, math.random() * 360, matrix)
+        mat4.rotate(matrix, {1, 0, 0}, 90, matrix)
+        mat4.scale(matrix, scale, matrix)
+        rig:set_matrix(0, matrix)
+        inair = false
+    end
+
+    function on_fall()
+        inair = true
+    end
+
+    function on_render()
+        if inair then
+            local dt = time.delta();
+
+            mat4.rotate(rotation, {0, 1, 0}, 240*dt, rotation)
+            mat4.rotate(rotation, {0, 0, 1}, 240*dt, rotation)
+
+            local matrix = mat4.idt()
+            mat4.mul(matrix, rotation, matrix)
+            mat4.scale(matrix, scale, matrix)
+            rig:set_matrix(0, matrix)
+        end
+    end
 end
 
-function on_grounded(force)
-    local matrix = mat4.idt()
-    mat4.rotate(matrix, {0, 1, 0}, math.random() * 360, matrix)
-    mat4.rotate(matrix, {1, 0, 0}, 90, matrix)
-    mat4.scale(matrix, scale, matrix)
-    rig:set_matrix(0, matrix)
-    inair = false
-end
-
-function on_fall()
-    inair = true
-end
 
 function on_sensor_enter(index, oid)
     local other = entities.get(oid)
@@ -85,7 +103,9 @@ function on_sensor_enter(index, oid)
     if timer < 0.0 and index == 0 then
         entity:despawn()
         inventory.add(player.get_inventory(pid), dropitem.id, dropitem.count, dropitem.data)
-        audio.play_sound_2d("events/pickup", 0.5, 0.8 + math.random() * 0.4, "regular")
+        if not VC_HEADLESS then
+            audio.play_sound_2d("events/pickup", 0.5, 0.8 + math.random() * 0.4, "regular")
+        end
     end
     if index == 1 then
         target = oid
@@ -95,20 +115,6 @@ end
 function on_sensor_exit(index, oid)
     if oid == target and index == 1 then
         target = -1
-    end
-end
-
-function on_render()
-    if inair then
-        local dt = time.delta();
-
-        mat4.rotate(rotation, {0, 1, 0}, 240*dt, rotation)
-        mat4.rotate(rotation, {0, 0, 1}, 240*dt, rotation)
-
-        local matrix = mat4.idt()
-        mat4.mul(matrix, rotation, matrix)
-        mat4.scale(matrix, scale, matrix)
-        rig:set_matrix(0, matrix)
     end
 end
 
