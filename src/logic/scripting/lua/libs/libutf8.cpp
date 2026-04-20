@@ -66,19 +66,13 @@ static int l_sub(lua::State* L) {
 }
 
 static int l_upper(lua::State* L) {
-    auto string = util::str2u32str_utf8(lua::require_string(L, 1));
-    for (auto& c : string) {
-        c = std::towupper(c);
-    }
-    return lua::pushstring(L, util::u32str2str_utf8(string));
+    auto string = util::str2wstr_utf8(lua::require_string(L, 1));
+    return lua::pushwstring(L, util::upper_case(string));
 }
 
 static int l_lower(lua::State* L) {
-    auto string = util::str2u32str_utf8(lua::require_string(L, 1));
-    for (auto& c : string) {
-        c = std::towlower(c);
-    }
-    return lua::pushstring(L, util::u32str2str_utf8(string));
+    auto string = util::str2wstr_utf8(lua::require_string(L, 1));
+    return lua::pushwstring(L, util::lower_case(string));
 }
 
 static int l_encode(lua::State* L) {
