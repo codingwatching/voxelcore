@@ -507,20 +507,30 @@ double util::parse_double(const std::string& str, size_t offset, size_t len) {
     return parse_double(str.substr(offset, len));
 }
 
-std::wstring util::lower_case(const std::wstring& str) {
-    std::wstring result = str;
+template<typename CharT>
+static std::basic_string<CharT> lower_case(const std::basic_string<CharT>& str) {
+    std::basic_string<CharT> result = str;
     for (uint i = 0; i < result.length(); i++) {
-        result[i] = static_cast<wchar_t>(std::tolower(str[i], locale));
+        result[i] = std::tolower(str[i], locale);
     }
     return result;
 }
 
-std::wstring util::upper_case(const std::wstring& str) {
-    std::wstring result = str;
+template<typename CharT>
+static std::basic_string<CharT> upper_case(const std::basic_string<CharT>& str) {
+    std::basic_string<CharT> result = str;
     for (uint i = 0; i < result.length(); i++) {
-        result[i] = static_cast<wchar_t>(std::toupper(str[i], locale));
+        result[i] = std::toupper(str[i], locale);
     }
     return result;
+}
+
+std::wstring util::lower_case(const std::wstring& str) {
+    return ::lower_case(str);
+}
+
+std::wstring util::upper_case(const std::wstring& str) {
+    return ::upper_case(str);
 }
 
 std::wstring util::capitalized(const std::wstring& str) {
