@@ -99,7 +99,15 @@ static void create_libs(State* L, StateType stateType) {
     addfunc(L, "crc32", lua::wrap<l_crc32>);
 }
 
+static int l_panic_handler(lua::State* L) {
+    logger.error() << "PANIC: unprotected error in call to Lua API: " << lua::tostring(L, -1);
+    logger.flush();
+    abort();
+}
+
 void lua::init_state(State* L, StateType stateType) {
+    lua_atpanic(L, l_panic_handler);
+
     // Allowed standard libraries
     luaL_openlibs(L);
 
