@@ -770,7 +770,10 @@ namespace lua {
     }
 
     inline std::string_view bytearray_as_string(lua::State* L, int idx) {
-        lua::pushvalue(L, idx);
+        if (lua::type(L, idx) == LUA_TSTRING) {
+            return lua::tolstring(L, idx);
+        }
+        lua::pushvalue(L, idx); 
         lua::requireglobal(L, "Bytearray_as_string");
         lua::pushvalue(L, -2);
         lua::call(L, 1, 1);
