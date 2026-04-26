@@ -829,6 +829,9 @@ namespace lua {
     }
 
     inline std::string_view bytearray_as_string(lua::State* L, int idx) {
+        if (type(L, idx) == LUA_TSTRING) {
+            return tolstring(L, idx);
+        }
         pushvalue(L, idx);
         requireglobal(L, "Bytearray_as_string");
         pushvalue(L, -2);
