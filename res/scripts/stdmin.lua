@@ -11,7 +11,6 @@ vc = {
 }
 
 local _ffi = ffi
-local _debug_getinfo = debug.getinfo
 local _crc32 = crc32
 
 function crc32(bytes, chksum)
@@ -115,6 +114,8 @@ function timeit(iters, func, ...)
 end
 
 ----------------------------------------------
+
+local _debug_getinfo = debug.getinfo
 
 function debug.count_frames()
     local frames = 1

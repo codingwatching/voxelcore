@@ -64,12 +64,13 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "yaml", yamllib);
 
+    openlib(L, "__vc_app", applib);
+    lua::getglobal(L, "__vc_app");
+    lua::setregistry(L, "app");
+
     if (stateType == StateType::SCRIPT) {
-        openlib(L, "app", applib);
-        lua::getglobal(L, "app");
-        lua::setglobal(L, "__vc_app");
-    } else if (stateType == StateType::BASE) {
-        openlib(L, "__vc_app", applib);
+        lua::getregistry(L, "app");
+        lua::setglobal(L, "app");
     }
     if (stateType == StateType::BASE || stateType == StateType::SCRIPT) {
         openlib(L, "assets", assetslib);
