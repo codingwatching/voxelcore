@@ -122,14 +122,16 @@ void lua::init_state(State* L, StateType stateType) {
     remove_lib_funcs(L, "os", removed_os);
     create_libs(L, stateType);
 
-    pushglobals(L);
-    setglobal(L, env_name(0));
-
     createtable(L, 0, 0);
     setregistry(L, LAMBDAS_TABLE);
 
     createtable(L, 0, 0);
     setregistry(L, CHUNKS_TABLE);
+
+    createtable(L, 0, 0);
+    pushglobals(L);
+    setfield(L, env_name(0));
+    setregistry(L, ENVS_TABLE);
 
     initialize_libs_extends(L);
 

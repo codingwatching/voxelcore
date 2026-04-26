@@ -15,6 +15,7 @@ namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";  // lambdas storage
     inline std::string CHUNKS_TABLE = "$C";   // precompiled lua chunks
     inline std::string PACK_ENVS_TABLE = "$P";
+    inline std::string ENVS_TABLE = "$E";
     extern std::unordered_map<std::type_index, std::string> usertypeNames;
     int userdata_destructor(lua::State* L);
 
@@ -56,6 +57,16 @@ namespace lua {
         } else {
             throw std::runtime_error("registry entry " + name + " not found");
         }
+    }
+
+    inline bool getregistry(lua::State* L, const std::string& name, const std::string& key) {
+        requireregistry(L,  name);
+        if (getfield(L, key)) {
+            lua_remove(L, -2);
+            return true;
+        }
+        pop(L);
+        return false;
     }
 
     inline bool hasglobal(lua::State* L, const std::string& name) {
@@ -550,7 +561,7 @@ namespace lua {
         if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
             throw luaerror(tostring(L, -1));
         }
-        if (env && getglobal(L, env_name(env))) {
+        if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
             lua_setfenv(L, -2);
         }
     }
@@ -658,10 +669,7 @@ namespace lua {
     scripting::common_func create_lambda_nothrow(lua::State*);
 
     inline int pushenv(lua::State* L, int env) {
-        if (getglobal(L, env_name(env))) {
-            return 1;
-        }
-        return 0;
+        return getregistry(L, ENVS_TABLE, env_name(env));
     }
     int create_environment(lua::State*, int parent);
     int restore_pack_environment(lua::State*, const std::string& packid);
@@ -790,14 +798,14 @@ namespace lua {
     inline void read_bytes_from_table(
         lua::State* L, int tableIndex, std::vector<ubyte>& bytes
     ) {
-        if (!lua::istable(L, tableIndex)) {
+        if (!istable(L, tableIndex)) {
             throw std::runtime_error("table expected");
         } else {
-            size_t size = lua::objlen(L, tableIndex);
+            size_t size = objlen(L, tableIndex);
             for (size_t i = 0; i < size; i++) {
-                lua::rawgeti(L, i + 1, tableIndex);
-                const int byte = lua::tointeger(L, -1);
-                lua::pop(L);
+                rawgeti(L, i + 1, tableIndex);
+                const int byte = tointeger(L, -1);
+                pop(L);
                 if (byte < 0 || byte > 255) {
                     throw std::runtime_error(
                         "invalid byte '" + std::to_string(byte) + "'"
@@ -809,11 +817,11 @@ namespace lua {
     }
 
     inline int create_bytearray(lua::State* L, const void* bytes, size_t size) {
-        lua::requireglobal(L, "Bytearray_construct");
-        lua::pushlstring(
+        requireglobal(L, "Bytearray_construct");
+        pushlstring(
             L, std::string_view(reinterpret_cast<const char*>(bytes), size)
         );
-        return lua::call(L, 1, 1);
+        return call(L, 1, 1);
     }
 
     inline int create_bytearray(lua::State* L, const std::vector<ubyte>& bytes) {
@@ -821,12 +829,12 @@ namespace lua {
     }
 
     inline std::string_view bytearray_as_string(lua::State* L, int idx) {
-        lua::pushvalue(L, idx);
-        lua::requireglobal(L, "Bytearray_as_string");
-        lua::pushvalue(L, -2);
-        lua::call(L, 1, 1);
-        auto view = lua::tolstring(L, -1);
-        lua::pop(L, 2);
+        pushvalue(L, idx);
+        requireglobal(L, "Bytearray_as_string");
+        pushvalue(L, -2);
+        call(L, 1, 1);
+        auto view = tolstring(L, -1);
+        pop(L, 2);
         return view;
     }
 }
