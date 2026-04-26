@@ -14,6 +14,7 @@
 namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";  // lambdas storage
     inline std::string CHUNKS_TABLE = "$C";   // precompiled lua chunks
+    inline std::string PACK_ENVS_TABLE = "$P";
     extern std::unordered_map<std::type_index, std::string> usertypeNames;
     int userdata_destructor(lua::State* L);
 
@@ -49,7 +50,7 @@ namespace lua {
         }
     }
 
-    inline int reguireregistry(lua::State* L, const std::string& name) {
+    inline int requireregistry(lua::State* L, const std::string& name) {
         if (getregistry(L, name)) {
             return 1;
         } else {

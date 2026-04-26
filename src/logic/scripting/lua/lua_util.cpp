@@ -220,7 +220,7 @@ void lua::dump_stack(State* L) {
 static std::shared_ptr<std::string> create_lambda_handler(State* L) {
     auto ptr = reinterpret_cast<ptrdiff_t>(topointer(L, -1));
     auto name = util::mangleid(ptr);
-    reguireregistry(L, LAMBDAS_TABLE);
+    requireregistry(L, LAMBDAS_TABLE);
     pushvalue(L, -2);
     setfield(L, name);
     pop(L, 2);
@@ -229,7 +229,7 @@ static std::shared_ptr<std::string> create_lambda_handler(State* L) {
         new std::string(name),
         [=](std::string* name) {
             auto L = lua::get_main_state();
-            reguireregistry(L, LAMBDAS_TABLE);
+            requireregistry(L, LAMBDAS_TABLE);
             pushnil(L);
             setfield(L, *name);
             pop(L);
@@ -341,7 +341,7 @@ int lua::create_environment(State* L, int parent) {
 }
 
 int lua::restore_pack_environment(lua::State* L, const std::string& packid) {
-    if(!lua::getglobal(L, "__vc__pack_envs")) {
+    if(!lua::requireregistry(L, lua::PACK_ENVS_TABLE)) {
         return -1;
     }
     int id = nextEnvironment++;

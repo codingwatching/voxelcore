@@ -113,7 +113,9 @@ void lua::init_state(State* L, StateType stateType) {
     setglobal(L, "io");
 
     createtable(L, 0, 0);
+    pushvalue(L, -1);
     setglobal(L, "__vc__pack_envs");
+    setregistry(L, lua::PACK_ENVS_TABLE);
 
     const char* removed_os[] {
         "execute", "exit", "remove", "rename", "setlocale", "tmpname", nullptr};

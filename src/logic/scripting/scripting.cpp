@@ -188,11 +188,7 @@ std::unique_ptr<Process> scripting::start_app_script(const io::path& script) {
     lua::pushstring(L, pack.id);
     lua::setfield(L, "PACK_ID");
 
-    if(!lua::getglobal(L, "__vc__pack_envs")) {
-        lua::createtable(L, 0, 0);
-        lua::setglobal(L, "__vc__pack_envs");
-        lua::pushvalue(L, -1);
-    }
+    lua::requireregistry(L, lua::PACK_ENVS_TABLE);
     lua::pushenv(L, id);
     lua::setfield(L, pack.id);
     lua::pop(L);
@@ -248,7 +244,7 @@ std::unique_ptr<Process> scripting::start_app_script(const io::path& script) {
 
 void scripting::process_post_runnables() {
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__process_post_runnables")) {
+    if (lua::getglobal(L, "__vc__process_post_runnables")) {
         lua::call_nothrow(L, 0, 0);
     }
 }

@@ -540,20 +540,27 @@ function __vc_on_world_save()
     file.write(RULES_FILE, toml.tostring(rule_values))
 end
 
+local __close_all_descriptors = file.__close_all_descriptors
+local __gui_util_reset_local = gui_util.__reset_local
+local __stdcomp_reset = stdcomp.__reset
+file.__close_all_descriptors = nil
+gui_util.__reset_local = nil
+stdcomp.reset = nil
+
 function __vc_on_world_quit()
     _rules.clear()
-    gui_util:__reset_local()
-    stdcomp.__reset()
-    file.__close_all_descriptors()
+    __gui_util_reset_local()
+    __stdcomp_reset()
+    __close_all_descriptors()
 end
-
-local __post_runnables = {}
 
 local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
-local function __vc__process_post_runnables()
+local __post_runnables = {}
+
+local function __process_post_runnables()
     if #__post_runnables > 0 then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __vc__error)
@@ -587,9 +594,9 @@ local function __vc__process_post_runnables()
     end
 end
 
-function __process_post_runnables()
+function __vc__process_post_runnables()
     __vc__is_post_runnable = true
-    local success, err = pcall(__vc__process_post_runnables)
+    local success, err = pcall(__process_post_runnables)
     if not success then
         debug.error("an error ocurred while processing post-runnables: ".. err)
     end
@@ -624,3 +631,4 @@ require "core:internal/deprecated"
 ffi = nil
 __vc_app = nil
 __vc_lock_internal_modules()
+__vc_lock_internal_modules = nil
