@@ -11,7 +11,7 @@ else
     SAVED_DATA.states = blockstates
 end
 
-if not VC_HEADLESS then-- setup visuals
+if vc.is_client() then-- setup visuals
     local rig = entity.skeleton
     local id = block.index(blockid)
     local rotation = block.decompose_state(blockstates)[1]

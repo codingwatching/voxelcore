@@ -1,5 +1,18 @@
+local _vc_headless = __VC_HEADLESS
+__VC_HEADLESS = nil
+
+vc = {
+    is_headless = function()
+        return _vc_headless
+    end,
+    is_client = function ()
+        return not _vc_headless
+    end
+}
+
 local _ffi = ffi
 local _debug_getinfo = debug.getinfo
+local _crc32 = crc32
 
 function crc32(bytes, chksum)
     chksum = chksum or 0
