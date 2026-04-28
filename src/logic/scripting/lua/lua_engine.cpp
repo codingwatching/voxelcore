@@ -64,12 +64,13 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "yaml", yamllib);
 
+    openlib(L, "__vc_app", applib);
+    lua::getglobal(L, "__vc_app");
+    lua::setregistry(L, "app");
+
     if (stateType == StateType::SCRIPT) {
-        openlib(L, "app", applib);
-        lua::getglobal(L, "app");
-        lua::setglobal(L, "__vc_app");
-    } else if (stateType == StateType::BASE) {
-        openlib(L, "__vc_app", applib);
+        lua::getregistry(L, "app");
+        lua::setglobal(L, "app");
     }
     if (stateType == StateType::BASE || stateType == StateType::SCRIPT) {
         openlib(L, "assets", assetslib);
@@ -95,10 +96,18 @@ static void create_libs(State* L, StateType stateType) {
     }
 
     addfunc(L, "print", lua::wrap<l_print>);
-    addfunc(L, "_crc32", lua::wrap<l_crc32>);
+    addfunc(L, "crc32", lua::wrap<l_crc32>);
+}
+
+static int l_panic_handler(lua::State* L) {
+    logger.error() << "PANIC: unprotected error in call to Lua API: " << lua::tostring(L, -1);
+    logger.flush();
+    abort();
 }
 
 void lua::init_state(State* L, StateType stateType) {
+    lua_atpanic(L, l_panic_handler);
+
     // Allowed standard libraries
     luaL_openlibs(L);
 
@@ -112,21 +121,25 @@ void lua::init_state(State* L, StateType stateType) {
     setglobal(L, "io");
 
     createtable(L, 0, 0);
+    pushvalue(L, -1);
     setglobal(L, "__vc__pack_envs");
+    setregistry(L, lua::PACK_ENVS_TABLE);
 
     const char* removed_os[] {
         "execute", "exit", "remove", "rename", "setlocale", "tmpname", nullptr};
     remove_lib_funcs(L, "os", removed_os);
     create_libs(L, stateType);
 
+    createtable(L, 0, 0);
+    setregistry(L, LAMBDAS_TABLE);
+
+    createtable(L, 0, 0);
+    setregistry(L, CHUNKS_TABLE);
+
+    createtable(L, 0, 0);
     pushglobals(L);
-    setglobal(L, env_name(0));
-
-    createtable(L, 0, 0);
-    setglobal(L, LAMBDAS_TABLE);
-
-    createtable(L, 0, 0);
-    setglobal(L, CHUNKS_TABLE);
+    setfield(L, env_name(0));
+    setregistry(L, ENVS_TABLE);
 
     initialize_libs_extends(L);
 
@@ -144,6 +157,9 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     );
     lua::pushstring(main_thread, params.scriptFile.stem().u8string());
     lua::setglobal(main_thread, "__VC_SCRIPT_NAME");
+
+    lua::pushboolean(main_thread, params.headless);
+    lua::setglobal(main_thread, "__VC_HEADLESS");
 }
 
 void lua::finalize() {

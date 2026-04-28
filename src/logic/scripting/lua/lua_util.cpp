@@ -8,7 +8,7 @@
 
 using namespace lua;
 
-static int nextEnvironment = 1;
+static int next_environment = 1;
 
 std::unordered_map<std::type_index, std::string> lua::usertypeNames;
 
@@ -20,7 +20,7 @@ int lua::userdata_destructor(lua::State* L) {
 }
 
 std::string lua::env_name(int env) {
-    return "_ENV" + util::mangleid(env);
+    return std::to_string(env);
 }
 
 int lua::pushvalue(State* L, const dv::value& value) {
@@ -220,7 +220,7 @@ void lua::dump_stack(State* L) {
 static std::shared_ptr<std::string> create_lambda_handler(State* L) {
     auto ptr = reinterpret_cast<ptrdiff_t>(topointer(L, -1));
     auto name = util::mangleid(ptr);
-    requireglobal(L, LAMBDAS_TABLE);
+    requireregistry(L, LAMBDAS_TABLE);
     pushvalue(L, -2);
     setfield(L, name);
     pop(L, 2);
@@ -229,7 +229,7 @@ static std::shared_ptr<std::string> create_lambda_handler(State* L) {
         new std::string(name),
         [=](std::string* name) {
             auto L = lua::get_main_state();
-            requireglobal(L, LAMBDAS_TABLE);
+            requireregistry(L, LAMBDAS_TABLE);
             pushnil(L);
             setfield(L, *name);
             pop(L);
@@ -242,8 +242,9 @@ runnable lua::create_runnable(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() {
         auto L = lua::get_main_state();
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return;
+        }
         call_nothrow(L, 0, 0);
         pop(L);
     };
@@ -252,8 +253,9 @@ runnable lua::create_runnable(State* L) {
 KeyCallback lua::create_simple_handler(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() -> bool {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return false;
+        }
         int top = gettop(L) - 1;
         if (call_nothrow(L, 0)) {
             int nres = gettop(L) - top;
@@ -271,8 +273,9 @@ KeyCallback lua::create_simple_handler(State* L) {
 scripting::common_func lua::create_lambda(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=](const std::vector<dv::value>& args) -> dv::value {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return nullptr;
+        }
         int top = gettop(L) - 1;
         for (const auto& arg : args) {
             pushvalue(L, arg);
@@ -294,8 +297,9 @@ scripting::common_func lua::create_lambda(State* L) {
 scripting::common_func lua::create_lambda_nothrow(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=](const std::vector<dv::value>& args) -> dv::value {
-        if (!get_from(L, LAMBDAS_TABLE, *funcptr, false))
+        if (!get_from_registry(L, LAMBDAS_TABLE, *funcptr, false)) {
             return nullptr;
+        }
         int top = gettop(L) - 1;
         for (const auto& arg : args) {
             pushvalue(L, arg);
@@ -313,8 +317,16 @@ scripting::common_func lua::create_lambda_nothrow(State* L) {
     };
 }
 
+static void store_env(lua::State* L, int id) {
+    requireregistry(L, ENVS_TABLE);
+    pushvalue(L, -2);
+    lua_remove(L, -3);
+    setfield(L, env_name(id));
+    pop(L);
+}
+
 int lua::create_environment(State* L, int parent) {
-    int id = nextEnvironment++;
+    int id = next_environment++;
 
     // local env = {}
     createtable(L, 0, 1);
@@ -331,24 +343,22 @@ int lua::create_environment(State* L, int parent) {
     setfield(L, "__index");
     setmetatable(L);
 
-    // envname = env
-    setglobal(L, env_name(id));
+    store_env(L, id);
     return id;
 }
 
 int lua::restore_pack_environment(lua::State* L, const std::string& packid) {
-    if(!lua::getglobal(L, "__vc__pack_envs")) {
+    if(!requireregistry(L, PACK_ENVS_TABLE)) {
         return -1;
     }
-    int id = nextEnvironment++;
+    int id = next_environment++;
 
-    if (lua::getfield(L, packid)) {
-        // envname = env
-        setglobal(L, env_name(id));
-        lua::pop(L);
+    if (getfield(L, packid)) {
+        store_env(L, id);
+        pop(L);
         return id;
     }
-    lua::pop(L);
+    pop(L);
     return -1;
 }
 
@@ -357,5 +367,5 @@ void lua::remove_environment(State* L, int id) {
         return;
     }
     pushnil(L);
-    setglobal(L, env_name(id));
+    store_env(L, id);
 }

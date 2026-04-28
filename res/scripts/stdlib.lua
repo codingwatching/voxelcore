@@ -1,4 +1,5 @@
-local enable_experimental = __vc_app.get_setting("debug.enable-experimental")
+local __app = __vc_app
+local enable_experimental = __app.get_setting("debug.enable-experimental")
 
 ------------------------------------------------
 ------ Extended kit of standard functions ------
@@ -119,12 +120,7 @@ local function complete_app_lib(app)
     end
 end
 
-if app then
-    complete_app_lib(app)
-elseif __vc_app then
-    complete_app_lib(__vc_app)
-end
-
+complete_app_lib(__app)
 require "core:internal/maths_inline"
 require "core:internal/debugging"
 require "core:internal/audio_input"
@@ -175,18 +171,18 @@ function start_coroutine(chunk, name)
     local co = coroutine.create(function()
         local status, error = xpcall(chunk, function(err)
             local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            
-            if hud then
-                gui.alert(fullmsg, function()
-                    if world.is_open() then
-                        __vc_app.close_world()
-                    else
-                        __vc_app.reset_content()
-                        menu:reset()
-                        menu.page = "main"
-                    end
-                end)
+            if vc.is_headless() then
+                return fullmsg
             end
+            gui.alert(fullmsg, function()
+                if world.is_open() then
+                    __app.close_world()
+                else
+                    __app.reset_content()
+                    menu:reset()
+                    menu.page = "main"
+                end
+            end)
             return fullmsg
         end)
         if not status then
@@ -204,7 +200,7 @@ function __vc_start_app_script(path, name)
     if chunk == nil then
         error(err)
     end
-    local script_env = setmetatable({app = app or __vc_app}, {__index=_G})
+    local script_env = setmetatable({app = __app}, {__index=_G})
     chunk = setfenv(chunk, script_env)
     if name then
         start_coroutine(chunk, name)
@@ -222,7 +218,7 @@ gui_util = require "core:internal/gui_util"
 Document = gui_util.Document
 Element = gui_util.Element
 RadioGroup = gui_util.RadioGroup
-__vc_page_loader = gui_util.load_page
+__vc_page_loader = function(...) return gui_util.load_page(__app, ...) end
 
 function __vc_get_document_node(docname, nodeid)
     return Element.new(docname, nodeid)
@@ -384,6 +380,40 @@ math.randomseed(time.uptime() * 1536227939)
 rules = require "core:internal/rules"
 local _rules = rules
 
+local function configure_SSAO()
+    -- Temporary using slot to configure built-in SSAO effect
+    local slot = gfx.posteffects.index("core:ssao")
+    gfx.posteffects.set_effect(slot, "ssao")
+
+    -- Generating random SSAO samples
+    local buffer = Bytearray(0)
+    for i = 0, 63 do
+        local x = math.random() * 2.0 - 1.0
+        local y = math.random() * 2.0 - 1.0
+        local z = math.random() * 2.0
+        local len = math.sqrt(x * x + y * y + z * z)
+        if len > 0 then
+            x = x / len
+            y = y / len
+            z = z / len
+        end
+        Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
+    end
+    gfx.posteffects.set_array(slot, "u_ssaoSamples", Bytearray_as_string(buffer))
+
+    local function update_ssao_quality(value)
+        value = math.min(value, 3)
+        gfx.posteffects.set_params(slot, {
+            u_kernelSize = value * 16,
+            u_radius = 0.4 / value,
+            u_bias = 0.006 / value / value,
+        })
+    end
+    events.on("core:setting.graphics.ssao.set", update_ssao_quality)
+
+    update_ssao_quality(__app.get_setting("graphics.ssao"))
+end
+
 function __vc_on_hud_open()
     local _hud_is_content_access = hud._is_content_access
     local _hud_set_content_access = hud._set_content_access
@@ -446,6 +476,8 @@ function __vc_on_hud_open()
         end
     end)
     hud.open_permanent("core:ingame_chat")
+
+    configure_SSAO()
 end
 
 local Schedule = require "core:schedule"
@@ -508,20 +540,27 @@ function __vc_on_world_save()
     file.write(RULES_FILE, toml.tostring(rule_values))
 end
 
+local __close_all_descriptors = file.__close_all_descriptors
+local __gui_util_reset_local = gui_util.__reset_local
+local __stdcomp_reset = stdcomp.__reset
+file.__close_all_descriptors = nil
+gui_util.__reset_local = nil
+stdcomp.reset = nil
+
 function __vc_on_world_quit()
     _rules.clear()
-    gui_util:__reset_local()
-    stdcomp.__reset()
-    file.__close_all_descriptors()
+    __gui_util_reset_local()
+    __stdcomp_reset()
+    __close_all_descriptors()
 end
-
-local __post_runnables = {}
 
 local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
-local function __vc__process_post_runnables()
+local __post_runnables = {}
+
+local function __process_post_runnables()
     if #__post_runnables > 0 then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __vc__error)
@@ -555,9 +594,9 @@ local function __vc__process_post_runnables()
     end
 end
 
-function __process_post_runnables()
+function __vc__process_post_runnables()
     __vc__is_post_runnable = true
-    local success, err = pcall(__vc__process_post_runnables)
+    local success, err = pcall(__process_post_runnables)
     if not success then
         debug.error("an error ocurred while processing post-runnables: ".. err)
     end
@@ -590,4 +629,6 @@ end
 require "core:internal/deprecated"
 
 ffi = nil
+__vc_app = nil
 __vc_lock_internal_modules()
+__vc_lock_internal_modules = nil

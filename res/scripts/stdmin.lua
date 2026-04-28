@@ -1,5 +1,17 @@
+local _vc_headless = __VC_HEADLESS
+__VC_HEADLESS = nil
+
+vc = {
+    is_headless = function()
+        return _vc_headless
+    end,
+    is_client = function ()
+        return not _vc_headless
+    end
+}
+
 local _ffi = ffi
-local _debug_getinfo = debug.getinfo
+local _crc32 = crc32
 
 function crc32(bytes, chksum)
     chksum = chksum or 0
@@ -103,6 +115,8 @@ end
 
 ----------------------------------------------
 
+local _debug_getinfo = debug.getinfo
+
 function debug.count_frames()
     local frames = 1
     while true do
@@ -178,7 +192,7 @@ function reload_module(name)
     end
 end
 
-local internal_locked = false
+local __internal_locked = false
 
 -- Load script with caching
 --
@@ -188,9 +202,12 @@ local internal_locked = false
 -- nocache - ignore cached script, load anyway
 function __load_script(path, nocache, env)
     local packname, filename = parse_path(path)
+    local is_internal = (packname == "res" or packname == "core")
+       and filename:find("modules/internal") == 1
 
-    if internal_locked and (packname == "res" or packname == "core") 
-       and filename:starts_with("modules/internal") then
+    nocache = nocache or is_internal
+
+    if is_internal and __internal_locked then
         error("access to core:internal modules outside of [core]")
     end
 
@@ -218,8 +235,11 @@ function __load_script(path, nocache, env)
 end
 
 function __vc_lock_internal_modules()
-    internal_locked = true
+    __internal_locked = true
 end
+
+local __pack_envs = __vc__pack_envs
+__vc__pack_envs = nil
 
 function require(path)
     if not string.find(path, ':') then
@@ -227,7 +247,7 @@ function require(path)
         return require(prefix .. ':' .. path)
     end
     local prefix, file = parse_path(path)
-    local env = __vc__pack_envs[prefix]
+    local env = __pack_envs[prefix]
     return __load_script(prefix .. ":modules/" .. file .. ".lua", nil, env)
 end
 
@@ -248,7 +268,7 @@ function __scripts_cleanup(non_reset_packs)
             __cached_scripts[k] = nil
             package.loaded[k] = nil
         end
-        __vc__pack_envs[packname] = nil
+        __pack_envs[packname] = nil
         ::continue::
     end
 end
