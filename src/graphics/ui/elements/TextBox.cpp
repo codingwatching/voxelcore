@@ -646,7 +646,11 @@ void TextBox::reposition() {
 void TextBox::refresh() {
     Container::refresh();
     label->setSize(
-        size - glm::vec2(padding.z + padding.x, padding.w + padding.y)
+        size - glm::vec2(
+                   padding.z + padding.x +
+                       LINE_NUMBERS_PANE_WIDTH * showLineNumbers + textOffset,
+                   padding.w + padding.y
+               )
     );
     label->setPos(glm::vec2(
         padding.x + LINE_NUMBERS_PANE_WIDTH * showLineNumbers + textInitX -
