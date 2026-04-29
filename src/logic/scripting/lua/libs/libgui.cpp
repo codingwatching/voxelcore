@@ -759,6 +759,7 @@ static void p_set_text(UINode* node, lua::State* L, int idx) {
 static void p_set_caret(UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<TextBox*>(node)) {
         box->setCaret(static_cast<ptrdiff_t>(lua::tointeger(L, idx)));
+        box->resetSelection();
     }
 }
 static void p_set_editable(UINode* node, lua::State* L, int idx) {

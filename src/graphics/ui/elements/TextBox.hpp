@@ -77,7 +77,6 @@ namespace gui {
 
         void setTextOffset(uint x);
         bool eraseSelected();
-        void resetSelection();
         void extendSelection(int index);
         void tokenSelectAt(int index);
         size_t getLineLength(uint line) const;
@@ -106,6 +105,7 @@ namespace gui {
         
         void paste(const std::wstring& text, bool history=true);
         void erase(size_t start, size_t length);
+        void resetSelection();
             
         virtual void setTextSupplier(wstringsupplier supplier);
 
