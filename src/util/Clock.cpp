@@ -1,6 +1,7 @@
 #include "Clock.hpp"
 
 #include <cmath>
+#include <algorithm>
 
 using namespace util;
 
