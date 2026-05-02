@@ -288,22 +288,24 @@ void Entities::preparePhysics(float delta) {
     auto& hitboxes = physics.getHitboxesWriteable();
     auto& solidHitboxes = physics.getSolidHitboxesWriteable();
 
-    if (sensorsTickClock.update(delta)) {
-        auto part = sensorsTickClock.getPart();
-        auto parts = sensorsTickClock.getParts();
+    if (int parts = sensorsTickClock.update(delta)) {
+        for (int i = 0; i < parts; i++) {
+            auto part = sensorsTickClock.convertPart(i);
+            auto allParts = sensorsTickClock.getParts();
 
-        auto& sensors = physics.getSensorsWriteable();
-        sensors.clear();
+            auto& sensors = physics.getSensorsWriteable();
+            sensors.clear();
 
-        auto view = registry->view<EntityId, Transform, Rigidbody>();
-        for (auto [entity, eid, transform, rigidbody] : view.each()) {
-            if (!rigidbody.enabled) {
-                continue;
+            auto view = registry->view<EntityId, Transform, Rigidbody>();
+            for (auto [entity, eid, transform, rigidbody] : view.each()) {
+                if (!rigidbody.enabled) {
+                    continue;
+                }
+                if ((eid.uid + part) % allParts != 0) {
+                    continue;
+                }
+                updateSensors(rigidbody, transform, sensors);
             }
-            if ((eid.uid + part) % parts != 0) {
-                continue;
-            }
-            updateSensors(rigidbody, transform, sensors);
         }
     }
 
@@ -364,12 +366,14 @@ void Entities::updatePhysics(float delta) {
 }
 
 void Entities::update(float delta) {
-    if (updateTickClock.update(delta)) {
-        scripting::on_entities_update(
-            updateTickClock.getTickRate(),
-            updateTickClock.getParts(),
-            updateTickClock.getPart()
-        );
+    if (int parts = updateTickClock.update(delta)) {
+        for (int i = 0; i < parts; i++) {
+            scripting::on_entities_update(
+                updateTickClock.getTickRate(),
+                updateTickClock.getParts(),
+                updateTickClock.convertPart(i)
+            );
+        }
     }
     updatePhysics(delta);
     scripting::on_entities_physics_update(delta);
