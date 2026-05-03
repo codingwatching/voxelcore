@@ -755,15 +755,16 @@ void TextBox::resetMaxLocalCaret() {
         caret - label->getTextLineOffset(label->getLineByTextIndex(caret));
 }
 
-void TextBox::stepLeft(bool shiftPressed, bool breakSelection) {
+void TextBox::stepCaret(bool shiftPressed, bool breakSelection, bool right) {
     uint previousCaret = this->caret;
-    size_t caret = breakSelection ? selectionStart : this->caret;
-    if (caret > 0) {
-        if (caret > input.length()) {
-            setCaret(input.length() - 1);
-        } else {
-            setCaret(caret - 1);
-        }
+    size_t caret =
+        breakSelection ? (right ? selectionEnd : selectionStart) : this->caret;
+    if (right ? (caret < input.length()) : (caret > 0)) {
+        setCaret(
+            right ? (caret + 1)
+                  : ((caret > input.length()) ? (input.length() - 1)
+                                              : (caret - 1))
+        );
         if (shiftPressed) {
             if (selectionStart == selectionEnd) {
                 selectionOrigin = previousCaret;
@@ -774,28 +775,9 @@ void TextBox::stepLeft(bool shiftPressed, bool breakSelection) {
         }
     } else {
         setCaret(caret);
-        resetSelection();
-    }
-    resetMaxLocalCaret();
-}
-
-void TextBox::stepRight(bool shiftPressed, bool breakSelection) {
-    uint previousCaret = this->caret;
-    size_t caret = breakSelection ? selectionEnd : this->caret;
-    if (caret < input.length()) {
-        setCaret(caret + 1);
-        caretLastMove = gui.getWindow().time();
-        if (shiftPressed) {
-            if (selectionStart == selectionEnd) {
-                selectionOrigin = previousCaret;
-            }
-            extendSelection(this->caret);
-        } else {
+        if (!shiftPressed) {
             resetSelection();
         }
-    } else {
-        setCaret(caret);
-        resetSelection();
     }
     resetMaxLocalCaret();
 }
@@ -983,9 +965,9 @@ void TextBox::performEditingKeyboardEvents(Keycode key) {
     } else if (key == Keycode::TAB) {
         onTab(shiftPressed);
     } else if (key == Keycode::LEFT) {
-        stepLeft(shiftPressed, breakSelection);
+        stepCaret(shiftPressed, breakSelection, false);
     } else if (key == Keycode::RIGHT) {
-        stepRight(shiftPressed, breakSelection);
+        stepCaret(shiftPressed, breakSelection, true);
     } else if (key == Keycode::UP && onUpPressed) {
         onUpPressed();
     } else if (key == Keycode::DOWN && onDownPressed) {
