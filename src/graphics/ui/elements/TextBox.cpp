@@ -648,7 +648,7 @@ void TextBox::refresh() {
     label->setSize(
         size - glm::vec2(
                    padding.z + padding.x +
-                       LINE_NUMBERS_PANE_WIDTH * showLineNumbers + textOffset,
+                       LINE_NUMBERS_PANE_WIDTH * showLineNumbers - textOffset,
                    padding.w + padding.y
                )
     );
@@ -671,7 +671,9 @@ size_t TextBox::normalizeIndex(int index) {
 /// @param y screen Y position
 /// @return non-normalized character index
 int TextBox::calcIndexAt(int x, int y) const {
-    if (!rawTextCache.metrics.font.has_value()) return 0;
+    if (!rawTextCache.metrics.font.has_value()) {
+        return 0;
+    }
     const auto& labelText = label->getText();
     glm::vec2 lcoord = label->calcPos();
     uint line = label->getLineByYOffset(y - lcoord.y);
@@ -733,6 +735,7 @@ void TextBox::doubleClick(int x, int y) {
 }
 
 void TextBox::click(int x, int y) {
+    Container::click(x, y);
     int index = normalizeIndex(calcIndexAt(x, y));
     selectionStart = index;
     selectionEnd = index;
@@ -1200,7 +1203,7 @@ void TextBox::setCaret(size_t position) {
     if (font == nullptr) {
         return;
     }
-    int width = label->getSize().x;
+    int width = size.x - padding.x - padding.z - LINE_NUMBERS_PANE_WIDTH * showLineNumbers;
 
     rawTextCache.prepare(font, rawTextCache.metrics, width);
     rawTextCache.update(input, multiline, label->isTextWrapping());
@@ -1221,12 +1224,12 @@ void TextBox::setCaret(size_t position) {
     }
     int lcaret = caret - rawTextCache.getTextLineOffset(line);
     int realoffset = rawTextCache.metrics.calcWidth(labelText, 0, lcaret) -
-                     static_cast<int>(textOffset) + 2;
+                     static_cast<int>(textOffset);
 
     if (realoffset - width > 0) {
         setTextOffset(textOffset + realoffset - width);
     } else if (realoffset < 0) {
-        setTextOffset(std::max(textOffset + realoffset, static_cast<size_t>(0)));
+        setTextOffset(std::max<int>(textOffset + realoffset - static_cast<int>(padding.x + padding.w), 0));
     }
 }
 
