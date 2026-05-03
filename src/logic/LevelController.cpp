@@ -104,10 +104,12 @@ void LevelController::update(float delta, bool pause) {
             if (player->isSuspended()) {
                 continue;
             }
-            if (playerTickClock.update(delta)) {
-                if (player->getId() % playerTickClock.getParts() ==
-                    playerTickClock.getPart()) {
-                    
+            if (int parts = playerTickClock.update(delta)) {
+                for (int i = 0; i < parts; i++) {
+                    if (player->getId() % playerTickClock.getParts() !=
+                        playerTickClock.convertPart(i)) {
+                        continue;
+                    }
                     const auto& position = player->getPosition();
                     if (player->chunks->get(
                         std::floor(position.x),
@@ -119,6 +121,7 @@ void LevelController::update(float delta, bool pause) {
                         );
                     }
                 }
+
             }
         }
     }
