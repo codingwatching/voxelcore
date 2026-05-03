@@ -27,10 +27,6 @@ int Clock::update(float delta) {
     return parts;
 }
 
-int Clock::getPart() const {
-    return currentTickPart;
-}
-
 int Clock::getParts() const {
     return tickParts;
 }

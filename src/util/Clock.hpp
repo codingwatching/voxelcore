@@ -13,7 +13,6 @@ namespace util {
 
         int update(float delta);
 
-        int getPart() const;
         int getParts() const;
         int getTickRate() const;
         int getTickId() const;
