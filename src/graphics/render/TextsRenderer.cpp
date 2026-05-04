@@ -10,12 +10,18 @@
 #include "graphics/core/Shader.hpp"
 #include "graphics/core/DrawContext.hpp"
 #include "presets/NotePreset.hpp"
+#include "world/Level.hpp"
+#include "objects/Entities.hpp"
+#include "objects/Entity.hpp"
 #include "constants.hpp"
 
 TextsRenderer::TextsRenderer(
-    Batch3D& batch, const Assets& assets, const Frustum& frustum
+    const Level& level,
+    Batch3D& batch,
+    const Assets& assets,
+    const Frustum& frustum
 )
-    : batch(batch), assets(assets), frustum(frustum) {
+    : level(level), batch(batch), assets(assets), frustum(frustum) {
 }
 
 void TextsRenderer::renderNote(
@@ -30,6 +36,13 @@ void TextsRenderer::renderNote(
     const auto& text = note.getText();
     const auto& preset = note.getPreset();
     auto pos = note.getPosition();
+
+    entityid_t eid = note.getEntity();
+    if (eid != ENTITY_NONE) {
+        if (auto entity = level.entities->get(eid)) {
+            pos += entity->getTransform().displayPos;
+        }
+    }
 
     if (util::distance2(pos, camera.position) >
         util::sqr(preset.renderDistance / camera.zoom)) {

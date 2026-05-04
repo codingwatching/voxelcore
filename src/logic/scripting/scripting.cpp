@@ -188,11 +188,7 @@ std::unique_ptr<Process> scripting::start_app_script(const io::path& script) {
     lua::pushstring(L, pack.id);
     lua::setfield(L, "PACK_ID");
 
-    if(!lua::getglobal(L, "__vc__pack_envs")) {
-        lua::createtable(L, 0, 0);
-        lua::setglobal(L, "__vc__pack_envs");
-        lua::pushvalue(L, -1);
-    }
+    lua::requireregistry(L, lua::PACK_ENVS_TABLE);
     lua::pushenv(L, id);
     lua::setfield(L, pack.id);
     lua::pop(L);
@@ -248,7 +244,7 @@ std::unique_ptr<Process> scripting::start_app_script(const io::path& script) {
 
 void scripting::process_post_runnables() {
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__process_post_runnables")) {
+    if (lua::getglobal(L, "__vc__process_post_runnables")) {
         lua::call_nothrow(L, 0, 0);
     }
 }
@@ -627,6 +623,26 @@ void scripting::on_ui_close(UiDocument* layout, Inventory* inventory) {
     });
 }
 
+void scripting::on_scripts_loading() {
+    auto L = lua::get_main_state();
+    
+    for (auto& pack : content_control->getAllContentPacks()) {
+        lua::emit_event(L, pack.id + ":.onscriptsloading", [](auto L) {
+            return 0;
+        });
+    }
+}
+
+void scripting::on_content_loaded() {
+    auto L = lua::get_main_state();
+    
+    for (auto& pack : content_control->getAllContentPacks()) {
+        lua::emit_event(L, pack.id + ":.oncontentloaded", [](auto L) {
+            return 0;
+        });
+    }
+}
+
 bool scripting::register_event(
     int env, const std::string& name, const std::string& id
 ) {
@@ -722,7 +738,7 @@ void scripting::load_entity_component(
     std::string src = io::read_string(file);
     logger.info() << "script (component) " << file.string();
     lua::loadbuffer(L, *env, src, fileName);
-    lua::store_in(L, lua::CHUNKS_TABLE, name);
+    lua::store_in_registry(L, lua::CHUNKS_TABLE, name);
 }
 
 void scripting::load_world_script(
@@ -761,6 +777,23 @@ void scripting::load_world_script(
         register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
     funcsset.oninventoryclosed =
         register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
+    funcsset.onentityspawn =
+        register_event(env, "on_entity_spawn", prefix + ":.entityspawn");
+    funcsset.onentitydespawn =
+        register_event(env, "on_entity_despawn", prefix + ":.entitydespawn");
+}
+
+void scripting::load_content_script(
+    const scriptenv& senv,
+    const std::string& prefix,
+    const io::path& file,
+    const std::string& fileName
+) {
+    int env = *senv;
+    lua::pop(lua::get_main_state(), load_script(env, "content", file, fileName));
+
+    register_event(env, "on_scripts_loading", prefix + ":.onscriptsloading");
+    register_event(env, "on_content_loaded", prefix + ":.oncontentloaded");
 }
 
 void scripting::load_layout_script(

@@ -160,6 +160,12 @@ namespace scripting {
     /// @brief Called on UI view close
     void on_ui_close(UiDocument* layout, Inventory* inventory);
 
+    /// @brief Called on Content loading
+    void on_scripts_loading();
+
+    /// @brief Called on Content loading finish
+    void on_content_loaded();
+
     /// @brief Load script associated with a Block
     /// @param env environment
     /// @param prefix pack id
@@ -219,6 +225,13 @@ namespace scripting {
         const io::path& file,
         const std::string& fileName,
         WorldFuncsSet& funcsset
+    );
+
+    void load_content_script(
+        const scriptenv& env,
+        const std::string& packid,
+        const io::path& file,
+        const std::string& fileName
     );
 
     /// @brief Load script associated with an UiDocument

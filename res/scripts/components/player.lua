@@ -80,7 +80,7 @@ function on_physics_update(delta)
     local front = mat4.mul(rot, {0, 0, -1})
     local pos = tsf:get_pos()
 
-    if hud and pid == hud.get_player() then
+    if vc.is_client() and pid == hud.get_player() then
         process_player_inputs(pid, rot, delta)
     end
     mob.look_at(vec3.add(pos, front))
