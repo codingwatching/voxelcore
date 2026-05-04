@@ -7,7 +7,25 @@
 #include <sstream>
 #include <stdexcept>
 
-static std::locale locale("en_US.UTF-8");
+static std::locale get_utf8_locale() {
+    std::vector<std::string> candidates = {
+        "C.UTF-8",
+        "en_US.UTF-8",
+        "en_US.utf8",
+        ".UTF8",
+    };
+
+    for (const auto& name : candidates) {
+        try {
+            return std::locale(name);
+        } catch (const std::runtime_error&) {
+            continue;
+        }
+    }
+    return std::locale::classic();
+}
+
+static std::locale locale = get_utf8_locale();
 
 std::string util::escape(std::string_view s, bool escapeUnicode) {
     std::stringstream ss;
