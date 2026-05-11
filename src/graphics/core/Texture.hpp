@@ -11,19 +11,21 @@ protected:
     uint id;
     uint width;
     uint height;
+    uint format;
 public:
-    Texture(uint id, uint width, uint height);
+    Texture(uint id, uint width, uint height, ImageFormat imageFormat);
     Texture(const ubyte* data, uint width, uint height, ImageFormat format);
     virtual ~Texture();
 
     virtual void bind() const;
     virtual void unbind() const;
-    void reload(const ubyte* data, uint w, uint h);
+    virtual void reload(const ubyte* data, uint w, uint h);
     void reloadPartial(const ImageData& image, uint x, uint y, uint w, uint h);
 
     void setNearestFilter();
 
     void reload(const ImageData& image);
+    virtual void resize(uint w, uint h);
 
     void setMipMapping(bool flag, bool pixelated);
 

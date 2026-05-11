@@ -1,14 +1,18 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-#include <glm/glm.hpp>
-#include "typedefs.hpp"
-#include "maths/fastmaths.hpp"
-#include "graphics/core/MeshData.hpp"
 
-template<typename VertexStructure> class Mesh;
+#include "graphics/core/MeshData.hpp"
+#include "maths/fastmaths.hpp"
+#include "typedefs.hpp"
+#include "world/Environment.hpp"
+
+
+template <typename VertexStructure>
+class Mesh;
 class Shader;
 class Assets;
 class Camera;
@@ -21,8 +25,7 @@ struct SkyboxVertex {
     glm::vec2 position;
 
     static constexpr VertexAttribute ATTRIBUTES[] {
-        {VertexAttribute::Type::FLOAT, false, 2}, 
-        {{}, 0}};
+        {VertexAttribute::Type::FLOAT, false, 2}, {{}, 0}};
 };
 
 struct SkySprite {
@@ -34,10 +37,11 @@ struct SkySprite {
 };
 
 class Skybox {
-    std::unique_ptr<Framebuffer> fbo;
+    SkyMode mode = SkyMode::SOLID;
     uint size;
+    std::unique_ptr<Framebuffer> fbo;
+    const Assets& assets;
     Shader& shader;
-    bool ready = false;
     FastRandom random;
     glm::vec3 lightDir;
 
@@ -53,30 +57,36 @@ class Skybox {
     glm::mat4 rotation;
 
     void drawStars(float angle, float opacity);
-    void drawBackground(
-        const Camera& camera, const Assets& assets, int width, int height
-    );
+    void drawBackground(const Camera& camera, int width, int height);
+    void drawSkySprites(float daytime, float angle, float opacity);
     void refreshFace(uint face, Cubemap* cubemap);
 public:
-    Skybox(uint size, Shader& shader);
+    Skybox(uint size, const Assets& assets);
     ~Skybox();
 
+    void setMode(SkyMode mode);
+
     void draw(
-        const DrawContext& pctx, 
-        const Camera& camera, 
-        const Assets& assets, 
+        const Environment& environment,
+        const DrawContext& pctx,
+        const Camera& camera,
         float daytime,
         float fog
     );
 
-    void refresh(const DrawContext& pctx, float t, float mie, const glm::vec3& tint, const glm::vec3& hightlight, uint quality);
+    void refresh(
+        const Environment& environment,
+        const DrawContext& pctx,
+        float t,
+        float mie,
+        const glm::vec3& tint,
+        const glm::vec3& hightlight,
+        uint quality
+    );
     void bind() const;
     void unbind() const;
-    bool isReady() const {
-        return ready;
-    }
 
-    const glm::vec3 getLightDir() const {
+    const glm::vec3& getLightDir() const {
         return lightDir;
     }
 };

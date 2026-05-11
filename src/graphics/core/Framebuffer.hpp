@@ -12,12 +12,13 @@ class Framebuffer : public Bindable {
     uint depth;
     uint width;
     uint height;
-    uint format;
     std::shared_ptr<Texture> texture;
 public:
     Framebuffer(uint fbo, uint depth, std::unique_ptr<Texture> texture);
     Framebuffer(uint width, uint height, bool alpha=false);
     ~Framebuffer();
+
+    void setTexture(std::unique_ptr<Texture> texture);
 
     /// @brief Use framebuffer
     void bind() override;
