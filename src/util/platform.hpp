@@ -25,4 +25,6 @@ namespace platform {
     bool open_url(const std::string& url);
     /// @brief Check if stdin has input
     bool stdin_has_data();
+    /// @brief Precise wrapper for std::clock (especially for Windows) 
+    double clock();
 }
