@@ -1,12 +1,13 @@
 #pragma once
 
-#include "typedefs.hpp"
-#include "maths/UVRegion.hpp"
-#include "ImageData.hpp"
-
 #include <memory>
 
-class Texture {
+#include "ImageData.hpp"
+#include "commons.hpp"
+#include "maths/UVRegion.hpp"
+#include "typedefs.hpp"
+
+class Texture : public Bindable {
 protected:
     uint id;
     uint width;
@@ -17,8 +18,8 @@ public:
     Texture(const ubyte* data, uint width, uint height, ImageFormat format);
     virtual ~Texture();
 
-    virtual void bind() const;
-    virtual void unbind() const;
+    virtual void bind() const override;
+    virtual void unbind() const override;
     virtual void reload(const ubyte* data, uint w, uint h);
     void reloadPartial(const ImageData& image, uint x, uint y, uint w, uint h);
 

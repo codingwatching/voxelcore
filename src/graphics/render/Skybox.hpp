@@ -59,7 +59,7 @@ class Skybox {
     void drawStars(float angle, float opacity);
     void drawBackground(const Camera& camera, int width, int height);
     void drawSkySprites(float daytime, float angle, float opacity);
-    void refreshFace(uint face, Cubemap* cubemap);
+    void refreshFace(uint face, Cubemap& cubemap);
 public:
     Skybox(uint size, const Assets& assets);
     ~Skybox();
@@ -83,8 +83,8 @@ public:
         const glm::vec3& hightlight,
         uint quality
     );
-    void bind() const;
-    void unbind() const;
+
+    const Cubemap* getCubemap() const;
 
     const glm::vec3& getLightDir() const {
         return lightDir;

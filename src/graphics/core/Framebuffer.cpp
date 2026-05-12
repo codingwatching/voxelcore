@@ -84,11 +84,11 @@ void Framebuffer::setTexture(std::unique_ptr<Texture> texture) {
     this->texture = std::move(texture);
 }
 
-void Framebuffer::bind() {
+void Framebuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void Framebuffer::unbind() {
+void Framebuffer::unbind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
