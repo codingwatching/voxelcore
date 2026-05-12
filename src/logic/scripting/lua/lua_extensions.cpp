@@ -8,7 +8,6 @@
 #include "engine/Engine.hpp"
 #include "devtools/DebuggingServer.hpp"
 #include "logic/scripting/scripting.hpp"
-#include "util/platform.hpp"
 
 using namespace devtools;
 using namespace scripting;
@@ -382,10 +381,6 @@ static int l_debug_is_debugging(lua::State* L) {
     return lua::pushboolean(L, engine->getDebuggingServer() != nullptr);
 }
 
-static int l_os_clock(lua::State* L) {
-    return lua::pushnumber(L, platform::clock());
-}
-
 void initialize_libs_extends(lua::State* L) {
     if (lua::getglobal(L, "debug")) {
         lua::pushcfunction(L, lua::wrap<l_debug_error>);
@@ -417,13 +412,6 @@ void initialize_libs_extends(lua::State* L) {
     if (lua::getglobal(L, "math")) {
         lua::pushcfunction(L, lua::wrap<l_math_normal_random>);
         lua::setfield(L, "normal_random");
-
-        lua::pop(L);
-    }
-
-    if (lua::getglobal(L, "os")) {
-        lua::pushcfunction(L, lua::wrap<l_os_clock>);
-        lua::setfield(L, "clock");
 
         lua::pop(L);
     }

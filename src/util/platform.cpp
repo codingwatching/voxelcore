@@ -327,23 +327,3 @@ bool platform::stdin_has_data() {
     return poll(&fds, 1, 0) == 1;
 #endif
 }
-
-double platform::clock() {
-#ifdef _WIN32
-    FILETIME createTime, exitTime, kernelTime, userTime;
-
-    static HANDLE currentProcess = GetCurrentProcess();
-    
-    if (GetProcessTimes(currentProcess, &createTime, &exitTime, &kernelTime, &userTime)) {
-        ULARGE_INTEGER kernel, user;
-        kernel.LowPart = kernelTime.dwLowDateTime;
-        kernel.HighPart = kernelTime.dwHighDateTime;
-        user.LowPart = userTime.dwLowDateTime;
-        user.HighPart = userTime.dwHighDateTime;
-
-        return static_cast<double>(kernel.QuadPart + user.QuadPart) / 1000'0000.0;
-    }
-#else
-    return std::clock() / static_cast<double>(CLOCKS_PER_SEC);
-#endif
-}
