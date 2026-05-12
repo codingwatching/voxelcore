@@ -23,7 +23,6 @@
 using namespace advanced_pipeline;
 
 const int STARS_COUNT = 3000;
-
 const int STARS_SEED = 632;
 
 Skybox::Skybox(uint size, const Assets& assets)
@@ -41,31 +40,6 @@ Skybox::Skybox(uint size, const Assets& assets)
         {{1.0f, -1.0f}}};
 
     mesh = std::make_unique<Mesh<SkyboxVertex>>(vertices, 6);
-
-    sprites.push_back(SkySprite {
-        "misc/moon",
-        glm::pi<float>() * 0.5f,
-        4.0f,
-        false,
-        glm::pi<float>() * 0.25f,
-    });
-
-    sprites.push_back(SkySprite {
-        "misc/moon_flare",
-        glm::pi<float>() * 0.5f,
-        0.5f,
-        false,
-        glm::pi<float>() * 0.25f,
-    });
-
-    sprites.push_back(SkySprite {
-        "misc/sun",
-        glm::pi<float>() * 1.5f,
-        4.0f,
-        true,
-        glm::pi<float>() * 0.25f,
-    });
-
     setMode(mode);
 }
 
@@ -117,7 +91,8 @@ void Skybox::drawStars(float angle, float opacity) {
 void Skybox::drawSkySprites(
     float daytime,
     float angle,
-    float opacity
+    float opacity,
+    const std::vector<SkySprite>& sprites
 ) {
     float depthScale = 2e3;
     for (auto& sprite : sprites) {
@@ -160,7 +135,7 @@ void Skybox::draw(
     DrawContext ctx = pctx.sub();
     ctx.setBlendMode(BlendMode::addition);
 
-    if (!environment.sky.sprites && !environment.sky.stars) {
+    if (environment.sky.sprites.empty() && !environment.sky.stars) {
         return;
     }
 
@@ -170,8 +145,8 @@ void Skybox::draw(
     shader->uniformMatrix("u_apply", glm::mat4(1.0f));
     batch3d->begin();
 
-    if (environment.sky.sprites) {
-        drawSkySprites(daytime, angle, opacity);
+    if (!environment.sky.sprites.empty()) {
+        drawSkySprites(daytime, angle, opacity, environment.sky.sprites);
     }
     if (environment.sky.stars) {
         drawStars(angle, opacity);

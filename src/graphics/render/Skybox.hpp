@@ -10,7 +10,6 @@
 #include "typedefs.hpp"
 #include "world/Environment.hpp"
 
-
 template <typename VertexStructure>
 class Mesh;
 class Shader;
@@ -28,14 +27,6 @@ struct SkyboxVertex {
         {VertexAttribute::Type::FLOAT, false, 2}, {{}, 0}};
 };
 
-struct SkySprite {
-    std::string texture;
-    float phase;
-    float distance;
-    bool emissive;
-    float altitude;
-};
-
 class Skybox {
     SkyMode mode = SkyMode::SOLID;
     uint size;
@@ -47,7 +38,6 @@ class Skybox {
 
     std::unique_ptr<Mesh<SkyboxVertex>> mesh;
     std::unique_ptr<Batch3D> batch3d;
-    std::vector<SkySprite> sprites;
     int frameid = 0;
 
     float prevMie = -1.0f;
@@ -58,7 +48,12 @@ class Skybox {
 
     void drawStars(float angle, float opacity);
     void drawBackground(const Camera& camera, int width, int height);
-    void drawSkySprites(float daytime, float angle, float opacity);
+    void drawSkySprites(
+        float daytime,
+        float angle,
+        float opacity,
+        const std::vector<SkySprite>& sprites
+    );
     void refreshFace(uint face, Cubemap& cubemap);
 public:
     Skybox(uint size, const Assets& assets);
