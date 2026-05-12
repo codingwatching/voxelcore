@@ -331,8 +331,10 @@ bool platform::stdin_has_data() {
 double platform::clock() {
 #ifdef _WIN32
     FILETIME createTime, exitTime, kernelTime, userTime;
+
+    static HANDLE currentProcess = GetCurrentProcess();
     
-    if (GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &kernelTime, &userTime)) {
+    if (GetProcessTimes(currentProcess, &createTime, &exitTime, &kernelTime, &userTime)) {
         ULARGE_INTEGER kernel, user;
         kernel.LowPart = kernelTime.dwLowDateTime;
         kernel.HighPart = kernelTime.dwHighDateTime;
