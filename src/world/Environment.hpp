@@ -56,6 +56,8 @@ public:
         };
     } sky;
 
+    std::string generator;
+
     Environment() = default;
 
     dv::value serialize() const override;

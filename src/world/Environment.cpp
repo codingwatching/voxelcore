@@ -22,6 +22,7 @@ dv::value Environment::serialize() const {
             {"clouds", sky.clouds},
             {"sprites", std::move(skySpritesList)},
         })},
+        {"generator", generator}
     });
 }
 
@@ -44,4 +45,5 @@ void Environment::deserialize(const dv::value& src) {
             }
         }
     }
+    src.at("generator").get(generator);
 }
