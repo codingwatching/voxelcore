@@ -5,9 +5,12 @@ vc = {
     is_headless = function()
         return _vc_headless
     end,
-    is_client = function ()
+    is_client = function()
         return not _vc_headless
-    end
+    end,
+    get_setting = __vc_app.get_setting,
+    get_setting_str = __vc_app.get_setting_str,
+    get_setting_info = __vc_app.get_setting_info,
 }
 
 local _ffi = ffi

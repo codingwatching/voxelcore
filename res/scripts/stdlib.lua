@@ -319,9 +319,8 @@ function console.chat(...)
     events.emit("core:chat", ...)
 end
 
-function gui.template(name, params)
-    local text = file.read(file.find("layouts/templates/"..name..".xml"))
-    text = text:gsub("%%{([^}]+)}", function(n) 
+function gui.process_template(source, params)
+    local text = source:gsub("%%{([^}]+)}", function(n)
         local s = params[n]
         if s == nil then
             return
@@ -339,6 +338,11 @@ function gui.template(name, params)
     -- remove unsolved properties: attr='%{var}'
     text = text:gsub('%s*%S+=[\'"]%%{[^}]+}[\'"]%s*', " ")
     return text
+end
+
+function gui.template(name, params)
+    local text = file.read(file.find("layouts/templates/"..name..".xml"))
+    return gui.process_template(text, params)
 end
 
 session = require "core:internal/session"
