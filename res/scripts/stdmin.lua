@@ -303,6 +303,7 @@ require "core:internal/extensions/string"
 local bytearray = require "core:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
+Bytearray_as_ptr = bytearray.FFIBytearray_as_ptr
 U16view = bytearray.FFIU16view
 I16view = bytearray.FFII16view
 U32view = bytearray.FFIU32view
