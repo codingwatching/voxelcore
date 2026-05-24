@@ -91,6 +91,6 @@ function on_open()
         selectbox.value = app.get_setting("audio.input-device")
     end
 
-    create_checkbox("audio.recording-enabled", "Enable microphone", "audio.recording-enabled.tooltip")
+    create_checkbox("audio.recording-enabled", "Microphone access", "audio.recording-enabled.tooltip")
     create_checkbox("audio.acoustic-effects", "Acoustic effects", "audio.acoustic-effects.tooltip")
 end
