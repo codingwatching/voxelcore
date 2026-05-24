@@ -38,6 +38,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
 
     builder.addSection("audio");
     builder.add("enabled", &settings.audio.enabled, false);
+    builder.add("recording-enabled", &settings.audio.recordingEnabled);
     builder.add("volume-master", &settings.audio.volumeMaster);
     builder.add("volume-regular", &settings.audio.volumeRegular);
     builder.add("volume-ui", &settings.audio.volumeUI);

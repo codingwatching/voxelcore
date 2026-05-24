@@ -10,6 +10,7 @@
 struct AudioSettings {
     /// @brief try to initialize AL backend
     FlagSetting enabled {true};
+    FlagSetting recordingEnabled {false};
     
     NumberSetting volumeMaster {1.0f, 0.0f, 1.0f, setting_format::percent};
     NumberSetting volumeRegular {1.0f, 0.0f, 1.0f, setting_format::percent};
