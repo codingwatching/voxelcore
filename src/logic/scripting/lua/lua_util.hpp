@@ -828,27 +828,5 @@ namespace lua {
         return create_bytearray(L, bytes.data(), bytes.size());
     }
 
-    inline std::string_view bytearray_as_string(lua::State* L, int idx) {
-        if (type(L, idx) == LUA_TSTRING) {
-            return tolstring(L, idx);
-        }
-        pushvalue(L, idx);
-#ifdef VC_LUA_DIRECT_BYTEARRAY_ACCESS
-        requireglobal(L, "Bytearray_as_ptr");
-        pushvalue(L, -2);
-        call(L, 1, 2);
-        auto view = tolstring(L, -2);
-        uint64_t size = touinteger(L, -1);
-        auto ptr = (const char*)std::stoull(std::string(view), nullptr, 16);
-        pop(L, 3);
-        return std::string_view(ptr, size);
-#else
-        requireglobal(L, "Bytearray_as_string");
-        pushvalue(L, -2);
-        call(L, 1, 1);
-        auto view = tolstring(L, -1);
-        pop(L, 2);
-        return view;
-#endif // VC_LUA_DIRECT_BYTEARRAY_ACCESS
-    }
+    std::string_view bytearray_as_string(lua::State* L, int idx);
 }

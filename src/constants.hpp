@@ -5,8 +5,6 @@
 #include <limits>
 #include <string>
 
-#define VC_LUA_DIRECT_BYTEARRAY_ACCESS
-
 inline constexpr int ENGINE_VERSION_MAJOR = 0;
 inline constexpr int ENGINE_VERSION_MINOR = 32;
 

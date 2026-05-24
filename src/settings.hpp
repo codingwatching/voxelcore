@@ -126,6 +126,8 @@ struct SystemSettings {
     IntegerSetting maxBgAssetLoaders {3, -4, 16};
     /// @brief Preserve assets during current frame from being destroyed
     FlagSetting preserveAssetsDuringFrame {true};
+    /// @brief Allow luajit cdata objects direct data access optimizations
+    FlagSetting directScriptingDataAccess {true};
 };
 
 struct EngineSettings {
