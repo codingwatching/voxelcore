@@ -141,7 +141,7 @@ std::unique_ptr<IClientProjectScript> scripting::load_client_project_script(
     auto source = io::read_string(script);
     auto env = create_environment(nullptr);
     lua::pushenv(L, *env);
-    if (lua::getglobal(L, "__vc_app")) {
+    if (lua::getregistry(L, "app")) {
         lua::setfield(L, "app");
     }
     lua::pop(L);
