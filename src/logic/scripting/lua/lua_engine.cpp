@@ -17,6 +17,7 @@
 
 static debug::Logger logger("lua-state");
 static lua::State* main_thread = nullptr;
+static bool headless_mode = false;
 
 using namespace lua;
 
@@ -146,20 +147,45 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
     newusertype<LuaCanvas>(L);
+
+    pushboolean(L, headless_mode);
+    setglobal(L, "__VC_HEADLESS");
+
+    auto file = "res:scripts/stdmin.lua";
+    auto src = io::read_string(file);
+    lua::pop(L, lua::execute(L, 0, src, "core:scripts/stdmin.lua"));
+
+    newusertype<LuaRandom>(L);
+    if (getglobal(L, "random")) {
+        if (getglobal(L, "__vc_Random")) {
+            setfield(L, "Random");
+        }
+        pop(L);
+    }
+    newusertype<LuaPCMStream>(L);
+    if (getglobal(L, "audio")) {
+        if (getglobal(L, "__vc_PCMStream")) {
+            setfield(L, "PCMStream");
+        }
+        pop(L);
+    }
+
+    if (stateType == StateType::GENERATOR) {
+        pushnil(L);
+        setglobal(L, "ffi");
+    }
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     logger.info() << LUA_VERSION;
     logger.info() << LUAJIT_VERSION;
 
+    headless_mode = params.headless;
     main_thread = create_state(
         paths, params.headless ? StateType::SCRIPT : StateType::BASE
     );
     lua::pushstring(main_thread, params.scriptFile.stem().u8string());
     lua::setglobal(main_thread, "__VC_SCRIPT_NAME");
-
-    lua::pushboolean(main_thread, params.headless);
-    lua::setglobal(main_thread, "__VC_HEADLESS");
 }
 
 void lua::finalize() {
@@ -191,29 +217,5 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
         throw luaerror("could not initialize Lua state");
     }
     init_state(L, stateType);
-    
-    auto file = "res:scripts/stdmin.lua";
-    auto src = io::read_string(file);
-    lua::pop(L, lua::execute(L, 0, src, "core:scripts/stdmin.lua"));
-
-    newusertype<LuaRandom>(L);
-    if (getglobal(L, "random")) {
-        if (getglobal(L, "__vc_Random")) {
-            setfield(L, "Random");
-        }
-        pop(L);
-    }
-    newusertype<LuaPCMStream>(L);
-    if (getglobal(L, "audio")) {
-        if (getglobal(L, "__vc_PCMStream")) {
-            setfield(L, "PCMStream");
-        }
-        pop(L);
-    }
-
-    if (stateType == StateType::GENERATOR) {
-        pushnil(L);
-        setglobal(L, "ffi");
-    }
     return L;
 }
