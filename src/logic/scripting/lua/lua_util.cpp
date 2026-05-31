@@ -103,6 +103,9 @@ dv::value lua::tovalue(State* L, int idx) {
         case LUA_TTHREAD:
             return "<thread " + to_ptr_string(L, idx) + ">";
         case LUA_TUSERDATA:
+            if (auto userdata = touserdata<Userdata>(L, idx)) {
+                return "<userdata:" + userdata->getTypeName() + " " + to_ptr_string(L, idx) + ">";
+            }
             return "<userdata " + to_ptr_string(L, idx) + ">";
         case LUA_TLIGHTUSERDATA:
             return "<lightuserdata " + to_ptr_string(L, idx) + ">";
