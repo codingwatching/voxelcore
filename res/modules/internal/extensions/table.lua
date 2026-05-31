@@ -57,6 +57,18 @@ function table.merge(t1, t2)
     return t1
 end
 
+function table.merge_replace(t1, t2)
+    for i, v in pairs(t2) do
+        if type(i) == "number" then
+            t1[#t1 + 1] = v
+        else
+            t1[i] = v
+        end
+    end
+
+    return t1
+end
+
 function table.map(t, func)
     for i, v in pairs(t) do
         t[i] = func(i, v)
