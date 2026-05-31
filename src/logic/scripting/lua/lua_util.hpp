@@ -555,16 +555,9 @@ namespace lua {
         return lua_setfenv(L, idx);
     }
 
-    inline void loadbuffer(
+    void loadbuffer(
         lua::State* L, int env, const std::string& src, const std::string& file
-    ) {
-        if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
-            throw luaerror(tostring(L, -1));
-        }
-        if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
-            lua_setfenv(L, -2);
-        }
-    }
+    );
 
     inline void store_in(
         lua::State* L, const std::string& tableName, const std::string& name

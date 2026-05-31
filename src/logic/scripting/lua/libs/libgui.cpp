@@ -1116,28 +1116,34 @@ static int l_gui_load_document(lua::State* L) {
     auto args = lua::tovalue(L, 3);
     auto prefix = filename.entryPoint();
 
-    auto env = scripting::get_root_environment();
+    auto parentEnv = scripting::get_root_environment();
     if (content) {
         if (auto runtime = content->getPackRuntime(prefix)) {
-            env = runtime->getEnvironment();
+            parentEnv = runtime->getEnvironment();
         }
     }
 
-    auto documentPtr = UiDocument::read(
-        engine->getGUI(), std::move(env), alias, filename, filename.string()
-    );
-    auto document = documentPtr.get();
-    engine->requireAssets().store(std::move(documentPtr), alias);
-
+    auto env = scripting::create_doc_environment(parentEnv, alias);
     // namespace extension
     if (lua::istable(L, 4)) {
-        if (lua::get_from(L, "table", "merge")) {
-            lua::pushenv(L, *document->getEnvironment());
+        if (lua::get_from(L, "table", "merge_replace")) {
+            lua::pushenv(L, *env);
             lua::pushvalue(L, 4);
             lua::call(L, 2, 0);
             lua::pop(L);
         }
     }
+    auto documentPtr = UiDocument::read(
+        engine->getGUI(),
+        nullptr,
+        alias,
+        filename,
+        filename.string(),
+        std::move(env)
+    );
+    auto document = documentPtr.get();
+    engine->requireAssets().store(std::move(documentPtr), alias);
+
     scripting::on_ui_open(document, {args});
     return 0;
 }

@@ -414,3 +414,14 @@ std::string_view lua::bytearray_as_string(lua::State* L, int idx) {
         return bytearray_as_string_indirect(L, idx);
     }
 }
+
+void lua::loadbuffer(
+    lua::State* L, int env, const std::string& src, const std::string& file
+) {
+    if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
+        throw luaerror(tostring(L, -1));
+    }
+    if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
+        lua_setfenv(L, -2);
+    }
+}
