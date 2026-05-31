@@ -1126,7 +1126,7 @@ static int l_gui_load_document(lua::State* L) {
     auto env = scripting::create_doc_environment(parentEnv, alias);
     // namespace extension
     if (lua::istable(L, 4)) {
-        if (lua::get_from(L, "table", "merge_replace")) {
+        if (lua::get_from(L, "table", "extend")) {
             lua::pushenv(L, *env);
             lua::pushvalue(L, 4);
             lua::call(L, 2, 0);

@@ -302,7 +302,9 @@ require "core:internal/extensions/file"
 require "core:internal/extensions/table"
 require "core:internal/extensions/string"
 
-vc.get_project_args = table.copy(_vc_project_args)
+vc.get_project_arg = function (name)
+    return _vc_project_args[name]
+end
 
 local bytearray = require "core:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
