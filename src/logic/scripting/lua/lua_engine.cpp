@@ -15,9 +15,12 @@
 #include "usertypes/lua_type_pcmstream.hpp"
 #include "engine/Engine.hpp"
 
-static debug::Logger logger("lua-state");
-static lua::State* main_thread = nullptr;
-static bool headless_mode = false;
+namespace {
+    debug::Logger logger("lua-state");
+    lua::State* main_thread = nullptr;
+    bool headless_mode = false;
+    const std::unordered_map<std::string, std::string>* project_args;
+}
 
 using namespace lua;
 
@@ -151,6 +154,13 @@ void lua::init_state(State* L, StateType stateType) {
     pushboolean(L, headless_mode);
     setglobal(L, "__VC_HEADLESS");
 
+    createtable(L, 0, project_args->size());
+    for (const auto& [key, value] : *project_args) {
+        pushstring(L, value);
+        setfield(L, key);
+    }
+    setglobal(L, "__VC_PROJECT_ARGS");
+
     auto file = "res:scripts/stdmin.lua";
     auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "core:scripts/stdmin.lua"));
@@ -181,6 +191,7 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     logger.info() << LUAJIT_VERSION;
 
     headless_mode = params.headless;
+    project_args = &params.projectArgs;
     main_thread = create_state(
         paths, params.headless ? StateType::SCRIPT : StateType::BASE
     );

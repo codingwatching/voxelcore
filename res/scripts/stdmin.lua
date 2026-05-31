@@ -1,5 +1,7 @@
 local _vc_headless = __VC_HEADLESS
+local _vc_project_args = __VC_PROJECT_ARGS
 __VC_HEADLESS = nil
+__VC_PROJECT_ARGS = nil
 
 vc = {
     is_headless = function()
@@ -299,6 +301,8 @@ require "core:internal/extensions/math"
 require "core:internal/extensions/file"
 require "core:internal/extensions/table"
 require "core:internal/extensions/string"
+
+vc.get_project_args = table.copy(_vc_project_args)
 
 local bytearray = require "core:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
