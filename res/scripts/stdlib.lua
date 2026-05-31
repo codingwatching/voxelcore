@@ -26,7 +26,6 @@ local function tb_frame_tostring(frame)
 end
 
 local __vc__app_script_coroutine
-local __vc__is_post_runnable = false
 
 local function complete_app_lib(app)
     local __app_load_content = app.load_content
@@ -46,7 +45,7 @@ local function complete_app_lib(app)
     app.tick = __app_tick
 
     local function call_in_app_script_co(func, ...)
-        if __vc__is_post_runnable then
+        if __vc_is_post_runnable_context() then
             func(...)
             return
         end

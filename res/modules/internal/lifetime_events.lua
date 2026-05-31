@@ -200,6 +200,8 @@ local function __process_post_runnables()
     end
 end
 
+local __vc__is_post_runnable = false
+
 function __vc__process_post_runnables()
     __vc__is_post_runnable = true
     local success, err = pcall(__process_post_runnables)
@@ -221,4 +223,7 @@ return {
     __vc_on_world_save = __vc_on_world_save,
     __vc_on_world_quit = __vc_on_world_quit,
     __vc__process_post_runnables = __vc__process_post_runnables,
+    __vc_is_post_runnable_context = function()
+        return __vc__is_post_runnable
+    end
 }
