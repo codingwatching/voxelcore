@@ -12,7 +12,7 @@ function sleep(timesec)
     end
 end
 
-function tb_frame_tostring(frame)
+local function tb_frame_tostring(frame)
     local s = frame.short_src
     if frame.what ~= "C" then
         s = s .. ":" .. tostring(frame.currentline)
@@ -192,6 +192,22 @@ function start_coroutine(chunk, name)
     __vc_named_coroutines[name] = co
 end
 
+function __vc_update_coroutines()
+    local dead = {}
+    for name, co in pairs(__vc_named_coroutines) do
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+        end
+        if coroutine.status(co) == "dead" then
+            table.insert(dead, name)
+        end
+    end
+    for _, name in ipairs(dead) do
+        __vc_named_coroutines[name] = nil
+    end
+end
+
 function __vc_start_app_script(path, name)
     debug.log("starting application script "..path)
 
@@ -257,71 +273,8 @@ do
     end
 end
 
----  Console library extension ---
-console.cheats = {}
-
-local log_element = Document.new("core:console").log
-function console.log(...)
-    local args = {...}
-    local text = ''
-    for i,v in ipairs(args) do
-        if i ~= 1 then 
-            text = text..' '..v 
-        else
-            text = text..v
-        end
-    end
-    log_element.caret = -1
-    if log_element.caret > 0 then
-        text = '\n'..text
-    end
-    log_element:paste(text)
-end
-
-local console_add_command = console.__add_command
-console.__add_command = nil
-
-function console.add_command(scheme, description, handler, is_cheat)
-    console_add_command(scheme, description, handler)
-    if not is_cheat then return end
-
-    local name = string.match(scheme, "^(%S+)")
-    if not name then
-        error("Incorrect command syntax, command name not found")
-    end
-
-    table.insert_unique(console.cheats, name)
-end
-
-function console.is_cheat(name)
-    if not table.has(console.get_commands_list(), name) then
-        error(string.format("command \"%s\" not found", name))
-    end
-
-    return table.has(console.cheats, name)
-end
-
-function console.set_cheat(name, status)
-    local is_cheat = console.is_cheat(name)
-    if status and not is_cheat then
-        table.insert(console.cheats, name)
-        return true
-    elseif not status and is_cheat then
-        table.remove_value(console.cheats, name)
-        return true
-    end
-
-    return false
-end
-
-function console.chat(...)
-    console.log(...)
-    events.emit("core:chat", ...)
-end
-
-function gui.template(name, params)
-    local text = file.read(file.find("layouts/templates/"..name..".xml"))
-    text = text:gsub("%%{([^}]+)}", function(n) 
+function gui.process_template(source, params)
+    local text = source:gsub("%%{([^}]+)}", function(n)
         local s = params[n]
         if s == nil then
             return
@@ -339,6 +292,11 @@ function gui.template(name, params)
     -- remove unsolved properties: attr='%{var}'
     text = text:gsub('%s*%S+=[\'"]%%{[^}]+}[\'"]%s*', " ")
     return text
+end
+
+function gui.template(name, params)
+    local text = file.read(file.find("layouts/templates/"..name..".xml"))
+    return gui.process_template(text, params)
 end
 
 session = require "core:internal/session"
@@ -365,7 +323,7 @@ if ffi.os == "Windows" then
     ffi.cdef[[
     unsigned long GetCurrentProcessId();
     ]]
-    
+
     os.pid = ffi.C.GetCurrentProcessId()
 else
     ffi.cdef[[
@@ -378,236 +336,20 @@ end
 math.randomseed(time.uptime() * 1536227939)
 
 rules = require "core:internal/rules"
-local _rules = rules
-
-local function configure_SSAO()
-    -- Temporary using slot to configure built-in SSAO effect
-    local slot = gfx.posteffects.index("core:ssao")
-    gfx.posteffects.set_effect(slot, "ssao")
-
-    -- Generating random SSAO samples
-    local buffer = Bytearray(0)
-    for i = 0, 63 do
-        local x = math.random() * 2.0 - 1.0
-        local y = math.random() * 2.0 - 1.0
-        local z = math.random() * 2.0
-        local len = math.sqrt(x * x + y * y + z * z)
-        if len > 0 then
-            x = x / len
-            y = y / len
-            z = z / len
-        end
-        Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
-    end
-    gfx.posteffects.set_array(slot, "u_ssaoSamples", Bytearray_as_string(buffer))
-
-    local function update_ssao_quality(value)
-        value = math.min(value, 3)
-        gfx.posteffects.set_params(slot, {
-            u_kernelSize = value * 16,
-            u_radius = 0.4 / value,
-            u_bias = 0.006 / value / value,
-        })
-    end
-    events.on("core:setting.graphics.ssao.set", update_ssao_quality)
-
-    update_ssao_quality(__app.get_setting("graphics.ssao"))
-end
-
-function __vc_on_hud_open()
-    local _hud_is_content_access = hud._is_content_access
-    local _hud_set_content_access = hud._set_content_access
-    local _hud_set_debug_cheats = hud._set_debug_cheats
-
-    _rules.create("allow-cheats", true)
-
-    _rules.create("allow-content-access", _hud_is_content_access(), function(value)
-        _hud_set_content_access(value)
-    end)
-    _rules.create("allow-flight", true, function(value)
-        input.set_enabled("player.flight", value)
-    end)
-    _rules.create("allow-noclip", true, function(value)
-        input.set_enabled("player.noclip", value)
-    end)
-    _rules.create("allow-attack", true, function(value)
-        input.set_enabled("player.attack", value)
-    end)
-    _rules.create("allow-destroy", true, function(value)
-        input.set_enabled("player.destroy", value)
-    end)
-    _rules.create("allow-cheat-movement", true, function(value)
-        input.set_enabled("movement.cheat", value)
-    end)
-    _rules.create("allow-fast-interaction", true, function(value)
-        input.set_enabled("player.fast_interaction", value)
-    end)
-    _rules.create("allow-debug-cheats", true, function(value)
-        _hud_set_debug_cheats(value)
-    end)
-    input.add_callback("devtools.console", function()
-        if menu.page ~= "" then
-            return
-        end
-        time.post_runnable(function()
-            hud.show_overlay("core:console", false, {"console"})
-        end)
-    end)
-    input.add_callback("hud.chat", function()
-        if menu.page ~= "" then
-            return
-        end
-        time.post_runnable(function()
-            hud.show_overlay("core:console", false, {"chat"})
-        end)
-    end)
-    input.add_callback("key:escape", function()
-        if menu.page ~= "" then
-            if not menu:back() then
-                menu:reset()
-                gui.set_active_frame("")
-            end
-        elseif hud.is_inventory_open() then
-            hud.close_inventory()
-        elseif gui.get_active_frame() then
-            gui.set_active_frame("")
-        else
-            hud.pause()
-        end
-    end)
-    hud.open_permanent("core:ingame_chat")
-
-    configure_SSAO()
-end
-
-local Schedule = require "core:schedule"
-
-local ScheduleGroup_mt = {
-    __index = {
-        publish = function(self, schedule)
-            local id = self._next_schedule
-            self._schedules[id] = schedule
-            self._next_schedule = id + 1
-        end,
-        tick = function(self, dt)
-            for id, schedule in pairs(self._schedules) do
-                schedule:tick(dt)
-            end
-            self.common:tick(dt)
-        end,
-        remove = function(self, id)
-            self._schedules[id] = nil
-        end,
-    }
-}
-
-local function ScheduleGroup()
-    return setmetatable({
-        _next_schedule = 1,
-        _schedules = {},
-        common = Schedule()
-    }, ScheduleGroup_mt)
-end
-
 time.schedules = {}
 
-local RULES_FILE = "world:rules.toml"
-function __vc_on_world_open()
-    time.schedules.world = ScheduleGroup()
+table.merge(_G, require "core:internal/lifetime_events")
 
-    if not file.exists(RULES_FILE) then
-        return
-    end
-    local rule_values = toml.parse(file.read(RULES_FILE))
-    for name, value in pairs(rule_values) do
-        _rules.set(name, value)
-    end
-end
-
-function __vc_on_world_tick(tps)
-    time.schedules.world:tick(1.0 / tps)
-end
-
-function __vc_process_before_quit()
-    block.__process_register_events()
-end
-
-function __vc_on_world_save()
-    local rule_values = {}
-    for name, rule in pairs(rules.rules) do
-        rule_values[name] = rule.value
-    end
-    file.write(RULES_FILE, toml.tostring(rule_values))
-end
-
-local __close_all_descriptors = file.__close_all_descriptors
-local __gui_util_reset_local = gui_util.__reset_local
-local __stdcomp_reset = stdcomp.__reset
-file.__close_all_descriptors = nil
-gui_util.__reset_local = nil
-stdcomp.reset = nil
-
-function __vc_on_world_quit()
-    _rules.clear()
-    __gui_util_reset_local()
-    __stdcomp_reset()
-    __close_all_descriptors()
-end
-
-local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
-audio.__reset_fetch_buffer = nil
 core.get_core_token = audio.input.__get_core_token
 
-local __post_runnables = {}
+require "core:internal/console"
+require "core:internal/deprecated"
 
-local function __process_post_runnables()
-    if #__post_runnables > 0 then
-        for _, func in ipairs(__post_runnables) do
-            local status, result = xpcall(func, __vc__error)
-            if not status then
-                debug.error("error in post_runnable: "..result)
-            end
-        end
-        __post_runnables = {}
-    end
 
-    local dead = {}
-    for name, co in pairs(__vc_named_coroutines) do
-        local success, err = coroutine.resume(co)
-        if not success then
-            debug.error(err)
-        end
-        if coroutine.status(co) == "dead" then
-            table.insert(dead, name)
-        end
-    end
-    for _, name in ipairs(dead) do
-        __vc_named_coroutines[name] = nil
-    end
+------------------------------------------
+---- Unsafe functions cleanup section ----
+------------------------------------------
 
-    fn_audio_reset_fetch_buffer()
-    debug.pull_events()
-    network.__process_events()
-    if not hud or not hud.is_paused() then
-        block.__process_register_events()
-        block.__perform_ticks(time.delta())
-    end
-end
-
-function __vc__process_post_runnables()
-    __vc__is_post_runnable = true
-    local success, err = pcall(__process_post_runnables)
-    if not success then
-        debug.error("an error ocurred while processing post-runnables: ".. err)
-    end
-    __vc__is_post_runnable = false
-end
-
-function time.post_runnable(runnable)
-    table.insert(__post_runnables, runnable)
-end
-
--- Hide unsafe debug.* functions
 local removed_names = {
     "getregistry", "getupvalue", "setupvalue", "upvalueid", "upvaluejoin",
     "sethook", "gethook", "getinfo"
@@ -626,9 +368,9 @@ debug.getinfo = function(lvl, fields)
     return debuginfo
 end
 
-require "core:internal/deprecated"
-
 ffi = nil
 __vc_app = nil
 __vc_lock_internal_modules()
 __vc_lock_internal_modules = nil
+__vc_update_coroutines = nil
+__VC_SCRIPT_NAME = ""

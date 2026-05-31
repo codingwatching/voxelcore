@@ -189,7 +189,7 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     keepAlive(settings.audio.inputDevice.observe([](auto name) {
         audio::set_input_device(name == "auto" ? "" : name);
-    }, true));
+    }));
 
     project->loadProjectStartScript();
     if (!params.headless) {

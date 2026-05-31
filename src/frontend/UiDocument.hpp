@@ -50,9 +50,7 @@ public:
         const scriptenv& parent_env,
         const std::string& name,
         const io::path& file,
-        const std::string& fileName
-    );
-    static std::shared_ptr<gui::UINode> readElement(
-        gui::GUI&, const io::path& file, const std::string& fileName
+        const std::string& fileName,
+        scriptenv&& env = nullptr
     );
 };

@@ -5,12 +5,16 @@
 #include <iostream>
 
 #include "util/stringutil.hpp"
+#include "engine/Engine.hpp"
+#include "debug/Logger.hpp"
 
 using namespace lua;
 
 static int next_environment = 1;
 
 std::unordered_map<std::type_index, std::string> lua::usertypeNames;
+
+static debug::Logger logger("lua-util");
 
 int lua::userdata_destructor(lua::State* L) {
     if (auto obj = touserdata<Userdata>(L, 1)) {
@@ -368,4 +372,56 @@ void lua::remove_environment(State* L, int id) {
     }
     pushnil(L);
     store_env(L, id);
+}
+
+static inline std::string_view bytearray_as_string_indirect(lua::State* L, int idx) {
+    requireglobal(L, "Bytearray_as_string");
+    pushvalue(L, -2);
+    call(L, 1, 1);
+    auto view = tolstring(L, -1);
+    pop(L, 2);
+    return view;
+}
+
+std::string_view lua::bytearray_as_string(lua::State* L, int idx) {
+    const auto& settings = scripting::engine->getSettings();
+
+    int luaType = type(L, idx);
+    if (luaType == LUA_TSTRING) {
+        return tolstring(L, idx);
+    } else if (luaType == LUA_TTABLE) {
+        return bytearray_as_string_indirect(L, idx);
+    }
+    pushvalue(L, idx);
+
+    if (settings.system.directScriptingDataAccess.get()) {
+        requireglobal(L, "Bytearray_as_ptr");
+        pushvalue(L, -2);
+        call(L, 1, 2);
+        auto view = tolstring(L, -2);
+        if (view == "0") {
+            if (luaType == LUA_TCDATA) {
+                logger.error() << "FFI-based Bytearray_as_ptr returned null-pointer";
+            }
+            pop(L, 2);
+            return bytearray_as_string_indirect(L, idx);
+        }
+        uint64_t size = touinteger(L, -1);
+        auto ptr = (const char*)std::stoull(std::string(view), nullptr, 16);
+        pop(L, 3);
+        return std::string_view(ptr, size);
+    } else {
+        return bytearray_as_string_indirect(L, idx);
+    }
+}
+
+void lua::loadbuffer(
+    lua::State* L, int env, const std::string& src, const std::string& file
+) {
+    if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
+        throw luaerror(tostring(L, -1));
+    }
+    if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
+        lua_setfenv(L, -2);
+    }
 }

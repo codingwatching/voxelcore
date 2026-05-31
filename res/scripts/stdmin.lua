@@ -1,13 +1,18 @@
 local _vc_headless = __VC_HEADLESS
+local _vc_project_args = __VC_PROJECT_ARGS
 __VC_HEADLESS = nil
+__VC_PROJECT_ARGS = nil
 
 vc = {
     is_headless = function()
         return _vc_headless
     end,
-    is_client = function ()
+    is_client = function()
         return not _vc_headless
-    end
+    end,
+    get_setting = __vc_app.get_setting,
+    get_setting_str = __vc_app.get_setting_str,
+    get_setting_info = __vc_app.get_setting_info,
 }
 
 local _ffi = ffi
@@ -297,9 +302,14 @@ require "core:internal/extensions/file"
 require "core:internal/extensions/table"
 require "core:internal/extensions/string"
 
+vc.get_project_arg = function (name)
+    return _vc_project_args[name]
+end
+
 local bytearray = require "core:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
+Bytearray_as_ptr = bytearray.FFIBytearray_as_ptr
 U16view = bytearray.FFIU16view
 I16view = bytearray.FFII16view
 U32view = bytearray.FFIU32view
