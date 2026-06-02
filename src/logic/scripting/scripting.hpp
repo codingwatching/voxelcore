@@ -152,13 +152,16 @@ namespace scripting {
     void on_attacked(const Entity& entity, Player* player, entityid_t attacker);
     void on_entity_used(const Entity& entity, Player* player);
 
-    /// @brief Called on UI view show
+    /// @brief Called on UI document show
     void on_ui_open(UiDocument* layout, std::vector<dv::value> args);
 
     void on_ui_progress(UiDocument* layout, int workDone, int totalWork);
 
-    /// @brief Called on UI view close
+    /// @brief Called on UI document close
     void on_ui_close(UiDocument* layout, Inventory* inventory);
+
+    /// @brief Called on UI document destroy
+    void on_ui_destroy(UiDocument* layout);
 
     /// @brief Called on Content loading
     void on_scripts_loading();

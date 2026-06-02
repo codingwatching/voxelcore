@@ -594,6 +594,9 @@ bool scripting::on_item_break_block(
 void scripting::on_ui_open(
     UiDocument* layout, std::vector<dv::value> args
 ) {
+    if (!layout->getScript().onopen) {
+        return;
+    }
     auto argsptr =
         std::make_shared<std::vector<dv::value>>(std::move(args));
     std::string name = layout->getId() + ".open";
@@ -608,6 +611,9 @@ void scripting::on_ui_open(
 void scripting::on_ui_progress(
     UiDocument* layout, int workDone, int workTotal
 ) {
+    if (!layout->getScript().onprogress){
+        return;
+    }
     std::string name = layout->getId() + ".progress";
     lua::emit_event(lua::get_main_state(), name, [=](auto L) {
         lua::pushinteger(L, workDone);
@@ -617,10 +623,21 @@ void scripting::on_ui_progress(
 }
 
 void scripting::on_ui_close(UiDocument* layout, Inventory* inventory) {
+    if (!layout->getScript().onclose) {
+        return;
+    }
     std::string name = layout->getId() + ".close";
     lua::emit_event(lua::get_main_state(), name, [inventory](auto L) {
         return lua::pushinteger(L, inventory ? inventory->getId() : 0);
     });
+}
+
+void scripting::on_ui_destroy(UiDocument* layout) {
+    if (!layout->getScript().ondestroy) {
+        return;
+    }
+    std::string name = layout->getId() + ".destroy";
+    lua::emit_event(lua::get_main_state(), name, [](auto L) { return 0; });
 }
 
 void scripting::on_scripts_loading() {
@@ -810,6 +827,7 @@ void scripting::load_layout_script(
     script.onprogress =
         register_event(env, "on_progress", prefix + ".progress");
     script.onclose = register_event(env, "on_close", prefix + ".close");
+    script.ondestroy = register_event(env, "on_destroy", prefix + ".destroy");
 }
 
 void scripting::close() {
