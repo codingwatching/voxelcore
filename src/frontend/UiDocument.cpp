@@ -22,7 +22,7 @@ UiDocument::UiDocument(
 
 UiDocument::~UiDocument() {
     try {
-        scripting::on_ui_destroy(this);
+        scripting::on_ui_destroy(*this);
     } catch (const std::exception& err) {
         logger.error() << "an error occurred on calling on_destroy event for document '"
           << id << "': " << err.what();
