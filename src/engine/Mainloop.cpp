@@ -18,11 +18,9 @@ Mainloop::Mainloop(Engine& engine) : engine(engine) {
 }
 
 void Mainloop::run() {
-    const auto& coreParams = engine.getCoreParameters();
     auto& time = engine.getTime();
     auto& window = engine.getWindow();
     auto& settings = engine.getSettings();
-    double targetDelta = 1.0 / static_cast<double>(coreParams.tps);
 
     engine.setLevelConsumer([this](auto level, int64_t localPlayer) {
         if (level == nullptr) {
@@ -39,13 +37,10 @@ void Mainloop::run() {
 
     logger.info() << "starting menu screen";
     engine.setScreen(std::make_shared<MenuScreen>(engine));
-
-    double testTimer = 0.0;
     
     logger.info() << "main loop started";
     while (!window.isShouldClose()) {
-        testTimer += targetDelta;
-        time.update(coreParams.testMode ? testTimer : window.time());
+        time.update(window.time());
         engine.applicationTick();
         engine.updateFrontend();
 
