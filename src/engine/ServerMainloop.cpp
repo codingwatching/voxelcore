@@ -1,6 +1,7 @@
 #include "ServerMainloop.hpp"
 
 #include "Engine.hpp"
+#include "devtools/AppScriptsControl.hpp"
 #include "logic/LevelController.hpp"
 #include "interfaces/Process.hpp"
 #include "debug/Logger.hpp"
@@ -37,7 +38,7 @@ void ServerMainloop::run() {
     auto begin = system_clock::now();
     auto startupTime = begin;
 
-    while (engine.isQuitSignal()) {
+    while (!engine.isQuitSignal() && !engine.getAppScripts().isFinished()) {
         if (coreParams.testMode) {
             time.step(delta);
         } else {

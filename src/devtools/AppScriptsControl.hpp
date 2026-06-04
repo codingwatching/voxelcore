@@ -21,6 +21,8 @@ public:
     void terminate(std::string_view reason);
 
     void onScreenChange(const std::string& name, bool show);
+
+    bool isFinished() const;
 private:
     const Project& project;
     std::unique_ptr<scripting::IClientProjectScript> clientScript;

@@ -57,3 +57,7 @@ void AppScriptsControl::terminate(std::string_view reason) {
         logger.info() << "script has been terminated due to " << reason;
     }
 }
+
+bool AppScriptsControl::isFinished() const {
+    return scriptCoroutine == nullptr || !scriptCoroutine->isActive();
+}
