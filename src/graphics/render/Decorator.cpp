@@ -271,8 +271,7 @@ void Decorator::updateBlockEmitters(const Camera& camera) {
                 remove = true;
             }
         } else {
-            iter = blockEmitters.erase(iter);
-            continue;
+            remove = true;
         }
         if (util::distance2(iter->first, glm::ivec3(camera.position)) >
             UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER) {

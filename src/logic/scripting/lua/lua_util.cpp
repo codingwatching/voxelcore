@@ -5,12 +5,16 @@
 #include <iostream>
 
 #include "util/stringutil.hpp"
+#include "engine/Engine.hpp"
+#include "debug/Logger.hpp"
 
 using namespace lua;
 
 static int next_environment = 1;
 
 std::unordered_map<std::type_index, std::string> lua::usertypeNames;
+
+static debug::Logger logger("lua-util");
 
 int lua::userdata_destructor(lua::State* L) {
     if (auto obj = touserdata<Userdata>(L, 1)) {
@@ -76,6 +80,10 @@ int lua::pushwstring(State* L, const std::wstring& str) {
     return pushstring(L, util::wstr2str_utf8(str));
 }
 
+static std::string to_ptr_string(State* L, int idx) {
+    return std::to_string(reinterpret_cast<ptrdiff_t>(lua_topointer(L, idx)));
+}
+
 dv::value lua::tovalue(State* L, int idx) {
     using dv::value_type;
     auto type = lua::type(L, idx);
@@ -95,11 +103,16 @@ dv::value lua::tovalue(State* L, int idx) {
             }
         }
         case LUA_TFUNCTION:
-            return "<function " +
-                   std::to_string(
-                       reinterpret_cast<ptrdiff_t>(lua_topointer(L, idx))
-                   ) +
-                   ">";
+            return "<function " + to_ptr_string(L, idx) + ">";
+        case LUA_TTHREAD:
+            return "<thread " + to_ptr_string(L, idx) + ">";
+        case LUA_TUSERDATA:
+            if (auto userdata = touserdata<Userdata>(L, idx)) {
+                return "<userdata:" + userdata->getTypeName() + " " + to_ptr_string(L, idx) + ">";
+            }
+            return "<userdata " + to_ptr_string(L, idx) + ">";
+        case LUA_TLIGHTUSERDATA:
+            return "<lightuserdata " + to_ptr_string(L, idx) + ">";
         case LUA_TSTRING:
             return std::string(tostring(L, idx));
         case LUA_TTABLE: {
@@ -368,4 +381,56 @@ void lua::remove_environment(State* L, int id) {
     }
     pushnil(L);
     store_env(L, id);
+}
+
+static inline std::string_view bytearray_as_string_indirect(lua::State* L, int idx) {
+    requireglobal(L, "Bytearray_as_string");
+    pushvalue(L, -2);
+    call(L, 1, 1);
+    auto view = tolstring(L, -1);
+    pop(L, 2);
+    return view;
+}
+
+std::string_view lua::bytearray_as_string(lua::State* L, int idx) {
+    const auto& settings = scripting::engine->getSettings();
+
+    int luaType = type(L, idx);
+    if (luaType == LUA_TSTRING) {
+        return tolstring(L, idx);
+    } else if (luaType == LUA_TTABLE) {
+        return bytearray_as_string_indirect(L, idx);
+    }
+    pushvalue(L, idx);
+
+    if (settings.system.directScriptingDataAccess.get()) {
+        requireglobal(L, "Bytearray_as_ptr");
+        pushvalue(L, -2);
+        call(L, 1, 2);
+        auto view = tolstring(L, -2);
+        if (view == "0") {
+            if (luaType == LUA_TCDATA) {
+                logger.error() << "FFI-based Bytearray_as_ptr returned null-pointer";
+            }
+            pop(L, 2);
+            return bytearray_as_string_indirect(L, idx);
+        }
+        uint64_t size = touinteger(L, -1);
+        auto ptr = (const char*)std::stoull(std::string(view), nullptr, 16);
+        pop(L, 3);
+        return std::string_view(ptr, size);
+    } else {
+        return bytearray_as_string_indirect(L, idx);
+    }
+}
+
+void lua::loadbuffer(
+    lua::State* L, int env, const std::string& src, const std::string& file
+) {
+    if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
+        throw luaerror(tostring(L, -1));
+    }
+    if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
+        lua_setfenv(L, -2);
+    }
 }

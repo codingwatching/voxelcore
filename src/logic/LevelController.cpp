@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "content/Content.hpp"
 #include "debug/Logger.hpp"
 #include "engine/Engine.hpp"
 #include "engine/EnginePaths.hpp"
@@ -41,7 +42,7 @@ LevelController::LevelController(
 
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
-            level->content, *clientPlayer->chunks
+            *level->content.getIndices(), *clientPlayer->chunks
         );
     }
     blocks = std::make_unique<BlocksController>(

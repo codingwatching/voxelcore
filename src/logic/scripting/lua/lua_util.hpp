@@ -555,16 +555,9 @@ namespace lua {
         return lua_setfenv(L, idx);
     }
 
-    inline void loadbuffer(
+    void loadbuffer(
         lua::State* L, int env, const std::string& src, const std::string& file
-    ) {
-        if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
-            throw luaerror(tostring(L, -1));
-        }
-        if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
-            lua_setfenv(L, -2);
-        }
-    }
+    );
 
     inline void store_in(
         lua::State* L, const std::string& tableName, const std::string& name
@@ -828,16 +821,5 @@ namespace lua {
         return create_bytearray(L, bytes.data(), bytes.size());
     }
 
-    inline std::string_view bytearray_as_string(lua::State* L, int idx) {
-        if (type(L, idx) == LUA_TSTRING) {
-            return tolstring(L, idx);
-        }
-        pushvalue(L, idx);
-        requireglobal(L, "Bytearray_as_string");
-        pushvalue(L, -2);
-        call(L, 1, 1);
-        auto view = tolstring(L, -1);
-        pop(L, 2);
-        return view;
-    }
+    std::string_view bytearray_as_string(lua::State* L, int idx);
 }
