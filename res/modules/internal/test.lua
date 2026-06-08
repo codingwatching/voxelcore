@@ -70,7 +70,7 @@ function test.click(node, options)
     end
     if not node.exists then
         error(string.format("timeout %s ms exceeded: element %s does not exists",
-            math.floor(timeout), string.escape(node.id)))
+            math.floor(timeout), string.escape(rawget(node, 'name'))))
     end
 
     local center_x, center_y = get_node_center(node)
@@ -82,6 +82,9 @@ end
 
 -- TODO: replace with resolving in C++ side
 function test.find_by_attr(node, attr, value)
+    if getmetatable(node) == Document then
+        return test.find_by_attr(node.root, attr, value)
+    end
     if node[attr] == value then
         return node
     end
