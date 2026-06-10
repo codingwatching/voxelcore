@@ -9,6 +9,9 @@ namespace scripting::io_descriptors {
     std::istream* get_input(int id);
     std::ostream* get_output(int id);
 
+    std::istream& require_input(int id);
+    std::ostream& require_output(int id);
+
     void flush(int id);
 
     bool has_descriptor(int id);

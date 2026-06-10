@@ -373,6 +373,10 @@ function io_stream:seek(mode, offset)
     self.ioLib.seek(self.descriptor, mode, offset)
 end
 
+function io_stream:tell()
+    return self.ioLib.tell(self.descriptor)
+end
+
 function io_stream:is_alive()
     return self.ioLib.is_alive(self.descriptor)
 end

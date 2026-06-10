@@ -14,6 +14,7 @@ using namespace scripting;
 
 namespace {
     struct StreamDescriptor {
+        // TODO: std::iostream?
         std::unique_ptr<std::istream> in;
         std::unique_ptr<std::ostream> out;
     };
@@ -34,6 +35,31 @@ std::ostream* io_descriptors::get_output(int id) {
     return ::descriptors[id]->out.get();
 }
 
+static StreamDescriptor& require_descriptor(int id) {
+    if (!io_descriptors::has_descriptor(id)) {
+        throw std::runtime_error(
+            "io-descriptor with id " + std::to_string(id) + " does not exists"
+        );
+    }
+    return *::descriptors[id];
+}
+
+std::istream& io_descriptors::require_input(int id) {
+    const auto& descriptor = require_descriptor(id);
+    if (descriptor.in) {
+        return *descriptor.in;
+    }
+    throw std::runtime_error("io-descriptor is not readable");
+}
+
+std::ostream& io_descriptors::require_output(int id) {
+    const auto& descriptor = require_descriptor(id);
+    if (descriptor.out) {
+        return *descriptor.out;
+    }
+    throw std::runtime_error("io-descriptor is not writeable");
+}
+
 void io_descriptors::flush(int id) {
     if (is_writeable(id)) {
         ::descriptors[id]->out->flush();
@@ -42,15 +68,11 @@ void io_descriptors::flush(int id) {
 
 bool io_descriptors::has_descriptor(int id) {
     return id >= 0 && id < static_cast<int>(::descriptors.size()) &&
-           ::descriptors[id].has_value() &&
-           (::descriptors[id]->in != nullptr ||
-            ::descriptors[id]->out != nullptr);
+           ::descriptors[id].has_value();
 }
 
 bool io_descriptors::is_readable(int id) {
-    return id >= 0 && id < static_cast<int>(::descriptors.size())
-        && ::descriptors[id].has_value()
-        && ::descriptors[id]->in != nullptr;
+    return has_descriptor(id) && ::descriptors[id]->in != nullptr;
 }
 
 bool io_descriptors::is_writeable(int id) {
