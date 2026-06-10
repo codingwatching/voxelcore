@@ -10,7 +10,7 @@
 #include "util/stringutil.hpp"
 #include "api_lua.hpp"
 #include "../lua_engine.hpp"
-#include "logic/scripting/descriptors_manager.hpp"
+#include "logic/scripting/io_descriptors.hpp"
 
 namespace fs = std::filesystem;
 using namespace scripting;
@@ -263,13 +263,13 @@ static int l_open_descriptor(lua::State* L) {
     std::vector<char> buffer;
 
     if(wplusMode) {
-        int temp_descriptor = scripting::descriptors_manager::open_descriptor(path, false, true);
+        int temp_descriptor = io_descriptors::open_descriptor(path, false, true);
 
         if (temp_descriptor == -1) {
             throw std::runtime_error("failed to open descriptor for initial reading");
         }
 
-        auto* in_stream = scripting::descriptors_manager::get_input(temp_descriptor);
+        auto* in_stream = io_descriptors::get_input(temp_descriptor);
 
         in_stream->seekg(0, std::ios::end);
         std::streamsize size = in_stream->tellg();
@@ -278,17 +278,17 @@ static int l_open_descriptor(lua::State* L) {
         buffer.resize(size);
         in_stream->read(buffer.data(), size);
 
-        scripting::descriptors_manager::close(temp_descriptor);
+        io_descriptors::close(temp_descriptor);
     }
 
-    int descriptor = scripting::descriptors_manager::open_descriptor(path, write, read);
+    int descriptor = io_descriptors::open_descriptor(path, write, read);
 
     if(descriptor == -1) {
         throw std::runtime_error("failed to open descriptor");
     }
 
     if(wplusMode) {
-        auto* out_stream = scripting::descriptors_manager::get_output(descriptor);
+        auto* out_stream = io_descriptors::get_output(descriptor);
         out_stream->write(buffer.data(), buffer.size());
         out_stream->flush();
     }
@@ -297,23 +297,23 @@ static int l_open_descriptor(lua::State* L) {
 }
 
 static int l_has_descriptor(lua::State* L) {
-    return lua::pushboolean(L, scripting::descriptors_manager::has_descriptor(lua::tointeger(L, 1)));
+    return lua::pushboolean(L, io_descriptors::has_descriptor(lua::tointeger(L, 1)));
 }
 
 static int l_read_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
-    if (!scripting::descriptors_manager::is_readable(descriptor)) {
+    if (!io_descriptors::is_readable(descriptor)) {
         throw std::runtime_error("descriptor is not readable");
     }
 
     int maxlen = lua::tointeger(L, 2);
 
-    auto* stream = scripting::descriptors_manager::get_input(descriptor);
+    auto* stream = io_descriptors::get_input(descriptor);
 
     util::Buffer<char> buffer(maxlen);
 
@@ -327,17 +327,17 @@ static int l_read_descriptor(lua::State* L) {
 static int l_write_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
-    if (!scripting::descriptors_manager::is_writeable(descriptor)) {
+    if (!io_descriptors::is_writeable(descriptor)) {
         throw std::runtime_error("descriptor is not writeable");
     }
 
     auto data = lua::bytearray_as_string(L, 2);
 
-    auto* stream = scripting::descriptors_manager::get_output(descriptor);
+    auto* stream = io_descriptors::get_output(descriptor);
 
     stream->write(data.data(), static_cast<std::streamsize>(data.size()));
 
@@ -350,7 +350,7 @@ static int l_write_descriptor(lua::State* L) {
 static int l_seek_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
@@ -371,7 +371,7 @@ static int l_seek_descriptor(lua::State* L) {
             throw std::runtime_error("invalid seek mode");
     }
 
-    auto* stream = scripting::descriptors_manager::get_output(descriptor);
+    auto* stream = io_descriptors::get_output(descriptor);
 
     stream->seekp(lua::tointeger(L, 3), dir);
 
@@ -385,31 +385,31 @@ static int l_seek_descriptor(lua::State* L) {
 static int l_flush_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
-    if (!scripting::descriptors_manager::is_writeable(descriptor)) {
+    if (!io_descriptors::is_writeable(descriptor)) {
         throw std::runtime_error("descriptor is not writeable");
     }
 
-    scripting::descriptors_manager::flush(descriptor);
+    io_descriptors::flush(descriptor);
     return 0;
 }
 
 static int l_close_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
-    scripting::descriptors_manager::close(descriptor);
+    io_descriptors::close(descriptor);
     return 0;
 }
 
 static int l_close_all_descriptors(lua::State* L) {
-    scripting::descriptors_manager::close_all_descriptors();
+    io_descriptors::close_all_descriptors();
     return 0;
 }
 
