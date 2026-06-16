@@ -151,7 +151,10 @@ bool PhysicsSolver::calcCollisionNegY(
             continue;
         }
         auto aabb = AABB(pos - half, pos + half);
-        aabb.scale(glm::vec3(1.0f - E * 4.0f, 1.0f - E * 2, 1.0f - E * 4.0f));
+        glm::vec3 scale(1.0f);
+        scale.x = 1.0f - E * 4.0f;
+        scale.z = 1.0f - E * 4.0f;
+        aabb.scale(scale);
 
         auto boxhalf = box->getHalfSize();
         if (box->position.y < pos.y && box->getAABB().intersects(aabb)) {
