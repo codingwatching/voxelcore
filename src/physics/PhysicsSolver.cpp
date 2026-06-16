@@ -244,7 +244,7 @@ void PhysicsSolver::calcCollisions(
             float x = (pos.x - half.x + E) + ix;
             for (int iz = 0; iz <= glm::ceil((half.z - E) * 2); iz++) {
                 float z = (pos.z - half.z + E) + iz;
-                float y = (pos.y + half.y + E) + 0.5f;
+                float y = (pos.y + half.y + E) - E;
                 if (auto aabb = chunks.isObstacleAt(x, y, z, boxAABB)) {
                     float newy = std::floor(y) - half.y + aabb->min().y - E;
                     if (pos.y >= newy) {
