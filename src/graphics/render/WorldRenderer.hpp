@@ -6,6 +6,7 @@
 #include "presets/WeatherPreset.hpp"
 #include "world/Weather.hpp"
 #include "window/Camera.hpp"
+#include "util/ObjectsKeeper.hpp"
 
 #include <vector>
 #include <memory>
@@ -37,13 +38,7 @@ class TextsRenderer;
 class CloudsRenderer;
 struct EngineSettings;
 
-struct CompileTimeShaderSettings {
-    bool advancedRender = false;
-    bool shadows = false;
-    bool ssao = false;
-};
-
-class WorldRenderer {
+class WorldRenderer final : public util::ObjectsKeeper {
 public:
     static bool showChunkBorders;
     static bool showEntitiesDebug;
@@ -90,7 +85,7 @@ private:
     bool lightsDebug = false;
     bool gbufferPipeline = false;
 
-    CompileTimeShaderSettings prevCTShaderSettings {};
+    bool dirtyShaders = false;
 
     /// @brief Render block selection lines
     void renderBlockSelection();
@@ -122,7 +117,7 @@ private:
         bool hudVisible
     );
 
-    void refreshSettings(Shader** shaders);
+    void refreshSettings();
 
     float calcFogFactor() const;
 public:
