@@ -310,12 +310,6 @@ std::shared_ptr<UINode> create_debug_panel(
         bar->setConsumer([&](double val) { worldInfo.daytime = val; });
         panel->add(bar);
     }
-    if (allowDebugCheats) {
-        auto bar = std::make_shared<TrackBar>(gui, 0.0f, 1.0f, 0.0f, 0.005f, 8);
-        bar->setSupplier([&]() { return worldInfo.fog; });
-        bar->setConsumer([&](double val) { worldInfo.fog = val; });
-        panel->add(bar);
-    }
     {
         auto checkbox = std::make_shared<FullCheckBox>(
             gui, L"Show Chunk Borders", glm::vec2(400, 24)

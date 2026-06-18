@@ -10,7 +10,6 @@
 
 #include <vector>
 #include <memory>
-#include <algorithm>
 #include <string>
 
 class Assets;
@@ -85,7 +84,7 @@ private:
     bool lightsDebug = false;
     bool gbufferPipeline = false;
 
-    bool dirtyShaders = false;
+    bool dirtySettings = false;
 
     /// @brief Render block selection lines
     void renderBlockSelection();
@@ -93,7 +92,7 @@ private:
     /// @brief Render lines (selection and debug)
     /// @param camera active camera
     /// @param linesShader shader used
-    void renderLines(
+    void renderInWorldLines(
         const Camera& camera, Shader& linesShader, const DrawContext& pctx
     );
 
@@ -115,6 +114,33 @@ private:
         const Camera& camera, 
         const EngineSettings& settings,
         bool hudVisible
+    );
+
+    void renderOpaquePass(
+        const DrawContext& context,
+        Camera& camera,
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void renderWeatherEffects(Camera& camera);
+
+    void renderHandsPass(const DrawContext& pctx, Camera& camera);
+
+    void renderDebugLines(const DrawContext& context, Camera& camera);
+
+    void renderFrameClassic(
+        const DrawContext& context, 
+        Camera& camera, 
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void renderFrameAdvanced(
+        const DrawContext& context, 
+        Camera& camera, 
+        bool hudVisible,
+        PostProcessing& postProcessing
     );
 
     void refreshSettings();
