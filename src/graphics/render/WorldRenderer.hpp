@@ -44,6 +44,30 @@ struct CompileTimeShaderSettings {
 };
 
 class WorldRenderer {
+public:
+    static bool showChunkBorders;
+    static bool showEntitiesDebug;
+
+    WorldRenderer(Engine& engine, LevelFrontend& frontend, Player& player);
+    ~WorldRenderer();
+
+    void update(const Camera& camera, float delta);
+
+    void renderFrame(
+        const DrawContext& context, 
+        Camera& camera, 
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void clear();
+
+    void setDebug(bool flag);
+
+    void toggleLightsDebug();
+
+    Weather& getWeather();
+private:
     Engine& engine;
     const Level& level;
     Player& player;
@@ -106,27 +130,4 @@ public:
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
     std::unique_ptr<NamedSkeletons> skeletons;
-
-    static bool showChunkBorders;
-    static bool showEntitiesDebug;
-
-    WorldRenderer(Engine& engine, LevelFrontend& frontend, Player& player);
-    ~WorldRenderer();
-
-    void update(const Camera& camera, float delta);
-
-    void renderFrame(
-        const DrawContext& context, 
-        Camera& camera, 
-        bool hudVisible,
-        PostProcessing& postProcessing
-    );
-
-    void clear();
-
-    void setDebug(bool flag);
-
-    void toggleLightsDebug();
-
-    Weather& getWeather();
 };
