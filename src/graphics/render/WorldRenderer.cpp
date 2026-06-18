@@ -51,6 +51,7 @@
 #include "window/Window.hpp"
 #include "world/Level.hpp"
 #include "world/LevelEvents.hpp"
+#include "world/Weather.hpp"
 #include "world/World.hpp"
 #include "debug/Logger.hpp"
 
@@ -84,6 +85,7 @@ WorldRenderer::WorldRenderer(
       level(frontend.getLevel()),
       player(player),
       assets(*engine.getAssets()),
+      weather(frontend.getWeather()),
       frustumCulling(std::make_unique<Frustum>()),
       lineBatch(std::make_unique<LineBatch>()),
       batch3d(std::make_unique<Batch3D>(BATCH3D_CAPACITY)),
@@ -590,7 +592,7 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     batch3d->flush();
 }
 
-void WorldRenderer::clear() {
+void WorldRenderer::resetCache() {
     chunksRenderer->clear();
 }
 

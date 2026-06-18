@@ -4,7 +4,6 @@
 #include "typedefs.hpp"
 
 #include "presets/WeatherPreset.hpp"
-#include "world/Weather.hpp"
 #include "window/Camera.hpp"
 #include "util/ObjectsKeeper.hpp"
 
@@ -36,6 +35,7 @@ class Skybox;
 class TextsRenderer;
 class CloudsRenderer;
 struct EngineSettings;
+struct Weather;
 
 class WorldRenderer final : public util::ObjectsKeeper {
 public:
@@ -54,7 +54,7 @@ public:
         PostProcessing& postProcessing
     );
 
-    void clear();
+    void resetCache();
 
     void setDebug(bool flag);
 
@@ -66,6 +66,7 @@ private:
     const Level& level;
     Player& player;
     const Assets& assets;
+    Weather& weather;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<LineBatch> lineBatch;
     std::unique_ptr<Batch3D> batch3d;
@@ -77,13 +78,11 @@ private:
     std::unique_ptr<DebugLinesRenderer> debugLines;
     std::unique_ptr<PrecipitationRenderer> precipitation;
     std::unique_ptr<CloudsRenderer> cloudsRenderer;
-    Weather weather {};
     
     float timer = 0.0f;
     bool debug = false;
     bool lightsDebug = false;
     bool gbufferPipeline = false;
-
     bool dirtySettings = false;
 
     /// @brief Render block selection lines
