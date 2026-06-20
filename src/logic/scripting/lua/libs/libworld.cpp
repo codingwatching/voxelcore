@@ -33,7 +33,7 @@ static Level& require_level() {
 }
 
 static WorldInfo& require_world_info() {
-    return require_level().getWorld()->getInfo();
+    return require_level().getWorld().getInfo();
 }
 
 static int l_is_open(lua::State* L) {
@@ -136,7 +136,7 @@ static int l_get_chunk_data(lua::State* L) {
     auto voxelData = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
     std::vector<ubyte> chunkData;
     if (chunk == nullptr) {
-        auto& regions = level->getWorld()->wfile->getRegions();
+        auto& regions = level->getWorld().wfile->getRegions();
         if (!regions.getVoxels(x, z, voxelData.get())) {
             return 0;
         }
@@ -215,7 +215,7 @@ static int l_save_chunk_data(lua::State* L) {
             reinterpret_cast<const ubyte*>(buffer.data()),
             reinterpret_cast<const ubyte*>(buffer.data()) + buffer.size()
         ),
-        level->getWorld()->wfile->getRegions()
+        level->getWorld().wfile->getRegions()
     );
     return 0;
 }

@@ -57,7 +57,7 @@ void ServerMainloop::run() {
         }
         process->update();
         if (controller) {
-            controller->getLevel()->getWorld()->updateTimers(delta);
+            controller->getLevel()->getWorld().updateTimers(delta);
             controller->update(glm::min(delta, 0.2), false);
         }
         engine.applicationTick();

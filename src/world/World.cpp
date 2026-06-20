@@ -147,7 +147,7 @@ std::unique_ptr<Level> World::load(
 
         if (!playerRoot["players"].empty()) {
             if (!playerRoot["players"][0].has("id")) {
-                level->getWorld()->getInfo().nextPlayerId++;
+                level->getWorld().getInfo().nextPlayerId++;
             }
         }
     }

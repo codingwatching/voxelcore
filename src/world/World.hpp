@@ -67,6 +67,8 @@ public:
         const std::vector<ContentPack>& packs
     );
 
+    World(const World&) = delete;
+
     ~World();
 
     /// @brief Update world day-time and total time

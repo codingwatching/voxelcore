@@ -254,7 +254,7 @@ std::shared_ptr<UINode> create_debug_panel(
         }
     }));
     panel->add(create_label(gui, [&]() {
-        return L"seed: " + std::to_wstring(level.getWorld()->getSeed());
+        return L"seed: " + std::to_wstring(level.getWorld().getSeed());
     }));
 
     for (int ax = 0; ax < 3; ax++) {
@@ -294,7 +294,7 @@ std::shared_ptr<UINode> create_debug_panel(
         sub->add(box, glm::vec2(20, 0));
         panel->add(sub);
     }
-    auto& worldInfo = level.getWorld()->getInfo();
+    auto& worldInfo = level.getWorld().getInfo();
     panel->add(create_label(gui, [&]() {
         int hour, minute, second;
         timeutil::from_value(worldInfo.daytime, hour, minute, second);
