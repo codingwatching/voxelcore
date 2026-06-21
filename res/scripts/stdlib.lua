@@ -332,6 +332,8 @@ else
     os.pid = ffi.C.getpid()
 end
 
+require("core:io_stream").wrap_bytearray = require "core:internal/stream_providers/bytearray"
+
 math.randomseed(time.uptime() * 1536227939)
 
 rules = require "core:internal/rules"
