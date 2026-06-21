@@ -125,15 +125,21 @@ function io_stream:set_max_buffer_size(maxBufferSize)
 end
 
 function io_stream:available(length)
+    local available
+
     if self.mode == BUFFERED_MODE then
         self:__update_read_buffer()
 
-        if not length then
-            return #self.readBuffer
-        else
-            return #self.readBuffer >= length
-        end
-    else return self.ioLib.available(self.descriptor) end
+        available = #self.readBuffer
+    else
+        available = self.ioLib.available(self.descriptor)
+    end
+
+    if not length then
+        return available
+    else
+        return available >= length
+    end
 end
 
 function io_stream:__update_read_buffer()
