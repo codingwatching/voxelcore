@@ -50,6 +50,9 @@ ioLib - I/O library. Should include the following functions:
     write(descriptor: int, data: Bytearray)
     seek(descriptor: int, mode: string, offset: int)
         Mode may be 'b' (relative begin), 'c' (relative current), 'e' (relative end + 1)
+        May throw error if environment is not support seek
+    tell(descriptor: int) -> int
+        May throw error if environment is not support tell
     flush(descriptor: int)
     available(descriptor: int) -> int
         May return 0 if environment is not support available method
