@@ -145,8 +145,12 @@ function io_stream:__update_read_buffer()
     end
 end
 
-function io_stream:__read(length)
+function io_stream:__read(length, fromReadFully)
     if self.mode == YIELD_MODE then
+        if fromReadFully then
+            return self.ioLib.read(self.descriptor, length)
+        end
+
         local buffer = Bytearray()
 
         while #buffer < length do
@@ -203,7 +207,9 @@ function io_stream:read_fully(useTable)
     if self.binaryMode then
         local result = useTable and Bytearray() or { }
 
-        readFully(result, function() return self:__read(self.maxBufferSize) end)
+        readFully(result, function() return self:__read(self.maxBufferSize, true) end)
+
+        return result
     else
         if useTable then
             local lines = { }
