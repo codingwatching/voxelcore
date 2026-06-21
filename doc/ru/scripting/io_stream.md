@@ -154,16 +154,6 @@ io_stream:seek(
 ## Методы Buffered-режима
 
 ```lua
---[[
-Если length определён, то возвращает true, если length байт доступно к чтению. Иначе возвращает false
-
-Если не определён, то возвращает количество байт, которое можно прочитать
-
---]]
-io_stream:available(
-    [опционально] length: number
-) -> number | boolean
-
 -- Возвращает максимальный размер буферов
 io_stream:get_max_buffer_size() -> number
 
@@ -174,6 +164,14 @@ io_stream:set_max_buffer_size(max_size: number)
 ## Методы контроля состояния потока
 
 ```lua
+--[[
+Если length определён, то возвращает true, если length байт доступно к чтению. Иначе возвращает false.
+
+Если не определён, то возвращает количество байт, которое можно прочитать.
+--]]
+io_stream:available(
+    [опционально] length: number
+) -> number | boolean
 
 -- Возвращает true, если поток открыт на данный момент
 io_stream:is_alive() -> bool

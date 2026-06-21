@@ -397,6 +397,20 @@ static int l_flush_descriptor(lua::State* L) {
     return 0;
 }
 
+static int l_available_descriptor(lua::State* L) {
+    int descriptor = lua::tointeger(L, 1);
+
+    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+        throw std::runtime_error("unknown descriptor");
+    }
+
+    if (!scripting::descriptors_manager::is_readable(descriptor)) {
+        throw std::runtime_error("descriptor is not readable");
+    }
+
+    return lua::pushinteger(L, scripting::descriptors_manager::available(descriptor));
+}
+
 static int l_close_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
@@ -443,6 +457,7 @@ const luaL_Reg filelib[] = {
     {"__write_descriptor", lua::wrap<l_write_descriptor>},
     {"__seek_descriptor", lua::wrap<l_seek_descriptor>},
     {"__flush_descriptor", lua::wrap<l_flush_descriptor>},
+    {"__available_descriptor", lua::wrap<l_available_descriptor>},
     {"__close_descriptor", lua::wrap<l_close_descriptor>},
     {"__close_all_descriptors", lua::wrap<l_close_all_descriptors>},
     {nullptr, nullptr}

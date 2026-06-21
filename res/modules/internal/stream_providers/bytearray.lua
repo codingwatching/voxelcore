@@ -102,6 +102,15 @@ function lib.flush(descriptor)
     requireDescriptor(descriptor)
 end
 
+function lib.available(descriptor)
+    requireDescriptor(descriptor)
+
+    local buf = buffers[descriptor]
+    local pos = positions[descriptor]
+
+    return math.max(#buf - pos + 1, 0)
+end
+
 function lib.is_alive(descriptor)
     return buffers[descriptor] ~= nil
 end

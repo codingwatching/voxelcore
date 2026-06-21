@@ -26,6 +26,8 @@ namespace scripting {
 
         static void flush(int descriptor);
 
+        static int available(int descriptor);
+
         static bool has_descriptor(int descriptor);
 
         static bool is_readable(int descriptor);

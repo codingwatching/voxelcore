@@ -5,6 +5,7 @@ local lib = {
     write = file.__write_descriptor,
     seek = file.__seek_descriptor,
     flush = file.__flush_descriptor,
+    available = file.__available_descriptor,
     is_alive = file.__has_descriptor,
     close = file.__close_descriptor
 }

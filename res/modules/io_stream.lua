@@ -42,14 +42,17 @@ local function readFully(result, readFunc)
 end
 
 --[[
-
 descriptor - descriptor of stream for provided I/O library
 binaryMode - if enabled, most methods will expect bytes instead of strings
 ioLib - I/O library. Should include the following functions:
     read(descriptor: int, length: int) -> Bytearray
         May return bytearray with a smaller size if bytes have not arrived yet or have run out
     write(descriptor: int, data: Bytearray)
+    seek(descriptor: int, mode: string, offset: int)
+        Mode may be 'b' (relative begin), 'c' (relative current), 'e' (relative end + 1)
     flush(descriptor: int)
+    available(descriptor: int) -> int
+        May return 0 if environment is not support available method
     is_alive(descriptor: int) -> bool
     close(descriptor: int)
 --]]
@@ -130,7 +133,7 @@ function io_stream:available(length)
         else
             return #self.readBuffer >= length
         end
-    end
+    else return self.ioLib.available(self.descriptor) end
 end
 
 function io_stream:__update_read_buffer()
