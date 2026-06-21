@@ -403,15 +403,15 @@ static int l_flush_descriptor(lua::State* L) {
 static int l_available_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
-    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+    if (!io_descriptors::has_descriptor(descriptor)) {
         throw std::runtime_error("unknown descriptor");
     }
 
-    if (!scripting::descriptors_manager::is_readable(descriptor)) {
+    if (!io_descriptors::is_readable(descriptor)) {
         throw std::runtime_error("descriptor is not readable");
     }
 
-    return lua::pushinteger(L, scripting::descriptors_manager::available(descriptor));
+    return lua::pushinteger(L, io_descriptors::available(descriptor));
 }
 
 static int l_close_descriptor(lua::State* L) {

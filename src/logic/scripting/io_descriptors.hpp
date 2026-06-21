@@ -13,6 +13,7 @@ namespace scripting::io_descriptors {
     std::ostream& require_output(int id);
 
     void flush(int id);
+    int available(int id);
 
     bool has_descriptor(int id);
 
