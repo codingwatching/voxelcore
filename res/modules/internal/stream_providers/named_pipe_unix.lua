@@ -64,6 +64,10 @@ function lib.seek(fd, mode, offset)
     error("cannot seek the named pipe")
 end
 
+function lib.tell(fd)
+    error("cannot tell the named pipe")
+end
+
 function lib.flush(fd)
     -- no flush on unix
 end
