@@ -127,6 +127,10 @@ require "core:internal/extensions/inventory"
 asserts = require "core:internal/asserts"
 events = require "core:internal/events"
 
+if test then
+    require "core:internal/test"
+end
+
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
