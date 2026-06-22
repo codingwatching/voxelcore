@@ -93,14 +93,19 @@ function io_stream:set_mode(mode)
         error("invalid stream mode: "..mode)
     end
 
-    if self.mode == BUFFERED_MODE then
+    if self.writeBuffer then
         self.writeBuffer:clear()
-        self.readBuffer:clear()
+        self.writeBuffer = nil
     end
 
-    if mode == BUFFERED_MODE and not self.writeBuffer then
-        self.writeBuffer = Bytearray()
-        self.readBuffer = Bytearray()
+    if self.readBuffer then
+        self.readBuffer:clear()
+        self.readBuffer = nil
+    end
+
+    if mode == BUFFERED_MODE then
+        self.writeBuffer = Bytearray(self.maxBufferSize)
+        self.readBuffer = Bytearray(self.maxBufferSize)
     end
 
     self.mode = mode
@@ -124,6 +129,9 @@ end
 
 function io_stream:set_max_buffer_size(maxBufferSize)
     self.maxBufferSize = maxBufferSize
+
+    self.writeBuffer = Bytearray(self.maxBufferSize)
+    self.readBuffer = Bytearray(self.maxBufferSize)
 end
 
 function io_stream:available(length)
