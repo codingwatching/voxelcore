@@ -218,7 +218,13 @@ function io_stream:read_fully(useTable)
     if self.binaryMode then
         local result = useTable and Bytearray() or { }
 
-        readFully(result, function() return self:__read(self.maxBufferSize, true) end)
+        local avail = self:available()
+
+        if avail == 0 then
+            avail = self.maxBufferSize
+        end
+
+        readFully(result, function() return self:__read(avail, true) end)
 
         return result
     else
