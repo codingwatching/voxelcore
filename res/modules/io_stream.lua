@@ -127,32 +127,16 @@ function io_stream:set_max_buffer_size(maxBufferSize)
 end
 
 function io_stream:available(length)
-    local available
+    local available = self.ioLib.available and self.ioLib.available(self.descriptor) or 0
 
     if self.mode == BUFFERED_MODE then
-        self:__update_read_buffer()
-
-        available = #self.readBuffer
-    else
-        available = self.ioLib.available and self.ioLib.available(self.descriptor) or 0
+        available = available + #self.readBuffer
     end
 
     if not length then
         return available
     else
         return available >= length
-    end
-end
-
-function io_stream:__update_read_buffer()
-    local readed = Bytearray()
-
-    readFully(readed, function(length) return self.ioLib.read(self.descriptor, length) end)
-
-    self.readBuffer:append(readed)
-
-    if #self.readBuffer > self.maxBufferSize then
-        error "buffer overflow"
     end
 end
 
@@ -172,27 +156,23 @@ function io_stream:__read(length, fromReadFully)
 
         return buffer
     elseif self.mode == BUFFERED_MODE then
-        self:__update_read_buffer()
+        local bufLen = #self.readBuffer
 
-        if #self.readBuffer < length then
-            error "buffer underflow"
+        if bufLen < length then
+            self.readBuffer:append(
+                self.ioLib.read(self.descriptor, self.maxBufferSize - bufLen)
+            )
         end
 
-        local copy
+        bufLen = #self.readBuffer
 
-        if #self.readBuffer == length then
-            copy = Bytearray()
-            
-            copy:append(self.readBuffer)
+        length = math.min(bufLen, length)
 
+        local copy = self.readBuffer:slice(1, length)
+
+        if bufLen == length then
             self.readBuffer:clear()
         else
-            copy = Bytearray()
-
-            for i = 1, length do
-                copy[i] = self.readBuffer[i]
-            end
-
             self.readBuffer:remove(1, length)
         end
 
@@ -204,11 +184,22 @@ end
 
 function io_stream:__write(data)
     if self.mode == BUFFERED_MODE then
-        self.writeBuffer:append(data)
+        local dataLength = #data
 
-        if #self.writeBuffer > self.maxBufferSize then
-            error "buffer overflow"
+        if #self.writeBuffer + dataLength > self.maxBufferSize then
+            self:flush()
         end
+
+        if dataLength > self.maxBufferSize then
+            local toWrite = math.floor(dataLength / self.maxBufferSize) * self.maxBufferSize
+            local toSave = dataLength - toWrite
+
+            self.ioLib.write(self.descriptor, data:slice(1, toWrite))
+
+            self:flush()
+
+            self.writeBuffer = data:slice(toWrite + 1, toSave)
+        else self.writeBuffer:append(data) end
     elseif self.mode == DEFAULT_MODE or self.mode == YIELD_MODE then
         return self.ioLib.write(self.descriptor, data)
     end
