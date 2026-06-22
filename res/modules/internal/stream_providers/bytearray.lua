@@ -98,10 +98,6 @@ function lib.tell(descriptor)
     return positions[descriptor]
 end
 
-function lib.flush(descriptor)
-    requireDescriptor(descriptor)
-end
-
 function lib.available(descriptor)
     requireDescriptor(descriptor)
 

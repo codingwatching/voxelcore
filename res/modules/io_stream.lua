@@ -47,15 +47,14 @@ binaryMode - if enabled, most methods will expect bytes instead of strings
 ioLib - I/O library. Should include the following functions:
     read(descriptor: int, length: int) -> Bytearray
         May return bytearray with a smaller size if bytes have not arrived yet or have run out
+        May throw error if descriptor isn't readable
     write(descriptor: int, data: Bytearray)
-    seek(descriptor: int, mode: string, offset: int)
+        May throw error if descriptor isn't writeable
+    [optional] seek(descriptor: int, mode: string, offset: int)
         Mode may be 'b' (relative begin), 'c' (relative current), 'e' (relative end + 1)
-        May throw error if environment is not support seek
-    tell(descriptor: int) -> int
-        May throw error if environment is not support tell
-    flush(descriptor: int)
-    available(descriptor: int) -> int
-        May return 0 if environment is not support available method
+    [optional] tell(descriptor: int) -> int
+    [optional] flush(descriptor: int)
+    [optional] available(descriptor: int) -> int
     is_alive(descriptor: int) -> bool
     close(descriptor: int)
 --]]
@@ -135,7 +134,7 @@ function io_stream:available(length)
 
         available = #self.readBuffer
     else
-        available = self.ioLib.available(self.descriptor)
+        available = self.ioLib.available and self.ioLib.available(self.descriptor) or 0
     end
 
     if not length then
@@ -388,10 +387,18 @@ function io_stream:write(arg, ...)
 end
 
 function io_stream:seek(mode, offset)
+    if not self.ioLib.seek then
+        error("cannot seek this stream")
+    end
+
     self.ioLib.seek(self.descriptor, mode, offset)
 end
 
 function io_stream:tell()
+    if not self.ioLib.tell then
+        error("cannot tell this stream")
+    end
+
     return self.ioLib.tell(self.descriptor)
 end
 
@@ -418,7 +425,11 @@ function io_stream:flush()
         self.writeBuffer:clear()
     end
 
-    if self.flushMode ~= FLUSH_MODE_ONLY_BUFFER then self.ioLib.flush(self.descriptor) end
+    if self.flushMode ~= FLUSH_MODE_ONLY_BUFFER then
+        if self.ioLib.flush then
+            self.ioLib.flush(self.descriptor)
+        elseif self:is_closed() then error("stream is closed") end
+    end
 end
 
 return io_stream

@@ -97,14 +97,6 @@ function lib.write(handle, bytearray)
     end
 end
 
-function lib.seek(handle, mode, offset)
-    error("cannot seek the named pipe")
-end
-
-function lib.tell(handle)
-    error("cannot tell the named pipe")
-end
-
 function lib.flush(handle)
     C.FlushFileBuffers(handle)
 end

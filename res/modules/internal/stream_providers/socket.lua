@@ -32,18 +32,6 @@ function lib.write(descriptor, data)
     sockets[descriptor]:send(data)
 end
 
-function lib.seek(descriptor, mode, offset)
-    error("cannot seek socket")
-end
-
-function lib.tell(descriptor)
-    error("cannot tell socket")
-end
-
-function lib.flush(descriptor)
-    requireDescriptor(descriptor)
-end
-
 function lib.available(descriptor)
     requireDescriptor(descriptor)
 
