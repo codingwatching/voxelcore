@@ -48,13 +48,13 @@
 **Независимый флаг** (включается через `set_binary_mode(true)` или при создании потока).  
 Определяет, в каком виде методы `read` и `write` принимают и возвращают данные:
 
-| binary = true                           | binary = false (по умолчанию)         |
-|-----------------------------------------|----------------------------------------|
+| binary = true                                              | binary = false (по умолчанию)         |
+|------------------------------------------------------------|----------------------------------------|
 | Данные — это **байты** (`Bytearray`, таблица чисел 0..255) | Данные — это **текстовые строки**      |
-| `read(n)` → `Bytearray` или `table<number>`| `read()` → одна строка                 |
-| `read("i4 f")` → распаковка через `byteutil.unpack` | `read(n)` → n строк в таблице       |
-| `write(Bytearray)` → запись байтов      | `write("hello")` → строка + `\n`       |
-| `write("i4", 42)` → `byteutil.pack`     | `write({"a","b"})` → две строки с `\n`|
+| `read(n)` → `Bytearray` или `table<int>`                   | `read()` → одна строка                 |
+| `read("i4 f")` → распаковка через `byteutil.unpack`        | `read(n)` → n строк в таблице       |
+| `write(Bytearray)` → запись байтов                         | `write("hello")` → строка + `\n`       |
+| `write("i4", 42)` → `byteutil.pack`                        | `write({"a","b"})` → две строки с `\n`|
 
 `read_line` / `write_line` — работают как в текстовом режиме
 
@@ -90,25 +90,25 @@ io_stream:set_flush_mode(string)
 --[[
 Читает данные из потока
 В двоичном режиме:
-    Если arg - number, то читает из потока arg байт и возвращает ввиде Bytearray или таблицы, если useTable = true
+    Если arg - int, то читает из потока arg байт и возвращает ввиде Bytearray или таблицы, если useTable = true
 
     Если arg - string, то функция интерпретирует arg как шаблон для byteutil. Прочитает кол-во байт, которое определено шаблоном, передаст их в byteutil.unpack и вернёт результат
 В текстовом режиме:
-    Если arg - number, то читает нужное кол-во строк с окончанием CRLF/LF из arg и возвращает ввиде таблицы. Также, если trimEmptyLines = true, то удаляет пустые строки с начала и конца из итоговой таблицы
+    Если arg - int, то читает нужное кол-во строк с окончанием CRLF/LF из arg и возвращает ввиде таблицы. Также, если trimEmptyLines = true, то удаляет пустые строки с начала и конца из итоговой таблицы
 
     Если arg не определён, то читает одну строку с окончанием CRLF/LF и возвращает её.
 --]]
 io_stream:read(
-    [опционально] arg: number | string,
+    [опционально] arg: int | string,
     [опционально] useTable | trimEmptyLines: boolean
-) -> Bytearray | table<number> | string | table<string> | ...
+) -> Bytearray | table<int> | string | table<string> | ...
 
 --[[
 Записывает данные в поток
 В двоичном режиме:
     Если arg - string, то функция интерпретирует arg как шаблон для byteutil, передаст его и ... в byteutil.pack и результат запишет в поток
 
-    Если arg - Bytearray | table<number>, то записывает байты в поток
+    Если arg - Bytearray | table<int>, то записывает байты в поток
 
 В текстовом режиме:
     Если arg - string, то записывает строку в поток (вместе с окончанием LF)
@@ -116,7 +116,7 @@ io_stream:read(
     Если arg - table<string>, то записывает каждую строку из таблицы отдельно
 --]]
 io_stream:write(
-    arg: Bytearray | table<number> | string | table<string>,
+    arg: Bytearray | table<int> | string | table<string>,
     [опционально] ...
 )
 
@@ -128,7 +128,7 @@ io_stream:write_line(string)
 
 --[[
 В двоичном режиме:
-    Читает все доступные байты из потока и возвращает ввиде Bytearray или table<number>, если useTable = true
+    Читает все доступные байты из потока и возвращает ввиде Bytearray или table<int>, если useTable = true
 
 В текстовом режиме:
     Читает все доступные строки из потока в table<string> если useTable = true, или в одну строку вместе с окончаниями, если нет
@@ -136,16 +136,18 @@ io_stream:write_line(string)
 --]]
 io_stream:read_fully(
     [опционально] useTable: boolean
-) -> Bytearray | table<number> | table<string> | string
+) -> Bytearray | table<int> | table<string> | string
 
 --[[
 Если length определён, то возвращает true, если length байт доступно к чтению. Иначе возвращает false.
 
 Если не определён, то возвращает количество байт, которое можно прочитать.
+
+В не буферизированном режиме потока может всегда возвращать 0 или false, если поток не поддерживает available.
 --]]
 io_stream:available(
-    [опционально] length: number
-) -> number | boolean
+    [опционально] length: int
+) -> int | boolean
 
 --[[
 Устанавливает позицию в потоке (всегда в байтах)
@@ -153,21 +155,27 @@ io_stream:available(
     b - Задаёт позицию относительно начало файла
     c - Задаёт позицию относительно текущей позиции
     e - Задаёт позицию относительно конца файла
+    
+Может бросать ошибку, если поток не поддерживает seek.
 --]]
 io_stream:seek(
     mode: string
-    offset: number
+    offset: int
 )
+
+-- Возвращает текущую позицию в потоке от начала.
+-- Может бросать ошибку, если поток не поддерживает tell.
+io_stream:tell() -> int
 ```
 
 ## Методы Buffered-режима
 
 ```lua
 -- Возвращает максимальный размер буферов
-io_stream:get_max_buffer_size() -> number
+io_stream:get_max_buffer_size() -> int
 
 -- Задаёт новый максимальный размер буферов
-io_stream:set_max_buffer_size(max_size: number)
+io_stream:set_max_buffer_size(max_size: int)
 ```
 
 ## Методы контроля состояния потока
@@ -183,7 +191,8 @@ io_stream:is_closed() -> bool
 io_stream:close()
 
 -- Записывает все данные из write-буфера в поток в buffer/all flush-режимах
--- Вызывает ioLib.flush() в all flush-режиме
+-- Вызывает ioLib.flush() в all flush-режиме, или ничего не делает, если
+-- ioLib не поддерживает flush.
 io_stream:flush()
 
 -- Создаёт новый поток из Bytearray.
@@ -200,7 +209,7 @@ io_stream.wrap_bytearray(
 -- Создаёт новый поток с переданным дескриптором и использующим переданную I/O библиотеку. (Более подробно в core:io_stream.lua)
 io_stream.new(
     descriptor: int,
-    binaryMode: bool,
+    binaryMode: boolean,
     ioLib: table,
     [опционально] mode: string = "default",
     [опционально] flushMode: string = "all"
