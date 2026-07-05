@@ -14,6 +14,7 @@
 #include "util/listutil.hpp"
 #include "util/ObjectsPool.hpp"
 #include "settings.hpp"
+#include "content/Content.hpp"
 
 static debug::Logger logger("chunks-render");
 
@@ -33,7 +34,7 @@ public:
               settings.graphics.denseRender.get()
                   ? settings.graphics.chunkMaxVerticesDense.get()
                   : settings.graphics.chunkMaxVertices.get(),
-              level.content,
+              level.content.getIndices()->blocks.getDefs(),
               cache,
               settings
           ) {
@@ -92,7 +93,7 @@ ChunksRenderer::ChunksRenderer(
     threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
         settings.graphics.chunkMaxVertices.get(), 
-        level.content, cache, settings
+        level.content.getIndices()->blocks.getDefs(), cache, settings
     );
     logger.info() << "created " << threadPool.getWorkersCount() << " workers";
     logger.info() << "memory consumption is "
@@ -126,7 +127,7 @@ const ChunkMesh* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
     glm::ivec2 key(chunk->x, chunk->z);
-    if (important) {
+    if (important || true) {
         ChunkMesh mesh {};
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
