@@ -40,6 +40,7 @@ void main() {
         if (alpha * bayer * bayer < 0.1f) {
             discard;
         }
+        alpha = 1.0;
     } else if (alpha < 0.05f) {
         discard;
     }
