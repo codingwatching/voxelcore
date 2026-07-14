@@ -37,7 +37,7 @@ void main() {
     // anyway it's any alpha-test alternative required
     if (u_alphaClip) {
         float bayer = calc_bayer(gl_FragCoord.xy);
-        if (alpha * bayer * bayer < 0.1f) {
+        if (alpha - bayer < 0.01f) {
             discard;
         }
         alpha = 1.0;
