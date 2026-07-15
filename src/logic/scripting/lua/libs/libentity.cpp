@@ -17,6 +17,8 @@
 #include "voxels/blocks_agent.hpp"
 #include "window/Camera.hpp"
 
+#include <set>
+
 using namespace scripting;
 
 static const EntityDef* require_entity_def(lua::State* L) {
@@ -145,34 +147,58 @@ static int l_get_all_in_radius(lua::State* L) {
     return 1;
 }
 
-static int l_raycast(lua::State* L) {
-    auto start = lua::tovec<3>(L, 1);
-    auto dir = lua::tovec<3>(L, 2);
-    auto maxDistance = lua::tonumber(L, 3);
-    auto ignoreEntityId = lua::tointeger(L, 4);
-    bool includeNonSelectable = false;
-    std::set<blockid_t> filteredBlocks {};
-    const int luaStackSize = lua::gettop(L);
-    if (luaStackSize >= 6) {
-        if (lua::istable(L, 6)) {
-            int addLen = lua::objlen(L, 6);
-            for (int i = 0; i < addLen; i++) {
-                lua::rawgeti(L, i + 1, 6);
-                auto blockName = std::string(lua::tostring(L, -1));
-                const Block* block = content->blocks.find(blockName);
-                if (block != nullptr) {
-                    filteredBlocks.insert(block->rt.id);
-                }
-                lua::pop(L);
-            }
-        } else {
-            throw std::runtime_error("table expected for filter");
-        }
+static int l_push_ray(
+    lua::State* L,
+    const std::optional<Entities::RaycastResult>& ray,
+    blockid_t block,
+    const glm::vec3& start,
+    const glm::vec3& dir,
+    const glm::vec3& end,
+    const glm::ivec3& iend,
+    const glm::ivec3& normal
+) {
+    if (!ray.has_value() && block == BLOCK_VOID) {
+        return 0;
     }
-    if (luaStackSize >= 7) {
-        includeNonSelectable = lua::toboolean(L, 6);
+    if (lua::gettop(L) >= 5 && lua::istable(L, 5)) {
+        lua::pushvalue(L, 5);
+    } else {
+        lua::createtable(L, 0, 6);
     }
 
+    lua::pushvec3(L, ray ? (start + dir * ray->distance) : end);
+    lua::setfield(L, "endpoint");
+
+    lua::pushvec3(L, ray ? ray->normal : normal);
+    lua::setfield(L, "normal");
+
+    lua::pushnumber(L, glm::distance(start, end));
+    lua::setfield(L, "length");
+
+    lua::pushvec3(L, iend);
+    lua::setfield(L, "iendpoint");
+
+    lua::pushinteger(L, block);
+    lua::setfield(L, "block");
+
+    if (ray.has_value()) {
+        lua::pushinteger(L, ray->entity);
+        lua::setfield(L, "entity");
+    } else if (block != BLOCK_VOID) {
+        lua::pushinteger(L, block);
+        lua::setfield(L, "block");
+    }
+    return 1;
+}
+
+static int l_raycast(
+    lua::State* L,
+    const glm::vec3& start,
+    const glm::vec3& dir,
+    float maxDistance,
+    const blocks_agent::RaycastSettings& voxelRaycast,
+    const Entities::RaycastSettings& entityRaycast
+) {
     glm::vec3 end;
     glm::ivec3 normal;
     glm::ivec3 iend;
@@ -187,61 +213,108 @@ static int l_raycast(lua::State* L) {
             end,
             normal,
             iend,
-            filteredBlocks,
-            includeNonSelectable
+            voxelRaycast
         )) {
         maxDistance = glm::distance(start, end);
         block = voxel->id;
     }
-    if (auto ray =
-            level->entities->rayCast(start, dir, maxDistance, ignoreEntityId)) {
-        if (luaStackSize >= 5 && !lua::isnil(L, 5)) {
-            lua::pushvalue(L, 5);
-        } else {
-            lua::createtable(L, 0, 6);
+    auto ray = level->entities->rayCast(start, dir, maxDistance, entityRaycast);
+    return l_push_ray(L, ray, block, start, dir, end, iend, normal);
+}
+
+static void load_blocks_filter(lua::State* L, int idx, std::set<blockid_t>& dst) {
+    int count = lua::objlen(L, idx);
+    for (int i = 0; i < count; i++) {
+        lua::rawgeti(L, i + 1, idx);
+        auto blockName = std::string(lua::tostring(L, -1));
+        const Block* block = content->blocks.find(blockName);
+        if (block != nullptr) {
+            dst.insert(block->rt.id);
         }
-
-        lua::pushvec3(L, start + dir * ray->distance);
-        lua::setfield(L, "endpoint");
-
-        lua::pushvec3(L, ray->normal);
-        lua::setfield(L, "normal");
-
-        lua::pushnumber(L, glm::distance(start, end));
-        lua::setfield(L, "length");
-
-        lua::pushvec3(L, iend);
-        lua::setfield(L, "iendpoint");
-
-        lua::pushinteger(L, block);
-        lua::setfield(L, "block");
-
-        lua::pushinteger(L, ray->entity);
-        lua::setfield(L, "entity");
-        return 1;
-    } else if (block != BLOCK_VOID) {
-        if (lua::gettop(L) >= 5 && !lua::isnil(L, 5)) {
-            lua::pushvalue(L, 5);
-        } else {
-            lua::createtable(L, 0, 5);
-        }
-        lua::pushvec3(L, end);
-        lua::setfield(L, "endpoint");
-
-        lua::pushvec3(L, normal);
-        lua::setfield(L, "normal");
-
-        lua::pushnumber(L, glm::distance(start, end));
-        lua::setfield(L, "length");
-
-        lua::pushvec3(L, iend);
-        lua::setfield(L, "iendpoint");
-
-        lua::pushinteger(L, block);
-        lua::setfield(L, "block");
-        return 1;
+        lua::pop(L);
     }
-    return 0;
+}
+
+static void load_entities_filter(lua::State* L, int idx, std::set<entitydefid_t>& dst) {
+    int count = lua::objlen(L, idx);
+    for (int i = 0; i < count; i++) {
+        lua::rawgeti(L, i + 1, idx);
+        auto entityName = std::string(lua::tostring(L, -1));
+        const EntityDef* entity = content->entities.find(entityName);
+        if (entity != nullptr) {
+            dst.insert(entity->rt.id);
+        }
+        lua::pop(L);
+    }
+}
+
+static int l_raycast(lua::State* L) {
+    blocks_agent::RaycastSettings blocksRaycast {};
+    Entities::RaycastSettings entityRaycast {};
+
+    std::set<blockid_t> filteredBlocks {};
+    std::set<entitydefid_t> filteredEntities {};
+
+    glm::vec3 start, dir;
+    float maxDistance;
+
+    const int luaStackSize = lua::gettop(L);
+    if (luaStackSize == 1) {
+        if (!lua::istable(L, 1)) {
+            throw std::runtime_error("invalid function overload");
+        }
+
+        lua::requirefield(L, "start", 1);
+        start = lua::tovec3(L, -1);
+
+        lua::requirefield(L, "dir", 1);
+        dir = lua::tovec3(L, -1);
+
+        lua::requirefield(L, "distance", 1);
+        maxDistance = lua::tonumber(L, -1);
+
+        lua::pop(L, 3);
+
+        if (lua::getfield(L, "ignore_uid", 1)) {
+            entityRaycast.ignoredUid = lua::tointeger(L, -1);
+            lua::pop(L);
+        }
+        if (lua::getfield(L, "ignore_entities")) {
+            load_entities_filter(L, -1, filteredEntities);
+            lua::pop(L);
+        }
+        if (lua::getfield(L, "entities_exclusion")) {
+            entityRaycast.entityFilterExcludeMode = lua::toboolean(L, -1);
+            lua::pop(L);
+        }
+        if (lua::getfield(L, "filter_blocks", 1)) {
+            load_blocks_filter(L, -1, filteredBlocks);
+            lua::pop(L);
+        }
+    } else {
+        start = lua::tovec<3>(L, 1);
+        dir = lua::tovec<3>(L, 2);
+        maxDistance = lua::tonumber(L, 3);
+
+        entityRaycast.ignoredUid = lua::tointeger(L, 4);
+        if (luaStackSize >= 6) {
+            if (lua::istable(L, 6)) {
+                load_blocks_filter(L, 6, filteredBlocks);
+            } else {
+                throw std::runtime_error("table expected for filter");
+            }
+        }
+        if (luaStackSize >= 7) {
+            blocksRaycast.includeNonSelectable = lua::toboolean(L, 6);
+        }
+    }
+    if (!filteredBlocks.empty()) {
+        blocksRaycast.filter = &filteredBlocks;
+    }
+    if (!filteredEntities.empty()) {
+        blocksRaycast.filter = &filteredEntities;
+    }
+    return l_raycast(L, start, dir, maxDistance, blocksRaycast, entityRaycast);
 }
 
 static int l_reload_component(lua::State* L) {
