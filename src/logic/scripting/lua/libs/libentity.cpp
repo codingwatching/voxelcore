@@ -291,6 +291,10 @@ static int l_raycast(lua::State* L) {
             load_blocks_filter(L, -1, filteredBlocks);
             lua::pop(L);
         }
+        if (lua::getfield(L, "nonselect_blocks", 1)) {
+            blocksRaycast.includeNonSelectable = lua::toboolean(L, -1);
+            lua::pop(L);
+        }
     } else {
         start = lua::tovec<3>(L, 1);
         dir = lua::tovec<3>(L, 2);
