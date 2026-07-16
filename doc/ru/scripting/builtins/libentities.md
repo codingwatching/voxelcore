@@ -70,3 +70,5 @@ entities.raycast(start: vec3, dir: vec3, max_distance: number, ignore: int, [opt
 Функция является расширенным вариантом [block.raycast](libblock.md#raycast). Возвращает таблицу с результатами если луч касается блока, либо сущности.
 
 Соответственно это повлияет на наличие полей *entity* и *block*.
+
+Для более тонкой настройки используйте `world.raycast(...)`.

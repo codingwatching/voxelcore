@@ -71,3 +71,5 @@ entities.raycast(start: vec3, dir: vec3, max_distance: number, ignore: int, [opt
 The function is an extended version of [block.raycast](libblock.md#raycast). Returns a table with the results if the ray touches a block or entity.
 
 Accordingly, this will affect the presence of the *entity* and *block* fields.
+
+Use `world.raycast(...)` for more detailed configuration.
