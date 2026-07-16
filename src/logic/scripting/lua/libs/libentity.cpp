@@ -230,10 +230,14 @@ static void load_blocks_filter(lua::State* L, int idx, std::set<blockid_t>& dst)
     int count = lua::objlen(L, idx);
     for (int i = 0; i < count; i++) {
         lua::rawgeti(L, i + 1, idx);
-        auto blockName = std::string(lua::tostring(L, -1));
-        const Block* block = content->blocks.find(blockName);
-        if (block != nullptr) {
-            dst.insert(block->rt.id);
+        if (lua::isnumber(L, -1)) {
+            dst.insert(lua::touinteger(L, -1));
+        } else {
+            auto blockName = std::string(lua::tostring(L, -1));
+            const Block* block = content->blocks.find(blockName);
+            if (block != nullptr) {
+                dst.insert(block->rt.id);
+            }
         }
         lua::pop(L);
     }
@@ -243,10 +247,14 @@ static void load_entities_filter(lua::State* L, int idx, std::set<entitydefid_t>
     int count = lua::objlen(L, idx);
     for (int i = 0; i < count; i++) {
         lua::rawgeti(L, i + 1, idx);
-        auto entityName = std::string(lua::tostring(L, -1));
-        const EntityDef* entity = content->entities.find(entityName);
-        if (entity != nullptr) {
-            dst.insert(entity->rt.id);
+        if (lua::isnumber(L, -1)) {
+            dst.insert(lua::touinteger(L, -1));
+        } else {
+            auto entityName = std::string(lua::tostring(L, -1));
+            const EntityDef* entity = content->entities.find(entityName);
+            if (entity != nullptr) {
+                dst.insert(entity->rt.id);
+            }
         }
         lua::pop(L);
     }
