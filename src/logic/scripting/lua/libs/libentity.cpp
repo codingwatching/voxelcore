@@ -287,7 +287,7 @@ static int l_world_raycast(lua::State* L) {
         entityRaycast.ignoredUid = lua::tointeger(L, -1);
         lua::pop(L);
     }
-    if (lua::getfield(L, "ignore_entities")) {
+    if (lua::getfield(L, "filter_entities")) {
         load_entities_filter(L, -1, filteredEntities);
         blocksRaycast.filter = &filteredEntities;
         lua::pop(L);
@@ -299,6 +299,10 @@ static int l_world_raycast(lua::State* L) {
     if (lua::getfield(L, "filter_blocks", 1)) {
         load_blocks_filter(L, -1, filteredBlocks);
         blocksRaycast.filter = &filteredBlocks;
+        lua::pop(L);
+    }
+    if (lua::getfield(L, "blocks_exclusion")) {
+        blocksRaycast.blocksFilterExcludeMode = lua::toboolean(L, -1);
         lua::pop(L);
     }
     if (lua::getfield(L, "nonselect_blocks", 1)) {

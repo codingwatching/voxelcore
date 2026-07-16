@@ -414,6 +414,7 @@ inline void set_rotation(
 
 struct RaycastSettings {
     const std::set<blockid_t>* filter = nullptr;
+    bool blocksFilterExcludeMode = true;
     bool includeNonSelectable = false;
 };
 

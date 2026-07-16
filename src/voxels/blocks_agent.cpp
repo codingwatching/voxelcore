@@ -267,10 +267,10 @@ static inline voxel* raycast_blocks(
 
         auto filter = settings.filter;
         const auto& def = blocks.require(voxel->id);
-        if (voxel->id != BLOCK_AIR
-            && (def.selectable || includeNonSelectable) 
-            && (filter == nullptr || filter->empty() ||
-             filter->find(def.rt.id) == filter->end())) {
+        if (voxel->id != BLOCK_AIR &&
+            (def.selectable || includeNonSelectable) &&
+            (filter == nullptr || (filter->find(def.rt.id) == filter->end()) ==
+                                      settings.blocksFilterExcludeMode)) {
             end = start + t * dir;
             iend = {ix, iy, iz};
 
