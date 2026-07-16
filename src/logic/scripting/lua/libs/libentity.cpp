@@ -197,7 +197,8 @@ static int l_raycast(
     const glm::vec3& dir,
     float maxDistance,
     const blocks_agent::RaycastSettings& voxelRaycast,
-    const Entities::RaycastSettings& entityRaycast
+    const Entities::RaycastSettings& entityRaycast,
+    bool entities
 ) {
     glm::vec3 end;
     glm::ivec3 normal;
@@ -218,7 +219,10 @@ static int l_raycast(
         maxDistance = glm::distance(start, end);
         block = voxel->id;
     }
-    auto ray = level->entities->rayCast(start, dir, maxDistance, entityRaycast);
+    auto ray =
+        entities
+            ? level->entities->rayCast(start, dir, maxDistance, entityRaycast)
+            : std::nullopt;
     return l_push_ray(L, ray, block, start, dir, end, iend, normal);
 }
 
@@ -248,7 +252,7 @@ static void load_entities_filter(lua::State* L, int idx, std::set<entitydefid_t>
     }
 }
 
-static int l_raycast(lua::State* L) {
+static int l_world_raycast(lua::State* L) {
     blocks_agent::RaycastSettings blocksRaycast {};
     Entities::RaycastSettings entityRaycast {};
 
@@ -257,68 +261,80 @@ static int l_raycast(lua::State* L) {
 
     glm::vec3 start, dir;
     float maxDistance;
+    bool entities = true;
+
+    if (!lua::istable(L, 1)) {
+        throw std::runtime_error("invalid function overload");
+    }
+
+    lua::requirefield(L, "start", 1);
+    start = lua::tovec3(L, -1);
+
+    lua::requirefield(L, "dir", 1);
+    dir = lua::tovec3(L, -1);
+
+    lua::requirefield(L, "distance", 1);
+    maxDistance = lua::tonumber(L, -1);
+
+    lua::pop(L, 3);
+
+    if (lua::getfield(L, "entities", 1)) {
+        entities = lua::toboolean(L, -1);
+        lua::pop(L);
+    }
+
+    if (lua::getfield(L, "ignore_uid", 1)) {
+        entityRaycast.ignoredUid = lua::tointeger(L, -1);
+        lua::pop(L);
+    }
+    if (lua::getfield(L, "ignore_entities")) {
+        load_entities_filter(L, -1, filteredEntities);
+        blocksRaycast.filter = &filteredEntities;
+        lua::pop(L);
+    }
+    if (lua::getfield(L, "entities_exclusion")) {
+        entityRaycast.entityFilterExcludeMode = lua::toboolean(L, -1);
+        lua::pop(L);
+    }
+    if (lua::getfield(L, "filter_blocks", 1)) {
+        load_blocks_filter(L, -1, filteredBlocks);
+        blocksRaycast.filter = &filteredBlocks;
+        lua::pop(L);
+    }
+    if (lua::getfield(L, "nonselect_blocks", 1)) {
+        blocksRaycast.includeNonSelectable = lua::toboolean(L, -1);
+        lua::pop(L);
+    }
+    return l_raycast(
+        L, start, dir, maxDistance, blocksRaycast, entityRaycast, entities
+    );
+}
+
+static int l_raycast(lua::State* L) {
+    blocks_agent::RaycastSettings blocksRaycast {};
+    Entities::RaycastSettings entityRaycast {};
+    std::set<blockid_t> filteredBlocks {};
 
     const int luaStackSize = lua::gettop(L);
-    if (luaStackSize == 1) {
-        if (!lua::istable(L, 1)) {
-            throw std::runtime_error("invalid function overload");
-        }
+    glm::vec3 start = lua::tovec<3>(L, 1);
+    glm::vec3 dir = lua::tovec<3>(L, 2);
+    float maxDistance = lua::tonumber(L, 3);
 
-        lua::requirefield(L, "start", 1);
-        start = lua::tovec3(L, -1);
-
-        lua::requirefield(L, "dir", 1);
-        dir = lua::tovec3(L, -1);
-
-        lua::requirefield(L, "distance", 1);
-        maxDistance = lua::tonumber(L, -1);
-
-        lua::pop(L, 3);
-
-        if (lua::getfield(L, "ignore_uid", 1)) {
-            entityRaycast.ignoredUid = lua::tointeger(L, -1);
-            lua::pop(L);
-        }
-        if (lua::getfield(L, "ignore_entities")) {
-            load_entities_filter(L, -1, filteredEntities);
-            lua::pop(L);
-        }
-        if (lua::getfield(L, "entities_exclusion")) {
-            entityRaycast.entityFilterExcludeMode = lua::toboolean(L, -1);
-            lua::pop(L);
-        }
-        if (lua::getfield(L, "filter_blocks", 1)) {
-            load_blocks_filter(L, -1, filteredBlocks);
-            lua::pop(L);
-        }
-        if (lua::getfield(L, "nonselect_blocks", 1)) {
-            blocksRaycast.includeNonSelectable = lua::toboolean(L, -1);
-            lua::pop(L);
-        }
-    } else {
-        start = lua::tovec<3>(L, 1);
-        dir = lua::tovec<3>(L, 2);
-        maxDistance = lua::tonumber(L, 3);
-
-        entityRaycast.ignoredUid = lua::tointeger(L, 4);
-        if (luaStackSize >= 6) {
-            if (lua::istable(L, 6)) {
-                load_blocks_filter(L, 6, filteredBlocks);
-            } else {
-                throw std::runtime_error("table expected for filter");
-            }
-        }
-        if (luaStackSize >= 7) {
-            blocksRaycast.includeNonSelectable = lua::toboolean(L, 6);
+    entityRaycast.ignoredUid = lua::tointeger(L, 4);
+    if (luaStackSize >= 6) {
+        if (lua::istable(L, 6)) {
+            load_blocks_filter(L, 6, filteredBlocks);
+            blocksRaycast.filter = &filteredBlocks;
+        } else {
+            throw std::runtime_error("table expected for filter");
         }
     }
-    if (!filteredBlocks.empty()) {
-        blocksRaycast.filter = &filteredBlocks;
+    if (luaStackSize >= 7) {
+        blocksRaycast.includeNonSelectable = lua::toboolean(L, 6);
     }
-    if (!filteredEntities.empty()) {
-        blocksRaycast.filter = &filteredEntities;
-    }
-    return l_raycast(L, start, dir, maxDistance, blocksRaycast, entityRaycast);
+    return l_raycast(
+        L, start, dir, maxDistance, blocksRaycast, entityRaycast, true
+    );
 }
 
 static int l_reload_component(lua::State* L) {
@@ -355,6 +371,7 @@ const luaL_Reg entitylib[] = {
     {"get_all_in_box", lua::wrap<l_get_all_in_box>},
     {"get_all_in_radius", lua::wrap<l_get_all_in_radius>},
     {"raycast", lua::wrap<l_raycast>},
+    {"__world_raycast", lua::wrap<l_world_raycast>},
     {"reload_component", lua::wrap<l_reload_component>},
     {nullptr, nullptr}
 };
