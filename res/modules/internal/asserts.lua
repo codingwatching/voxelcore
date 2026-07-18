@@ -41,15 +41,15 @@ function this.equals(expected, fact, prefix)
     if mt == Canvas then
         local diff, mismatches = diff_canvas(expected, fact)
         if mismatches > 0 then
-            local test_name = app.script or random.uuid()
+            prefix = prefix or app.script or base64.encode_urlsafe(random.bytes(6))
             local path_diff = get_test_artifact_path(
-                string.format("diff_%s.png", test_name)
+                string.format("%s.diff.png", prefix)
             )
             local path_fact = get_test_artifact_path(
-                string.format("fact_%s.png", test_name)
+                string.format("%s.fact.png", prefix)
             )
             local path_expected = get_test_artifact_path(
-                string.format("expected_%s.png", test_name)
+                string.format("%s.expected.png", prefix)
             )
             file.write_bytes(path_diff, diff:encode('png'))
             file.write_bytes(path_fact, fact:encode('png'))
@@ -59,7 +59,7 @@ function this.equals(expected, fact, prefix)
                 "%s pixels of %s (%s%%) are different, diff saved as %s",
                 mismatches,
                 total_pixels,
-                math.round(mismatches / total_pixels * 100),
+                math.round(mismatches / total_pixels * 100, 2),
                 string.escape(path_diff))
             )
         end
