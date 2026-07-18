@@ -264,3 +264,9 @@ function on_used(playerid: int)
 ```
 
 Called when an entity is used (RMB by entity). The player ID is passed as an argument.
+
+```lua
+function on_player_set(playerid: int)
+```
+
+Called when an entity is attached to a player.
