@@ -12,10 +12,27 @@ FFI.cdef[[
     } bytearray_t;
 ]]
 
-local malloc = FFI.C.malloc
-local free = FFI.C.free
 local FFIBytearray
 local bytearray_type
+
+local allocated_bytes = 0
+local GC_THRESHOLD = 50 * 1024 * 1024
+
+local function malloc(size)
+    local raw = FFI.C.malloc(size)
+    if raw == nil then
+        return nil
+    end
+
+    allocated_bytes = allocated_bytes + size
+
+    if allocated_bytes >= GC_THRESHOLD then
+        collectgarbage("step", 200)
+        allocated_bytes = 0
+    end
+
+    return FFI.gc(raw, FFI.C.free)
+end
 
 local function grow_buffer(self, elems)
     local new_capacity = math.ceil(self.capacity / 0.75 + elems)
@@ -23,7 +40,6 @@ local function grow_buffer(self, elems)
     self.bytes = malloc(new_capacity)
     FFI.copy(self.bytes, prev, self.size)
     self.capacity = new_capacity
-    free(prev)
 end
 
 local function trim_buffer(self)
@@ -35,7 +51,6 @@ local function trim_buffer(self)
     self.bytes = malloc(size)
     FFI.copy(self.bytes, prev, self.size)
     self.capacity = size
-    free(prev)
 end
 
 local function count_elements(b)
@@ -114,7 +129,6 @@ local function reserve(self, new_capacity)
     self.bytes = malloc(new_capacity)
     FFI.copy(self.bytes, prev, self.size)
     self.capacity = new_capacity
-    free(prev)
 end
 
 local function get_capacity(self)
@@ -173,9 +187,7 @@ local bytearray_mt = {
     __len = function(self)
         return tonumber(self.size)
     end,
-    __gc = function(self)
-        free(self.bytes)
-    end,
+    __gc = function(self) end,
     __ipairs = function(self)
         local i = 0
         return function()
