@@ -309,7 +309,9 @@ static inline voxel* raycast_blocks(
             } else {
                 iend = {ix, iy, iz};
                 norm = {0, 0, 0};
-                norm[steppedIndex] = -step[steppedIndex];
+                if (steppedIndex != -1) {
+                    norm[steppedIndex] = -step[steppedIndex];
+                }
                 return voxel;
             }
         }
