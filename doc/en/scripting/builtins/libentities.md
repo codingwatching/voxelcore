@@ -54,12 +54,12 @@ entities.get_all() -> table
 -- Returns a table of loaded entities based on the passed list of UIDs
 entities.get_all(uids: array<int>) -> table
 
--- Returns a list of UIDs of entities inside the rectangular area
+-- Returns a list of UIDs of entities with origin inside the rectangular area
 -- pos - minimal area corner
 -- size - area size
 entities.get_all_in_box(pos: vec3, size: vec3) -> array<int>
 
--- Returns a list of UIDs of entities inside the radius
+-- Returns a list of UIDs of entities with origin inside the radius
 -- center - center of the area
 -- radius - radius of the area
 entities.get_all_in_radius(center: vec3, radius: number) -> array<int>
