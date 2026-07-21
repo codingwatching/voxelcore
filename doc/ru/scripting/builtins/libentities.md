@@ -30,6 +30,9 @@ entities.def_name(id: int) -> string
 -- Возвращает значение свойства 'hitbox' сущности
 entities.def_hitbox(id: int) -> vec3
 
+-- Возвращает true если сущность является осязаемым препятствием.
+entities.def_solid(id: int) -> boolean
+
 -- Возвращает индекс определения сущности по имени (числовой ID).
 entities.def_index(name: string) -> int
 

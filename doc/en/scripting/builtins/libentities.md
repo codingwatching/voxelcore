@@ -30,6 +30,9 @@ entities.def_hitbox(id: int) -> vec3
 -- Returns entity definition name by index (string ID).
 entities.def_name(id: int) -> str
 
+-- Returns true if the entity is a solid obstacle.
+entities.def_solid(id: int) -> boolean
+
 -- Returns entity definition index by name (integer ID).
 entities.def_index(name: str) -> int
 
