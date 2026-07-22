@@ -82,9 +82,19 @@ static int l_parse_vcd(lua::State* L) {
     auto string = lua::require_string(L, 1);
     auto rootTag = lua::tostring(L, 2);
     auto document = xml::parse_vcm(
-        "[string]", string, rootTag ? rootTag : DEFAULT_ROOT_TAG
+        "[string]", string, rootTag ? rootTag : ""
     );
-    return push_xml(L, *document->getRoot());
+    const auto& root = *document->getRoot();
+    if (rootTag != nullptr) {
+        return push_xml(L, root);
+    }
+    int rootElements = root.size();
+    if (rootElements != 1) {
+        throw std::runtime_error(
+            "one root element expected, got " + std::to_string(rootElements)
+        );
+    }
+    return push_xml(L, *root.getElements()[0]);
 }
 
 const luaL_Reg xmllib[] = {

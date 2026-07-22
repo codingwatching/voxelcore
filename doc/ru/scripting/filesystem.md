@@ -101,8 +101,9 @@ xml.tostring(data: XML, multiline: bool = true) -> str
 xml.parse(code: str) -> XML
 
 -- Парсит формат VCD (VoxelCore Declaration), используемый форматом VCM.
--- root_tag - тег корневого элемента (формат не требует наличия явного)
-xml.parse(code: str, root_tag: str = "root") -> XML
+-- root_tag - будет неявно создан корневой элемент с указанным тегом,
+-- содержащий все корневые элементы
+xml.parse_vcd(code: str, root_tag: str | nil = nil) -> XML
 ```
 
 ## Библиотека bjson
