@@ -1,6 +1,9 @@
 #include "coders/xml.hpp"
 #include "api_lua.hpp"
 
+static const char* TAG_ATTR = "#";
+static const char* DEFAULT_ROOT_TAG = "root";
+
 static int push_xml(lua::State* L, const xml::xmlelement& elem) {
     if (elem.isText()) {
         return lua::pushlstring(L, elem.getInnerText());
@@ -12,7 +15,7 @@ static int push_xml(lua::State* L, const xml::xmlelement& elem) {
 
     lua::createtable(L, elem.size(), attrs.size() + 1);
     lua::pushlstring(L, tag);
-    lua::setfield(L, "@");
+    lua::setfield(L, TAG_ATTR);
 
     for (int i = 0; i < elems.size(); i++) {
         push_xml(L, *elems[i]);
@@ -27,7 +30,7 @@ static int push_xml(lua::State* L, const xml::xmlelement& elem) {
 }
 
 static std::unique_ptr<xml::xmlelement> toxml(lua::State* L) {
-    lua::getfield(L, "@");
+    lua::getfield(L, TAG_ATTR);
     auto tag = lua::require_lstring(L, -1);
     lua::pop(L);
     
@@ -78,7 +81,9 @@ static int l_parse(lua::State* L) {
 static int l_parse_vcd(lua::State* L) {
     auto string = lua::require_string(L, 1);
     auto rootTag = lua::tostring(L, 2);
-    auto document = xml::parse_vcm("[string]", string, rootTag ? rootTag : "root");
+    auto document = xml::parse_vcm(
+        "[string]", string, rootTag ? rootTag : DEFAULT_ROOT_TAG
+    );
     return push_xml(L, *document->getRoot());
 }
 
