@@ -4,6 +4,7 @@ local FFI = ffi
 
 FFI.cdef[[
     void* malloc(size_t);
+    void *realloc(void *, size_t);
     void free(void*);
     typedef struct {
         unsigned char* bytes;
@@ -22,12 +23,33 @@ local GC_THRESHOLD = 50 * 1024 * 1024
 
 local function malloc(size)
     local raw = FFI.C.malloc(size)
-    if raw == nil then
-        return nil
+    if not raw then
+        error("failed memory allocation of " .. size .. " bytes")
     end
 
     allocated_bytes = allocated_bytes + size
+    if allocated_bytes >= GC_THRESHOLD then
+        collectgarbage("step", 200)
+        allocated_bytes = 0
+    end
 
+    return raw
+end
+
+local function realloc(buff, size, throwerror)
+    if throwerror == nil then throwerror = true end
+
+    if size <= 0 then
+        free(buff)
+        return
+    end
+
+    local raw = FFI.C.realloc(buff, size)
+    if not raw and throwerror then
+        error("failed memory reallocation of block " .. buff .. " to new size " .. size)
+    end
+
+    allocated_bytes = allocated_bytes + size
     if allocated_bytes >= GC_THRESHOLD then
         collectgarbage("step", 200)
         allocated_bytes = 0
@@ -38,23 +60,17 @@ end
 
 local function grow_buffer(self, elems)
     local new_capacity = math.ceil(self.capacity / 0.75 + elems)
-    local prev = self.bytes
-    self.bytes = malloc(new_capacity)
-    FFI.copy(self.bytes, prev, self.size)
+    self.bytes = realloc(self.bytes, new_capacity)
     self.capacity = new_capacity
-    free(prev)
 end
 
 local function trim_buffer(self)
-    if self.size == self.capacity then
-        return
+    if self.size == self.capacity then return end
+    local new_bytes = realloc(self.bytes, self.size, false)
+    if new_bytes then
+        self.bytes = new_bytes
+        self.capacity = self.size
     end
-    local size = self.size
-    local prev = self.bytes
-    self.bytes = malloc(size)
-    FFI.copy(self.bytes, prev, self.size)
-    self.capacity = size
-    free(prev)
 end
 
 local function count_elements(b)
@@ -125,15 +141,16 @@ local function clear(self)
     self.size = 0
 end
 
-local function reserve(self, new_capacity)
-    if new_capacity <= self.capacity then
-        return
+local function fill(self, byte)
+    if self.size > 0 then
+        FFI.fill(self.bytes, self.size, byte)
     end
-    local prev = self.bytes
-    self.bytes = malloc(new_capacity)
-    FFI.copy(self.bytes, prev, self.size)
+end
+
+local function reserve(self, new_capacity)
+    if new_capacity <= self.capacity then return end
+    self.bytes = realloc(self.bytes, new_capacity)
     self.capacity = new_capacity
-    free(prev)
 end
 
 local function get_capacity(self)
@@ -150,22 +167,43 @@ local function slice(self, offset, length)
         length = self.size - offset + 1
     end
     local buffer = malloc(length)
-    if not buffer then
-        error("malloc(" .. length .. ") returned NULL")
-    end
     FFI.copy(buffer, self.bytes + (offset - 1), length)
     return bytearray_type(buffer, length, length)
 end
 
+local function copy(self, srcindex, dst, dstindex, size)
+    if srcindex > 0 and dstindex > 0 and size > 0 and
+        srcindex + size - 1 <= self.size and
+        dstindex + size - 1 <= dst.size
+    then
+        FFI.copy(dst.bytes + dstindex - 1, self.bytes + srcindex - 1, size)
+    end
+end
+
+local function move(self, fromindex, toindex, size)
+    if fromindex > 0 and toindex > 0 and size > 0 and
+        fromindex + size - 1 <= self.size and
+        toindex + size - 1 <= self.size
+    then
+        local buff = malloc(size)
+        FFI.copy(buff, self.bytes + fromindex - 1, size)
+        FFI.copy(self.bytes + toindex - 1, buff, size)
+        free(buff)
+    end
+end
+
 local bytearray_methods = {
-    append=append,
-    insert=insert,
-    remove=remove,
-    trim=trim_buffer,
-    clear=clear,
-    reserve=reserve,
-    get_capacity=get_capacity,
-    slice=slice,
+    append = append,
+    insert = insert,
+    remove = remove,
+    trim = trim_buffer,
+    clear = clear,
+    reserve = reserve,
+    get_capacity = get_capacity,
+    slice = slice,
+    fill = fill,
+    copy = copy,
+    move = move
 }
 
 local bytearray_mt = {
