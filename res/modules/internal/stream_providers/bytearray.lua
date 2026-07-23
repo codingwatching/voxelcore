@@ -5,73 +5,73 @@ local lib = { }
 local buffers = { }
 local positions = { }
 
-local nextDescriptor = 0
+local next_descriptor = 0
 
-local function openDescriptor(buffer)
-    nextDescriptor = nextDescriptor + 1
+local function open_descriptor(buffer)
+    next_descriptor = next_descriptor + 1
 
-    buffers[nextDescriptor] = buffer
-    positions[nextDescriptor] = 1
+    buffers[next_descriptor] = buffer
+    positions[next_descriptor] = 1
 
-    return nextDescriptor
+    return next_descriptor
 end
 
-local function requireDescriptor(descriptor)
+local function require_descriptor(descriptor)
     if not buffers[descriptor] then
         error("unknown descriptor")
     end
 end
 
 function lib.read(descriptor, length)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     local buf = buffers[descriptor]
-    local bufLength = #buf
+    local buf_length = #buf
     local pos = positions[descriptor]
 
-    local toRead = math.min(bufLength - pos + 1, length)
+    local to_read = math.min(buf_length - pos + 1, length)
 
-    if toRead <= 0 then
+    if to_read <= 0 then
         return Bytearray()
     end
 
-    local segment = buf:slice(pos, toRead)
+    local segment = buf:slice(pos, to_read)
 
-    positions[descriptor] = pos + toRead
+    positions[descriptor] = pos + to_read
 
     return segment
 end
 
 function lib.write(descriptor, data)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     local buf = buffers[descriptor]
     local pos = positions[descriptor]
 
-    local bufLength = #buf
-    local dataLength = #data
+    local buf_length = #buf
+    local data_length = #data
 
-    local endPos = pos + dataLength - 1
+    local end_pos = pos + data_length - 1
 
     -- size ensuring
-    if endPos > bufLength then
-        for i = bufLength + 1, endPos do
+    if endPos > buf_length then
+        for i = buf_length + 1, end_pos do
             buf[i] = 0
         end
     end
 
-    for i = 1, dataLength do
+    for i = 1, data_length do
         buf[i + pos - 1] = data[i]
     end
 
-    positions[descriptor] = pos + dataLength
+    positions[descriptor] = pos + data_length
 end
 
 function lib.seek(descriptor, mode, offset)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     local buf = buffers[descriptor]
-    local bufLength = #buf
+    local buf_length = #buf
 
     local base
 
@@ -80,26 +80,26 @@ function lib.seek(descriptor, mode, offset)
     elseif mode == 'c' then
         base = positions[descriptor]
     elseif mode == 'e' then
-        base = bufLength + 1
+        base = buf_length + 1
     else error('invalid seek mode') end
 
-    local newPos = base + offset
+    local new_pos = base + offset
 
-    if newPos < 1 then
+    if new_pos < 1 then
         error('failed to seek stream')
     end
 
-    positions[descriptor] = newPos
+    positions[descriptor] = new_pos
 end
 
 function lib.tell(descriptor)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     return positions[descriptor]
 end
 
 function lib.available(descriptor)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     local buf = buffers[descriptor]
     local pos = positions[descriptor]
@@ -112,20 +112,20 @@ function lib.is_alive(descriptor)
 end
 
 function lib.close(descriptor)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     buffers[descriptor] = nil
     positions[descriptor] = nil
 end
 
-return function(buffer, binaryMode)
-    if binaryMode == nil then
-        binaryMode = true
+return function(buffer, binary_mode)
+    if binary_mode == nil then
+        binary_mode = true
     end
 
     return io_stream.new(
-        openDescriptor(buffer),
-        binaryMode,
+        open_descriptor(buffer),
+        binary_mode,
         lib
     )
 end

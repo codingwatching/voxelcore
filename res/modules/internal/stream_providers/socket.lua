@@ -4,36 +4,36 @@ local lib = { }
 
 local sockets = { }
 
-local nextDescriptor = 0
+local next_descriptor = 0
 
-local function openDescriptor(socket)
-    nextDescriptor = nextDescriptor + 1
+local function open_descriptor(socket)
+    next_descriptor = next_descriptor + 1
 
-    sockets[nextDescriptor] = socket
+    sockets[next_descriptor] = socket
 
-    return nextDescriptor
+    return next_descriptor
 end
 
-local function requireDescriptor(descriptor)
+local function require_descriptor(descriptor)
     if not sockets[descriptor] then
         error("unknown descriptor")
     end
 end
 
 function lib.read(descriptor, length)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     return sockets[descriptor]:recv(length)
 end
 
 function lib.write(descriptor, data)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     sockets[descriptor]:send(data)
 end
 
 function lib.available(descriptor)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     return sockets[descriptor]:available()
 end
@@ -45,20 +45,20 @@ function lib.is_alive(descriptor)
 end
 
 function lib.close(descriptor)
-    requireDescriptor(descriptor)
+    require_descriptor(descriptor)
 
     sockets[descriptor]:close()
     sockets[descriptor] = nil
 end
 
-return function(socket, binaryMode)
-    if binaryMode == nil then
-        binaryMode = true
+return function(socket, binary_mode)
+    if binary_mode == nil then
+        binary_mode = true
     end
 
     return io_stream.new(
-        openDescriptor(socket),
-        binaryMode,
+        open_descriptor(socket),
+        binary_mode,
         lib
     )
 end
