@@ -166,19 +166,19 @@ function io_stream:__read(length, from_read_fully)
     elseif self.mode == BUFFERED_MODE then
         local buf_len = #self.read_buffer
 
-        if bufLen < length then
+        if buf_len < length then
             self.read_buffer:append(
                 self.io_lib.read(self.descriptor, self.max_buffer_size - buf_len)
             )
         end
 
-        bufLen = #self.read_buffer
+        buf_len = #self.read_buffer
 
         length = math.min(buf_len, length)
 
         local copy = self.read_buffer:slice(1, length)
 
-        if bufLen == length then
+        if buf_len == length then
             self.read_buffer:clear()
         else
             self.read_buffer:remove(1, length)
@@ -387,7 +387,7 @@ function io_stream:write(arg, ...)
     else
         if arg_type == "string" then
             self:write_line(arg)
-        elseif argType == "table" then
+        elseif arg_type == "table" then
             for i = 1, #arg do
                 self:write_line(arg[i])
             end

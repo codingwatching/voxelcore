@@ -54,7 +54,7 @@ function lib.write(descriptor, data)
     local end_pos = pos + data_length - 1
 
     -- size ensuring
-    if endPos > buf_length then
+    if end_pos > buf_length then
         for i = buf_length + 1, end_pos do
             buf[i] = 0
         end
