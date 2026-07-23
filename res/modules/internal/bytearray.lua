@@ -185,10 +185,15 @@ local function move(self, fromindex, toindex, size)
         fromindex + size - 1 <= self.size and
         toindex + size - 1 <= self.size
     then
-        local buff = malloc(size)
-        FFI.copy(buff, self.bytes + fromindex - 1, size)
-        FFI.copy(self.bytes + toindex - 1, buff, size)
-        free(buff)
+        if toindex >= fromindex and toindex < fromindex + size then
+            local buff = malloc(size)
+            FFI.copy(buff, self.bytes + fromindex - 1, size)
+            FFI.copy(self.bytes + toindex - 1, buff, size)
+            free(buff)
+        else
+            -- убери(-те) это ветвление, если FFI будет производить копирование не побайтово, и оставь(-те) только верхний блок без условия вообще.
+            FFI.copy(self.bytes + toindex - 1, self.bytes + fromindex - 1, size)
+        end
     end
 end
 
