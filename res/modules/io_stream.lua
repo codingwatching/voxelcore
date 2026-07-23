@@ -25,13 +25,13 @@ local ALL_FLUSH_MODES = {
 local CR = string.byte('\r')
 local LF = string.byte('\n')
 
-local function readFully(result, readFunc)
+local function read_fully(result, read_func)
     local isTable = type(result) == "table"
 
     local buf
 
     repeat
-        buf = readFunc(MAX_BUFFER_SIZE)
+        buf = read_func(MAX_BUFFER_SIZE)
 
         if isTable then
             for i = 1, #buf do
@@ -59,29 +59,29 @@ ioLib - I/O library. Should include the following functions:
     close(descriptor: int)
 --]]
 
-function io_stream.new(descriptor, binaryMode, ioLib, mode, flushMode)
+function io_stream.new(descriptor, binary_mode, io_lib, mode, flush_mode)
     mode = mode or DEFAULT_MODE
-    flushMode = flushMode or FLUSH_MODE_ALL
+    flush_mode = flush_mode or FLUSH_MODE_ALL
 
     local self = setmetatable({}, io_stream)
 
     self.descriptor = descriptor
-    self.binaryMode = binaryMode
-    self.maxBufferSize = MAX_BUFFER_SIZE
-    self.ioLib = ioLib
+    self.binary_mode = binary_mode
+    self.max_buffer_size = MAX_BUFFER_SIZE
+    self.io_lib = io_lib
 
     self:set_mode(mode)
-    self:set_flush_mode(flushMode)
+    self:set_flush_mode(flush_mode)
 
     return self
 end
 
 function io_stream:is_binary_mode()
-    return self.binaryMode
+    return self.binary_mode
 end
 
-function io_stream:set_binary_mode(binaryMode)
-    self.binaryMode = binaryMode ~= nil
+function io_stream:set_binary_mode(binary_mode)
+    self.binary_mode = binary_mode ~= nil
 end
 
 function io_stream:get_mode()
@@ -93,52 +93,52 @@ function io_stream:set_mode(mode)
         error("invalid stream mode: "..mode)
     end
 
-    if self.writeBuffer then
-        self.writeBuffer:clear()
-        self.writeBuffer = nil
+    if self.write_buffer then
+        self.write_buffer:clear()
+        self.write_buffer = nil
     end
 
-    if self.readBuffer then
-        self.readBuffer:clear()
-        self.readBuffer = nil
+    if self.read_buffer then
+        self.read_buffer:clear()
+        self.read_buffer = nil
     end
 
     if mode == BUFFERED_MODE then
-        self.writeBuffer = Bytearray(self.maxBufferSize)
-        self.readBuffer = Bytearray(self.maxBufferSize)
+        self.write_buffer = Bytearray(self.max_buffer_size)
+        self.read_buffer = Bytearray(self.max_buffer_size)
     end
 
     self.mode = mode
 end
 
 function io_stream:get_flush_mode()
-    return self.flushMode
+    return self.flush_mode
 end
 
-function io_stream:set_flush_mode(flushMode)
-    if not table.has(ALL_FLUSH_MODES, flushMode) then
-        error("invalid flush mode: "..flushMode)
+function io_stream:set_flush_mode(flush_mode)
+    if not table.has(ALL_FLUSH_MODES, flush_mode) then
+        error("invalid flush mode: " .. flush_mode)
     end
 
-    self.flushMode = flushMode
+    self.flush_mode = flush_mode
 end
 
 function io_stream:get_max_buffer_size()
-    return self.maxBufferSize
+    return self.max_buffer_size
 end
 
-function io_stream:set_max_buffer_size(maxBufferSize)
-    self.maxBufferSize = maxBufferSize
+function io_stream:set_max_buffer_size(max_buffer_size)
+    self.max_buffer_size = max_buffer_size
 
-    self.writeBuffer = Bytearray(self.maxBufferSize)
-    self.readBuffer = Bytearray(self.maxBufferSize)
+    self.write_buffer = Bytearray(self.max_buffer_size)
+    self.read_buffer = Bytearray(self.max_buffer_size)
 end
 
 function io_stream:available(length)
-    local available = self.ioLib.available and self.ioLib.available(self.descriptor) or 0
+    local available = self.io_lib.available and self.io_lib.available(self.descriptor) or 0
 
     if self.mode == BUFFERED_MODE then
-        available = available + #self.readBuffer
+        available = available + #self.read_buffer
     end
 
     if not length then
@@ -148,86 +148,86 @@ function io_stream:available(length)
     end
 end
 
-function io_stream:__read(length, fromReadFully)
+function io_stream:__read(length, from_read_fully)
     if self.mode == YIELD_MODE then
-        if fromReadFully then
-            return self.ioLib.read(self.descriptor, length)
+        if from_read_fully then
+            return self.io_lib.read(self.descriptor, length)
         end
 
         local buffer = Bytearray()
 
         while #buffer < length do
-            buffer:append(self.ioLib.read(self.descriptor, length - #buffer))
+            buffer:append(self.io_lib.read(self.descriptor, length - #buffer))
 
             if #buffer < length then coroutine.yield() end
         end
 
         return buffer
     elseif self.mode == BUFFERED_MODE then
-        local bufLen = #self.readBuffer
+        local buf_len = #self.read_buffer
 
         if bufLen < length then
-            self.readBuffer:append(
-                self.ioLib.read(self.descriptor, self.maxBufferSize - bufLen)
+            self.read_buffer:append(
+                self.io_lib.read(self.descriptor, self.max_buffer_size - buf_len)
             )
         end
 
-        bufLen = #self.readBuffer
+        bufLen = #self.read_buffer
 
-        length = math.min(bufLen, length)
+        length = math.min(buf_len, length)
 
-        local copy = self.readBuffer:slice(1, length)
+        local copy = self.read_buffer:slice(1, length)
 
         if bufLen == length then
-            self.readBuffer:clear()
+            self.read_buffer:clear()
         else
-            self.readBuffer:remove(1, length)
+            self.read_buffer:remove(1, length)
         end
 
         return copy
     elseif self.mode == DEFAULT_MODE then
-        return self.ioLib.read(self.descriptor, length)
+        return self.io_lib.read(self.descriptor, length)
     end
 end
 
 function io_stream:__write(data)
     if self.mode == BUFFERED_MODE then
-        local dataLength = #data
+        local data_length = #data
 
-        if #self.writeBuffer + dataLength > self.maxBufferSize then
+        if #self.write_buffer + data_length > self.max_buffer_size then
             self:flush()
         end
 
-        if dataLength > self.maxBufferSize then
-            local toWrite = math.floor(dataLength / self.maxBufferSize) * self.maxBufferSize
-            local toSave = dataLength - toWrite
+        if data_length > self.max_buffer_size then
+            local to_write = math.floor(data_length / self.max_buffer_size) * self.max_buffer_size
+            local to_save = data_length - to_write
 
-            self.ioLib.write(self.descriptor, data:slice(1, toWrite))
+            self.io_lib.write(self.descriptor, data:slice(1, to_write))
 
             self:flush()
 
-            self.writeBuffer = data:slice(toWrite + 1, toSave)
-        else self.writeBuffer:append(data) end
+            self.write_buffer = data:slice(to_write + 1, to_save)
+        else self.write_buffer:append(data) end
     elseif self.mode == DEFAULT_MODE or self.mode == YIELD_MODE then
-        return self.ioLib.write(self.descriptor, data)
+        return self.io_lib.write(self.descriptor, data)
     end
 end
 
-function io_stream:read_fully(useTable)
-    if self.binaryMode then
-        local result = useTable and Bytearray() or { }
+function io_stream:read_fully(use_table)
+    if self.binary_mode then
+        local result = use_table and { } or Bytearray()
 
         local avail = self:available()
 
         if avail == 0 then
-            avail = self.maxBufferSize
+            avail = self.max_buffer_size
         end
 
-        readFully(result, function() return self:__read(avail, true) end)
+        read_fully(result, function() return self:__read(avail, true) end)
 
         return result
     else
-        if useTable then
+        if use_table then
             local lines = { }
 
             local line
@@ -242,7 +242,7 @@ function io_stream:read_fully(useTable)
         else
             local result = Bytearray()
 
-            readFully(result, function() return self:__read(self.maxBufferSize) end)
+            read_fully(result, function() return self:__read(self.max_buffer_size) end)
 
             return utf8.tostring(result)
         end
@@ -284,57 +284,61 @@ function io_stream:write_line(str)
     self:__write(utf8.tobytes(str .. "\n"))
 end
 
-function io_stream:read(arg, useTable)
-    local argType = type(arg)
+function io_stream:read(arg, use_table)
+    local arg_type = type(arg)
 
-    if self.binaryMode then
-        local byteArr
+    if self.binary_mode then
+        local byte_arr
 
-        if argType == "number" then
+        if arg_type == "number" then
             -- using 'arg' as length
 
-            byteArr = self:__read(arg)
+            byte_arr = self:__read(arg)
 
-            if useTable == true then
+            if use_table == true then
                 local t = { }
 
-                for i = 1, #byteArr do
-                    t[i] = byteArr[i]
+                for i = 1, #byte_arr do
+                    t[i] = byte_arr[i]
                 end
 
                 return t
             else
-                return byteArr
+                return byte_arr
             end
-        elseif argType == "string" then
+        elseif arg_type == "string" then
             return byteutil.unpack(
                 arg,
                 self:__read(byteutil.get_size(arg))
             )
-        elseif argType == nil then
+        elseif arg_type == "nil" then
             error(
                 "in binary mode the first argument must be a string data format"..
                 " for the library \"byteutil\" or the number of bytes to read"
             )
         else
-            error("unknown argument type: "..argType)
+            error("unknown argument type: "..arg_type)
         end
     else
         if not arg then
             return self:read_line()
         else
-            local linesCount = arg
-            local trimLastEmptyLines = useTable or true
+            local lines_count = arg
+            local trim_last_empty_lines = use_table
 
-            if linesCount < 0 then error "count of lines to read must be positive" end
+            if use_table == nil then
+                trim_last_empty_lines = true
+            end
+
+            if lines_count < 0 then error "count of lines to read must be positive" end
 
             local result = { }
 
-            for i = 1, linesCount do
+            for i = 1, lines_count do
                 result[i] = self:read_line()
             end
 
-            if trimLastEmptyLines then
+            if trim_last_empty_lines then
                 local i = #result
 
                 while i >= 0 do
@@ -362,53 +366,53 @@ function io_stream:read(arg, useTable)
 end
 
 function io_stream:write(arg, ...)
-    local argType = type(arg)
+    local arg_type = type(arg)
 
-    if self.binaryMode then
-        local byteArr
+    if self.binary_mode then
+        local byte_arr
 
-        if argType ~= "string" then
+        if arg_type ~= "string" then
             -- using arg as bytes table/bytearray
 
-            if argType == "table" then
-                byteArr = Bytearray(arg)
+            if arg_type == "table" then
+                byte_arr = Bytearray(arg)
             else
-                byteArr = arg
+                byte_arr = arg
             end
         else
-            byteArr = byteutil.pack(arg, ...)
+            byte_arr = byteutil.pack(arg, ...)
         end
 
-        self:__write(byteArr)
+        self:__write(byte_arr)
     else
-        if argType == "string" then
+        if arg_type == "string" then
             self:write_line(arg)
         elseif argType == "table" then
             for i = 1, #arg do
                 self:write_line(arg[i])
             end
-        else error("unknown argument type: "..argType) end
+        else error("unknown argument type: "..arg_type) end
     end
 end
 
 function io_stream:seek(mode, offset)
-    if not self.ioLib.seek then
+    if not self.io_lib.seek then
         error("cannot seek this stream")
     end
 
-    self.ioLib.seek(self.descriptor, mode, offset)
+    self.io_lib.seek(self.descriptor, mode, offset)
 end
 
 function io_stream:tell()
-    if not self.ioLib.tell then
+    if not self.io_lib.tell then
         error("cannot tell this stream")
     end
 
-    return self.ioLib.tell(self.descriptor)
+    return self.io_lib.tell(self.descriptor)
 end
 
 function io_stream:is_alive()
-    return self.ioLib.is_alive(self.descriptor)
+    return self.io_lib.is_alive(self.descriptor)
 end
 
 function io_stream:is_closed()
@@ -417,22 +421,22 @@ end
 
 function io_stream:close()
     if self.mode == BUFFERED_MODE then
-        self.readBuffer:clear()
-        self.writeBuffer:clear()
+        self.read_buffer:clear()
+        self.write_buffer:clear()
     end
 
-    return self.ioLib.close(self.descriptor)
+    return self.io_lib.close(self.descriptor)
 end
 
 function io_stream:flush()
-    if self.mode == BUFFERED_MODE and #self.writeBuffer > 0 then
-        self.ioLib.write(self.descriptor, self.writeBuffer)
-        self.writeBuffer:clear()
+    if self.mode == BUFFERED_MODE and #self.write_buffer > 0 then
+        self.io_lib.write(self.descriptor, self.write_buffer)
+        self.write_buffer:clear()
     end
 
-    if self.flushMode ~= FLUSH_MODE_ONLY_BUFFER then
-        if self.ioLib.flush then
-            self.ioLib.flush(self.descriptor)
+    if self.flush_mode ~= FLUSH_MODE_ONLY_BUFFER then
+        if self.io_lib.flush then
+            self.io_lib.flush(self.descriptor)
         elseif self:is_closed() then error("stream is closed") end
     end
 end
