@@ -66,6 +66,33 @@ void io_descriptors::flush(int id) {
     }
 }
 
+int io_descriptors::available(int id) {
+    if (!is_readable(id))
+        return 0;
+
+    auto* stream = descriptors[id]->in.get();
+
+    auto current_pos = stream->tellg();
+
+    if (current_pos == -1) {
+        return 0;
+    }
+
+    stream->seekg(0, std::ios::end);
+
+    auto end_pos = stream->tellg();
+
+    stream->seekg(current_pos,  std::ios::beg);
+
+    auto remaining = end_pos - current_pos;
+
+    if (remaining > std::numeric_limits<int>::max()) {
+        return std::numeric_limits<int>::max();
+    }
+
+    return static_cast<int>(remaining);
+}
+
 bool io_descriptors::has_descriptor(int id) {
     return id >= 0 && id < static_cast<int>(::descriptors.size()) &&
            ::descriptors[id].has_value();
