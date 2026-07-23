@@ -94,7 +94,7 @@ socket:recv_async(
 
 -- Оборачивает сокет в io_stream (см. ../io_stream.md)
 socket:as_stream(
-    [опционально] binaryMode: boolean=true
+    [опционально] binary_mode: boolean=true
 ) -> io_stream
 
 -- Закрывает соединение
