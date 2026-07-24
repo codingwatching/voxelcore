@@ -61,6 +61,7 @@ local function sample_noise(x)
 end
 
 function math.noise(x, octaves)
+    x = math.abs(x)
     octaves = octaves or 1
     local value = 0.0
     local mul = 1.0
@@ -81,6 +82,9 @@ local function rand_2d(x, y)
 end
 
 local function sample_noise2d(x, y)
+    x = math.abs(x)
+    y = math.abs(y)
+
     local x0 = math.floor(x)
     local y0 = math.floor(y)
     local x1 = x0 + 1
