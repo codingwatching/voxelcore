@@ -162,6 +162,8 @@ static inline void draw_text(
     const FontStylesScheme* styles,
     size_t styleMapOffset
 ) {
+    bool is3d = std::is_same<Batch, Batch3D>();
+
     static FontStylesScheme defStyles {{{}}, {0}};
 
     if (styles == nullptr) {
@@ -200,7 +202,7 @@ static inline void draw_text(
             if (charpage == page){
                 batch.texture(font.getPage(charpage));
                 draw_glyph(
-                    batch, pos, glm::vec2(x, y - yOffset / static_cast<float>(font.getLineHeight())), c, right, up, interval, style
+                    batch, pos, glm::vec2(x, y - yOffset * (is3d ? -1 : 1) / static_cast<float>(font.getLineHeight())), c, right, up, interval, style
                 );
             }
             else if (charpage > page && charpage < next){

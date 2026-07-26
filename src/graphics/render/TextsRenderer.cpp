@@ -58,7 +58,10 @@ void TextsRenderer::renderNote(
         }
         opacity = preset.xrayOpacity;
     }
-    auto& font = assets.require<Font>(FONT_DEFAULT);
+
+    auto specifiedFont = assets.get<Font>(preset.font);
+    auto& font =
+        specifiedFont ? *specifiedFont : assets.require<Font>(FONT_DEFAULT);
 
     glm::vec3 xvec = note.getAxisX();
     glm::vec3 yvec = note.getAxisY();
@@ -118,6 +121,7 @@ void TextsRenderer::renderNote(
     }
     auto color = preset.color;
     batch.setColor(glm::vec4(color.r, color.g, color.b, color.a * opacity));
+
     font.draw(
         batch,
         text,
