@@ -79,7 +79,10 @@ void TextsRenderer::renderNote(
             yvec = camera.up;
         }
         float scale =
-            (1.0f - preset.perspective) * glm::pow(glm::distance(camera.position, pos), 1.0f-preset.perspective);
+            (1.0f - preset.perspective) *
+            glm::pow(
+                glm::distance(camera.position, pos), 1.0f - preset.perspective
+            );
         xvec *= 1.0f + scale;
         yvec *= 1.0f + scale;
     }

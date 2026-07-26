@@ -196,13 +196,26 @@ static inline void draw_text(
             float advance = baseAdvance;
             if (auto glyph = font.getGlyph(c)) {
                 yOffset = glyph->yOffset;
-                advance = glyph->xAdvance;
+                advance = glyph->xAdvance /
+                          static_cast<float>(font.getLineHeight()) * 2.0f *
+                          baseAdvance;
             }
             uint charpage = c >> 8;
             if (charpage == page){
                 batch.texture(font.getPage(charpage));
                 draw_glyph(
-                    batch, pos, glm::vec2(x, y - yOffset * (is3d ? -1 : 1) / static_cast<float>(font.getLineHeight())), c, right, up, interval, style
+                    batch,
+                    pos,
+                    glm::vec2(
+                        x,
+                        y - yOffset * (is3d ? -1 : 1) /
+                                static_cast<float>(font.getLineHeight())
+                    ),
+                    c,
+                    right,
+                    up,
+                    interval,
+                    style
                 );
             }
             else if (charpage > page && charpage < next){
