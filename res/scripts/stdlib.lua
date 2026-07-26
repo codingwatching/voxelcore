@@ -127,6 +127,10 @@ require "core:internal/extensions/inventory"
 asserts = require "core:internal/asserts"
 events = require "core:internal/events"
 
+if test then
+    require "core:internal/test"
+end
+
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
@@ -312,6 +316,8 @@ entities.get_all = function(uids)
         return stdcomp.get_all(uids)
     end
 end
+world.raycast = entities.__world_raycast
+entities.__world_raycast = nil
 
 __vc_scripts_registry = require "core:internal/scripts_registry"
 
@@ -331,6 +337,10 @@ else
 
     os.pid = ffi.C.getpid()
 end
+
+require("core:io_stream").wrap_bytearray = require "core:internal/stream_providers/bytearray"
+
+network.__as_stream = require "core:internal/stream_providers/socket"
 
 math.randomseed(time.uptime() * 1536227939)
 
