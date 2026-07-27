@@ -61,7 +61,7 @@ Determines how the physics engine will work with it.
 
 ### *blocking*
 
-Determines whether the entity blocks installation of blocks.
+If true - the entity blocks the placement of a block that intersects with the entity's hitbox.
 
 *In the future will also block other entities movement.*
 
