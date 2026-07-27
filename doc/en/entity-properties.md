@@ -67,6 +67,10 @@ If true - the entity blocks the placement of a block that intersects with the en
 
 Default value: *true*.
 
+### *selectable*
+
+If set to `false` the cursor will ignore the entity, passing the ray.
+
 ### *sensors*
 
 A sensor is an area attached to a physical body that detects the entry of other bodies into it.
