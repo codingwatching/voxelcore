@@ -1,6 +1,7 @@
 #pragma once
 
 #include "interfaces/Serializable.hpp"
+#include "io/path.hpp"
 
 #include <set>
 #include <string>
@@ -21,6 +22,7 @@ struct Permissions {
 struct Project : Serializable {
     std::string name;
     std::string title;
+    io::path path;
     std::vector<std::string> basePacks;
     Permissions permissions;
 

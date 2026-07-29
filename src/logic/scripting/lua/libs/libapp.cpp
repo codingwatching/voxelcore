@@ -366,9 +366,31 @@ static int l_start_debug_instance(lua::State* L) {
     platform::new_engine_instance(
         std::move(args),
         outputPath.empty() ? "" : io::resolve(std::string(outputPath)),
-        true // debug instance may be detached
+        false
     );
     return lua::pushinteger(L, port);
+}
+
+static int l_start_background_instance(lua::State* L) {
+    auto scriptPath = lua::require_lstring(L, 1);
+    io::path outputPath = "user:background.log"; // TODO:
+    const auto& paths = engine->getPaths();
+
+    std::vector<std::string> args {
+        "--headless",
+        "--res", paths.getResourcesFolder().u8string(),
+        "--dir", paths.getUserFilesFolder().u8string(),
+        "--script", io::resolve(scriptPath).u8string(),
+    };
+    args.emplace_back("--project");
+    args.emplace_back(io::resolve(engine->getProject().path).u8string());
+
+    platform::new_engine_instance(
+        std::move(args),
+        outputPath.empty() ? "" : io::resolve(outputPath),
+        true 
+    );
+    return 0;
 }
 
 const luaL_Reg applib[] = {
@@ -403,5 +425,6 @@ const luaL_Reg applib[] = {
     {"get_version", lua::wrap<l_get_version>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
+    {"start_background_instance", lua::wrap<l_start_background_instance>},
     {nullptr, nullptr}
 };

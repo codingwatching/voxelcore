@@ -380,6 +380,7 @@ void Engine::loadAssets() {
 void Engine::loadProject() {
     io::path projectFile = "project:project.toml";
     project = std::make_unique<Project>();
+    project->path = "project:";
     project->deserialize(io::read_object(projectFile));
     logger.info() << "loaded project " << util::quote(project->name);
 }
