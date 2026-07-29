@@ -362,11 +362,13 @@ void platform::new_engine_instance(
             }
             argv[args.size() + 1] = nullptr;
 
+            prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); 
             execvp(executable.c_str(), const_cast<char**>(argv.data()));
 
             _exit(127);
         } else {
             close(fd);
+            return;
         }
     }
 #endif // __APPLE_
