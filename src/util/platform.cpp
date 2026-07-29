@@ -18,11 +18,13 @@
 #pragma comment(lib, "winmm.lib")
 #else
 #include <sys/poll.h>
-#include <sys/prctl.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#endif
+#ifdef __linux__
+    #include <sys/prctl.h>
 #endif
 
 namespace platform::internal {
@@ -333,6 +335,8 @@ void platform::new_engine_instance(
     }
 #else
 
+// TODO: implement
+#ifndef __APPLE__
     if (subProcess) {
         pid_t pid = fork();
 
@@ -365,6 +369,7 @@ void platform::new_engine_instance(
             close(fd);
         }
     }
+#endif // __APPLE_
 
     std::stringstream ss;
     ss << executable;
