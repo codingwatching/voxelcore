@@ -365,7 +365,8 @@ static int l_start_debug_instance(lua::State* L) {
 
     platform::new_engine_instance(
         std::move(args),
-        outputPath.empty() ? "" : io::resolve(std::string(outputPath))
+        outputPath.empty() ? "" : io::resolve(std::string(outputPath)),
+        true // debug instance may be detached
     );
     return lua::pushinteger(L, port);
 }

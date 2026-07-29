@@ -19,7 +19,9 @@ namespace platform {
     std::filesystem::path get_executable_path();
     /// @brief Run a separate engine instance with specified arguments
     void new_engine_instance(
-        const std::vector<std::string>& args, std::filesystem::path outputFile
+        const std::vector<std::string>& args,
+        std::filesystem::path outputFile,
+        bool subProcess
     );
     /// @brief Open URL in web browser 
     bool open_url(const std::string& url);
