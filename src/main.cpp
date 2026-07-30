@@ -10,6 +10,7 @@
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
+    logger.info() << "SIGTERM received";
     Engine::getInstance().quit();
 }
 

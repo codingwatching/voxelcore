@@ -25,6 +25,7 @@
 #endif
 #ifdef __linux__
     #include <sys/prctl.h>
+    #include <sys/wait.h>
 #endif
 
 namespace platform::internal {
@@ -221,7 +222,98 @@ std::filesystem::path platform::get_executable_path() {
 #endif
 }
 
-void platform::new_engine_instance(
+class SystemProcess final : public Process {
+public:
+#ifdef __linux__
+    SystemProcess(pid_t pid) : pid(pid) {
+    }
+
+    ~SystemProcess() {
+        terminate();
+    }
+#elif defined(_WIN32)
+    SystemProcess(const PROCESS_INFORMATION& pi)
+        : processHandle(pi.hProcess), pid(pi.dwProcessId) {
+        if (pi.hThread != nullptr) {
+            CloseHandle(pi.hThread);
+        }
+    }
+
+    ~SystemProcess() {
+        terminate();
+    }
+#endif
+    SystemProcess(const SystemProcess&) = delete;
+    SystemProcess(SystemProcess&&) noexcept = default;
+    SystemProcess& operator=(const SystemProcess&) = delete;
+
+    SystemProcess& operator=(SystemProcess&& other) noexcept {
+        if (this != &other) {
+#ifdef __linux__
+            pid = other.pid;
+#elif defined(_WIN32)
+            if (processHandle != nullptr) {
+                CloseHandle(processHandle);
+            }
+            processHandle = other.processHandle;
+            pid = other.pid;
+            other.processHandle = nullptr;
+            other.pid = 0;
+#endif
+        }
+        return *this;
+    }
+
+    bool isActive() const override {
+#ifdef __linux__
+        if (kill(pid, 0) == 0) {
+            return true;
+        }
+        return errno != ESRCH;
+#elif defined(_WIN32)
+        if (processHandle == nullptr) {
+            return false;
+        }
+        DWORD exitCode;
+        if (GetExitCodeProcess(processHandle, &exitCode)) {
+            return exitCode == STILL_ACTIVE;
+        }
+        return false;
+#endif
+    }
+
+    void update() override {}
+
+    void waitForEnd() override {
+#ifdef __linux__
+        waitpid(pid, nullptr, 0);
+#elif defined(_WIN32)
+        if (processHandle != nullptr) {
+            WaitForSingleObject(processHandle, INFINITE);
+        }
+#endif
+    };
+
+    void terminate() final override {
+#ifdef __linux__
+        kill(pid, SIGKILL);
+#elif defined(_WIN32)
+        if (processHandle != nullptr) {
+            TerminateProcess(processHandle, 1);
+            WaitForSingleObject(processHandle, INFINITE);
+        }
+#endif
+    }
+private:
+#ifdef __linux__
+    pid_t pid;
+#elif defined(_WIN32)
+    HANDLE processHandle = nullptr;
+    DWORD pid = 0;
+#endif
+};
+
+std::unique_ptr<Process> platform::new_engine_instance(
     const std::vector<std::string>& args,
     std::filesystem::path outputFile,
     bool subProcess
@@ -317,11 +409,12 @@ void platform::new_engine_instance(
                     std::to_string(GetLastError())
                 );
             }
+            return std::make_unique<SystemProcess>(pi);
         } catch (const std::exception& err) {
             CloseHandle(job);
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
-            return;
+            return nullptr;
         }
     }
     if (success) {
@@ -368,7 +461,7 @@ void platform::new_engine_instance(
             _exit(127);
         } else {
             close(fd);
-            return;
+            return std::make_unique<SystemProcess>(pid);
         }
     }
 #endif // __APPLE_
@@ -393,6 +486,7 @@ void platform::new_engine_instance(
         );
     }
 #endif
+    return nullptr;
 }
 
 bool platform::stdin_has_data() {
