@@ -192,7 +192,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         audio::set_input_device(name == "auto" ? "" : name);
     }));
 
-    appScripts = std::make_unique<AppScriptsControl>(params, *project);
+    appScripts = std::make_unique<AppScriptsControl>(params);
 
     if (params.stdinCommands) {
         cmd::start_stdin_cmd_reader(*this);
