@@ -22,6 +22,10 @@
 
 using namespace scripting;
 
+namespace {
+    static std::unique_ptr<Process> sub_instance = nullptr;
+}
+
 /// @brief Check if content is loaded
 static int l_is_content_loaded(lua::State* L) {
     return lua::pushboolean(L, content != nullptr);
@@ -377,7 +381,7 @@ static int l_start_background_instance(lua::State* L) {
     const auto& paths = engine->getPaths();
 
     std::vector<std::string> args {
-        "--headless",
+        // "--headless",
         "--res", paths.getResourcesFolder().u8string(),
         "--dir", paths.getUserFilesFolder().u8string(),
         "--script", io::resolve(scriptPath).u8string(),
@@ -385,7 +389,7 @@ static int l_start_background_instance(lua::State* L) {
     args.emplace_back("--project");
     args.emplace_back(io::resolve(engine->getProject().path).u8string());
 
-    platform::new_engine_instance(
+    ::sub_instance = platform::new_engine_instance(
         std::move(args),
         outputPath.empty() ? "" : io::resolve(outputPath),
         true 

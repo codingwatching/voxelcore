@@ -413,6 +413,7 @@ void Engine::onWorldClosed() {
 }
 
 void Engine::quit() {
+    logger.info() << "quitSignal set to true";
     quitSignal = true;
     if (!isHeadless()) {
         window->setShouldClose(true);
