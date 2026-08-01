@@ -341,6 +341,10 @@ static int l_start_debug_instance(lua::State* L) {
     if (!engine->getProject().permissions.has(Permissions::DEBUGGING)) {
         throw std::runtime_error("project has no debugging permission");
     }
+    const auto& params = engine->getCoreParameters();
+    if (params.subProcessDepth >= MAX_SUBPROCESS_DEPTH) {
+        throw std::runtime_error("max subprocess depth exceeded");
+    }
 
     int port = lua::tointeger(L, 1);
     if (port == 0) {
@@ -361,6 +365,8 @@ static int l_start_debug_instance(lua::State* L) {
         "--res", paths.getResourcesFolder().u8string(),
         "--dir", paths.getUserFilesFolder().u8string(),
         "--dbg-server",  "tcp:" + std::to_string(port),
+        "--sub-depth", std::to_string(engine->getCoreParameters()
+            .subProcessDepth + 1),
     };
     if (!projectPath.empty()) {
         args.emplace_back("--project");
@@ -376,15 +382,25 @@ static int l_start_debug_instance(lua::State* L) {
 }
 
 static int l_start_background_instance(lua::State* L) {
+    if (!engine->getProject().permissions.has(Permissions::SUB_INSTANCES)) {
+        throw std::runtime_error("project has no sub-instances permission");
+    }
+    const auto& params = engine->getCoreParameters();
+    if (params.subProcessDepth >= MAX_SUBPROCESS_DEPTH) {
+        throw std::runtime_error("max subprocess depth exceeded");
+    }
+
     auto scriptPath = lua::require_lstring(L, 1);
-    io::path outputPath = "user:background.log"; // TODO:
+    io::path outputPath = lua::isstring(L, 2) ? lua::require_lstring(L, 2) : "";
     const auto& paths = engine->getPaths();
 
     std::vector<std::string> args {
-        // "--headless",
+        "--headless",
         "--res", paths.getResourcesFolder().u8string(),
         "--dir", paths.getUserFilesFolder().u8string(),
         "--script", io::resolve(scriptPath).u8string(),
+        "--sub-depth", std::to_string(engine->getCoreParameters()
+            .subProcessDepth + 1),
     };
     args.emplace_back("--project");
     args.emplace_back(io::resolve(engine->getProject().path).u8string());

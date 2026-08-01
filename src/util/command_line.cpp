@@ -78,12 +78,19 @@ static bool perform_keyword(
             params.debugServerString = reader.next();
             return true;
         }, "<serv>", "open debugging server where <serv> is {transport}:{port}"),
+        ArgC("--sub-depth", [&params, &reader]() -> bool {
+            params.subProcessDepth = reader.nextInt();
+            return true;
+        }, "<depth>", "sub-process depth"),
         ArgC("--help", []() -> bool {
             std::cout << "VoxelCore v" << ENGINE_VERSION_STRING << "\n\n";
             std::cout << "Command-line arguments:\n";
-            for (auto& a : argumentsCommandline) {
-                std::cout << std::setw(24) << std::left << (a.keyword + " " + a.args);
-                std::cout << "- " << a.help << std::endl;
+            for (auto& arg : argumentsCommandline) {
+                if (arg.help.empty()) {
+                    continue;
+                }
+                std::cout << std::setw(24) << std::left << (arg.keyword + " " + arg.args);
+                std::cout << "- " << arg.help << std::endl;
             }
             std::cout << std::endl;
             return false;

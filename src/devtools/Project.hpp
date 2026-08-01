@@ -13,6 +13,7 @@ struct Permissions {
     static inline std::string NETWORK = "network";
     static inline std::string RECORD_AUDIO = "record-audio";
     static inline std::string WRITE_TO_USER = "write-to-user";
+    static inline std::string SUB_INSTANCES = "sub-instances";
 
     std::set<std::string> permissions;
 

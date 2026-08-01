@@ -26,6 +26,8 @@ int main(int argc, char** argv) {
         if (!parse_cmdline(argc, argv, coreParameters)) {
             return EXIT_SUCCESS;
         }
+        logger.debug() << "sub-process depth: "
+                       << coreParameters.subProcessDepth;
     } catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
         return EXIT_FAILURE;

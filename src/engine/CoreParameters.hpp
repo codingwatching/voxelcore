@@ -14,5 +14,6 @@ struct CoreParameters {
     std::filesystem::path projectFolder;
     std::string debugServerString;
     int tps = 20;
+    int subProcessDepth = 0;
     std::unordered_map<std::string, std::string> projectArgs;
 };
