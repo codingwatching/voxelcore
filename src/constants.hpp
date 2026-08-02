@@ -16,6 +16,7 @@ inline constexpr bool ENGINE_DEBUG_BUILD = true;
 
 inline const std::string ENGINE_VERSION_STRING = "0.32";
 
+inline constexpr uint MAX_SUBPROCESSES = 1;
 inline constexpr uint MAX_SUBPROCESS_DEPTH = 2;
 
 /// @brief world regions format version

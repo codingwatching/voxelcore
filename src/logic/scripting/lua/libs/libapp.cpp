@@ -20,10 +20,12 @@
 #include "window/Window.hpp"
 #include "world/Level.hpp"
 
+#include <array>
+
 using namespace scripting;
 
 namespace {
-    static std::unique_ptr<Process> sub_instance = nullptr;
+    static std::array<std::unique_ptr<Process>, MAX_SUBPROCESSES> processes;
 }
 
 /// @brief Check if content is loaded
@@ -405,12 +407,36 @@ static int l_start_background_instance(lua::State* L) {
     args.emplace_back("--project");
     args.emplace_back(io::resolve(engine->getProject().path).u8string());
 
-    ::sub_instance = platform::new_engine_instance(
+    int handle = -1;
+    for (int i = 0; i < ::processes.size(); i++) {
+        if (!::processes[i] || !::processes[i]->isActive()) {
+            handle = i;
+            break;
+        }
+    }
+    if (handle == -1) {
+        throw std::runtime_error("sub-processes limit exceeded");
+    }
+    ::processes[handle] = platform::new_engine_instance(
         std::move(args),
         outputPath.empty() ? "" : io::resolve(outputPath),
         true 
     );
-    return 0;
+    return lua::pushinteger(L, handle);
+}
+
+static int l_terminate(lua::State* L) {
+    int handle = lua::tointeger(L, 1);
+    if (handle < 0 || handle >= ::processes.size()) {
+        throw std::runtime_error("invalid process handle");
+    }
+    auto& process = ::processes[handle];
+    if (process == nullptr) {
+        return lua::pushboolean(L, false);
+    }
+    bool active = process->isActive();
+    process.reset();
+    return lua::pushboolean(L, active);
 }
 
 const luaL_Reg applib[] = {
@@ -446,5 +472,6 @@ const luaL_Reg applib[] = {
     {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"start_background_instance", lua::wrap<l_start_background_instance>},
+    {"terminate", lua::wrap<l_terminate>},
     {nullptr, nullptr}
 };
