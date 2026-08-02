@@ -180,13 +180,13 @@ app.get_content_sources() -> table<string>
 
 Returns a list of content sources (paths), in descending priority order.
 
-``lua
+```lua
 app.set_content_sources(sources: table<string>)
 ```
 
 Sets a list of content sources (paths). Specified in descending priority order.
 
-``lua
+```lua
 app.reset_content_sources()
 ```
 
