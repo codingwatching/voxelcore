@@ -127,7 +127,7 @@ const ChunkMesh* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
 ) {
     glm::ivec2 key(chunk->x, chunk->z);
-    if (important || true) {
+    if (important) {
         ChunkMesh mesh {};
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
