@@ -156,7 +156,10 @@ app.start_background_instance(
     output_file: string | nil
 ) -> int
 
+-- Проверяет, жив ли под-экземпляр движка.
+app.is_instance_alive(handle: int) -> boolean
+
 -- Останавливает под-экземпляр движка.
 -- Возвращает true если экземпляр был жив в момент вызова.
-app.terminate(handle: int) -> boolean
+app.terminate_instance(handle: int) -> boolean
 ```

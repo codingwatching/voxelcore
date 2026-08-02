@@ -204,6 +204,9 @@ app.start_background_instance(
     output_file: string | nil
 ) -> int
 
+-- Checks if the engine sub-instance is alive.
+app.is_instance_alive(handle: int) -> boolean
+
 -- Stops the engine sub-instance.
 -- Returns true if the instance was alive at the time of the call.
 app.terminate(handle: int) -> boolean
