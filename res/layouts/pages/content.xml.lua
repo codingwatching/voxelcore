@@ -3,6 +3,7 @@ function on_open(params)
         mode = params.mode
     end
     refresh()
+    document.search_textbox.focused = true
 end
 
 -- add - packs to be added to the world (after apply)

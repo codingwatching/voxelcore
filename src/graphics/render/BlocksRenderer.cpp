@@ -514,6 +514,7 @@ void BlocksRenderer::render(
         int x = i % CHUNK_W;
         int y = i / (CHUNK_D * CHUNK_W);
         int z = (i / CHUNK_D) % CHUNK_W;
+
         switch (def.getModel(state.userbits).type) {
             case BlockModelType::BLOCK:
                 blockCube({x, y, z}, texfaces, def, vox.state, !def.shadeless,
@@ -532,7 +533,6 @@ void BlocksRenderer::render(
                 break;
             }
             case BlockModelType::CUSTOM: {
-                if (!denseRender)
                 blockCustomModel(
                     {x, y, z},
                     def,
