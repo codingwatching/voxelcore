@@ -37,7 +37,7 @@ end
 function util.block_loot(blockid)
     local lootscheme = block.properties[blockid]["base:loot"]
     if lootscheme then
-        return calc_loot(lootscheme)
+        return util.calc_loot(lootscheme)
     end
     return {{item=block.get_picking_item(blockid), count=1}}
 end
