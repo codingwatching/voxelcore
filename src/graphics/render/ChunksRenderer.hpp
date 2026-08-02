@@ -54,7 +54,7 @@ public:
         const ContentGfxCache& cache, 
         const EngineSettings& settings
     );
-    virtual ~ChunksRenderer();
+    ~ChunksRenderer();
 
     void unload(const Chunk* chunk);
     void clear();
@@ -88,7 +88,7 @@ private:
 
     std::shared_ptr<VoxelsRenderVolume> prepareVoxelsVolume(const Chunk& chunk);
 
-    const ChunkMesh* render(
-        const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
-    );
+    void render(const std::shared_ptr<Chunk>& chunk, bool lowPriority);
+
+    void renderBlocking(const std::shared_ptr<Chunk>& chunk);
 };

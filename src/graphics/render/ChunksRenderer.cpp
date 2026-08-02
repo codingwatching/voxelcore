@@ -125,30 +125,30 @@ std::shared_ptr<VoxelsRenderVolume> ChunksRenderer::prepareVoxelsVolume(
     return voxelsBuffer;
 }
 
-const ChunkMesh* ChunksRenderer::render(
-    const std::shared_ptr<Chunk>& chunk, bool important, bool lowPriority
+void ChunksRenderer::renderBlocking(const std::shared_ptr<Chunk>& chunk) {
+    glm::ivec2 key(chunk->x, chunk->z);
+    ChunkMesh mesh {};
+    auto voxelsBuffer = prepareVoxelsVolume(*chunk);
+    mesh = renderer->render(chunk.get(), *voxelsBuffer);
+    meshes[key] = std::move(mesh);
+    chunk->flags.modified = false;
+}
+
+void ChunksRenderer::render(
+    const std::shared_ptr<Chunk>& chunk, bool lowPriority
 ) {
     glm::ivec2 key(chunk->x, chunk->z);
-    if (important) {
-        ChunkMesh mesh {};
-        auto voxelsBuffer = prepareVoxelsVolume(*chunk);
-        mesh = renderer->render(chunk.get(), *voxelsBuffer);
-        meshes[key] = std::move(mesh);
-        chunk->flags.modified = false;
-        return &meshes[key];
-    }
     if (inwork.find(key) != inwork.end() ||
         ((inwork.size() >= threadPool.getWorkersCount() ||
           enqueuedInFrame >= MAX_CHUNKS_ENQUEUED_IN_FRAME) &&
          lowPriority)) {
-        return nullptr;
+        return;
     }
     chunk->flags.modified = false;
     enqueuedInFrame++;
     auto voxelsBuffer = prepareVoxelsVolume(*chunk);
     threadPool.enqueueJob({chunk, std::move(voxelsBuffer)});
     inwork[key] = true;
-    return nullptr;
 }
 
 void ChunksRenderer::unload(const Chunk* chunk) {
@@ -195,6 +195,8 @@ void ChunksRenderer::update() {
         }
     );
 
+    int loadDistance = settings.chunks.loadDistance.get();
+
     const int topN = 10;
     int top = std::min<int>(meshBuildQueue.size(), topN);
     for (int i = 0; i < top; i++) {
@@ -214,12 +216,16 @@ void ChunksRenderer::update() {
             )
         );
         bool important = distance < CHUNK_W * 1.5f;
-        bool lowPriority = distance > CHUNK_W * settings.chunks.loadDistance.get() * 0.5;
+        bool lowPriority = distance > CHUNK_W * loadDistance * 0.5;
 
         if (chunk->flags.dirtyHeights) {
             chunk->updateHeights();
         }
-        render(chunk, important, lowPriority);
+        if (important) {
+            renderBlocking(chunk);
+        } else {
+            render(chunk, lowPriority);
+        }
     }
 }
 
