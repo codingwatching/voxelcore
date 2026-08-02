@@ -191,3 +191,20 @@ app.reset_content_sources()
 ```
 
 Resets content sources.
+
+## Sub-instances
+
+```lua
+-- Creates a headless engine instance with the current project and the specified application script.
+-- Returns the instance ID. The number of active sub-instances is currently limited to one.
+app.start_background_instance(
+    -- script file
+    app_script: string,
+    -- log file
+    output_file: string | nil
+) -> int
+
+-- Stops the engine sub-instance.
+-- Returns true if the instance was alive at the time of the call.
+app.terminate(handle: int) -> boolean
+```
