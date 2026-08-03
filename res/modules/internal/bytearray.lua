@@ -298,7 +298,8 @@ local function FFIBytearray_as_string(bytes)
     end
 end
 
-local function create_FFIview_class(name, typename, typesize)
+local function create_FFIview_class(name, typename)
+    local typesize = FFI.sizeof(typename)
     local ptrtype = typename .. "*"
     local FFIview_mt = {
         __index = function(self, key)
@@ -343,11 +344,11 @@ local function create_FFIview_class(name, typename, typesize)
     end
 end
 
-local FFII16view = create_FFIview_class("FFII16view", "int16_t", 2)
-local FFIU16view = create_FFIview_class("FFIU16view", "uint16_t", 2)
-local FFII32view = create_FFIview_class("FFII32view", "int32_t", 4)
-local FFIU32view = create_FFIview_class("FFIU32view", "uint32_t", 4)
-local FFIF32view = create_FFIview_class("FFIF32view", "float", 4)
+local FFII16view = create_FFIview_class("FFII16view", "int16_t")
+local FFIU16view = create_FFIview_class("FFIU16view", "uint16_t")
+local FFII32view = create_FFIview_class("FFII32view", "int32_t")
+local FFIU32view = create_FFIview_class("FFIU32view", "uint32_t")
+local FFIF32view = create_FFIview_class("FFIF32view", "float")
 
 return {
     FFIBytearray = setmetatable(FFIBytearray, FFIBytearray),
