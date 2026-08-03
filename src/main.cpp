@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 
+using namespace std::literals;
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
@@ -36,7 +37,14 @@ int main(int argc, char** argv) {
 #ifdef NDEBUG
     std::signal(SIGINT, sigterm_handler);
 #endif
-    debug::Logger::init(coreParameters.userFolder.string() + "/latest.log");
+    std::filesystem::path logFile = coreParameters.logFile;
+    if (logFile.empty()) {
+        logFile = coreParameters.userFolder.string() + "/latest"s +
+                  (coreParameters.subProcessDepth > 0
+                       ? ".sub" + std::to_string(coreParameters.subProcessDepth)
+                       : "") + ".log"s;
+    }
+    debug::Logger::init(logFile);
     platform::configure_encoding();
 
     auto& engine = Engine::getInstance();

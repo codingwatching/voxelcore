@@ -12,6 +12,7 @@ struct CoreParameters {
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
     std::filesystem::path projectFolder;
+    std::filesystem::path logFile;
     std::string debugServerString;
     int tps = 20;
     int subProcessDepth = 0;
