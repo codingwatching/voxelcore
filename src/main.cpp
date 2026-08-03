@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
                        ? ".sub" + std::to_string(coreParameters.subProcessDepth)
                        : "") + ".log"s;
     }
-    debug::Logger::init(logFile);
+    debug::Logger::init(logFile.u8string());
     platform::configure_encoding();
 
     auto& engine = Engine::getInstance();
