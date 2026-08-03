@@ -4,13 +4,14 @@ local FFI = ffi
 
 FFI.cdef[[
     void* malloc(size_t);
-    void *realloc(void *, size_t);
+    void* realloc(void*, size_t);
     void free(void*);
     typedef struct {
         unsigned char* bytes;
         int size;
         int capacity;
     } bytearray_t;
+    void* memmove(void*, const void*, size_t);
 ]]
 
 local free = FFI.C.free
@@ -172,29 +173,27 @@ local function slice(self, offset, length)
 end
 
 local function copy(self, srcindex, dst, dstindex, size)
-    if srcindex > 0 and dstindex > 0 and size > 0 and
-        srcindex + size - 1 <= self.size and
-        dstindex + size - 1 <= dst.size
-    then
-        FFI.copy(dst.bytes + dstindex - 1, self.bytes + srcindex - 1, size)
+    if size <= 0 then error("size of byte range must be positive non-zero integer") end
+    if srcindex < 1 or srcindex + size - 1 > self.size then
+        error("specified source byte range is out of source array bounds")
     end
+    if dstindex < 1 or dstindex + size - 1 > dst.size then
+        error("specified destination byte range is out of destination array bounds")
+    end
+
+    FFI.copy(dst.bytes + dstindex - 1, self.bytes + srcindex - 1, size)
 end
 
 local function move(self, fromindex, toindex, size)
-    if fromindex > 0 and toindex > 0 and size > 0 and
-        fromindex + size - 1 <= self.size and
-        toindex + size - 1 <= self.size
-    then
-        if toindex >= fromindex and toindex < fromindex + size then
-            local buff = malloc(size)
-            FFI.copy(buff, self.bytes + fromindex - 1, size)
-            FFI.copy(self.bytes + toindex - 1, buff, size)
-            free(buff)
-        else
-            -- убери(-те) это ветвление, если FFI будет производить копирование не побайтово, и оставь(-те) только верхний блок без условия вообще.
-            FFI.copy(self.bytes + toindex - 1, self.bytes + fromindex - 1, size)
-        end
+    if size <= 0 then error("size of byte range must be positive non-zero integer") end
+    if fromindex < 1 or fromindex + size - 1 > self.size then
+        error("specified source byte range is out of array bounds")
     end
+    if toindex < 1 or toindex + size - 1 > self.size then
+        error("specified destination byte range is out of array bounds")
+    end
+
+    FFI.C.memmove(self.bytes + self.toindex - 1, self.bytes + self.fromindex - 1, size)
 end
 
 local bytearray_methods = {

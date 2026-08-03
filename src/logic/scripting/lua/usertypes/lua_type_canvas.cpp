@@ -164,8 +164,11 @@ static int l_clear(State* L) {
     size_t pixelscount = image.getWidth() * image.getHeight();
     uint32_t* data = reinterpret_cast<uint32_t*>(image.getData());
 
-    if (gettop(L) == 1) std::fill(data, data + pixelscount, 0);
-    else std::fill(data, data + pixelscount, get_rgba(L, 2).rgba);
+    if (gettop(L) == 1) {
+        std::fill(data, data + pixelscount, 0);
+    } else {
+        std::fill(data, data + pixelscount, get_rgba(L, 2).rgba);
+    }
     return 0;
 }
 
