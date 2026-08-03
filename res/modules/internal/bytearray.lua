@@ -142,8 +142,13 @@ local function clear(self)
     self.size = 0
 end
 
-local function fill(self, byte)
-    if self.size > 0 then
+local function fill(self, index, size, byte)
+    if index ~= nil and size ~= nil and size > 0 then
+        if index < 1 or index + size - 1 > self.size then
+            error("selected fill range is out of array bounds")
+        end
+        FFI.fill(self.bytes + index - 1, size, byte)
+    else
         FFI.fill(self.bytes, self.size, byte)
     end
 end
