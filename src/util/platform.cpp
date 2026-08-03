@@ -28,6 +28,8 @@
     #include <sys/wait.h>
 #endif
 
+using namespace std::literals;
+
 namespace platform::internal {
     std::filesystem::path get_executable_path();
 }
@@ -356,7 +358,7 @@ std::unique_ptr<Process> platform::new_engine_instance(
     if (!outputFile.empty()) {
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = CreateFileW(
-            toWString(outputFile.u8string()).data(),
+            toWString(outputFile.empty() ? outputFile.u8string() : "NUL"s,).data(),
             GENERIC_WRITE,
             FILE_SHARE_WRITE | FILE_SHARE_READ,
             nullptr,
@@ -434,9 +436,12 @@ std::unique_ptr<Process> platform::new_engine_instance(
     if (subProcess) {
         pid_t pid = fork();
 
+        if (outputFile.empty()) {
+            outputFile = "/dev/null";
+        }
         int fd = open(
             outputFile.string().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644
-        );
+        ); 
 
         if (pid == 0) {
             prctl(PR_SET_PDEATHSIG, SIGTERM);
