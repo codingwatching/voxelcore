@@ -403,7 +403,7 @@ static int l_start_background_instance(lua::State* L) {
         "--script", io::resolve(scriptPath).u8string(),
         "--sub-depth", std::to_string(engine->getCoreParameters()
             .subProcessDepth + 1),
-        "--log", io::resolve(outputPath),
+        "--log", io::resolve(outputPath).u8string(),
     };
     args.emplace_back("--project");
     args.emplace_back(io::resolve(engine->getProject().path).u8string());

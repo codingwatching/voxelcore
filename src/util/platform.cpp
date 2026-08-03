@@ -358,7 +358,7 @@ std::unique_ptr<Process> platform::new_engine_instance(
     if (!outputFile.empty()) {
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = CreateFileW(
-            toWString(outputFile.empty() ? outputFile.u8string() : "NUL"s,).data(),
+            toWString(outputFile.empty() ? outputFile.u8string() : "NUL"s).data(),
             GENERIC_WRITE,
             FILE_SHARE_WRITE | FILE_SHARE_READ,
             nullptr,
