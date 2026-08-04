@@ -340,16 +340,20 @@ local function create_FFIview_class(name, typename)
                 end
             end
         end,
-        typesize = function()
-            return typesize
-        end
     }
-    return function (bytes)
-        local x = setmetatable({
-            bytes=bytes,
-        }, FFIview_mt)
-        return x
-    end
+    return setmetatable({}, {
+        __call = function (self, bytes)
+            local x = setmetatable({
+                bytes=bytes,
+            }, FFIview_mt)
+            return x
+        end,
+        __index = {
+            typesize = function()
+                return typesize
+            end
+        }
+    })
 end
 
 local FFII8view = create_FFIview_class("FFII8view", "int8_t")
