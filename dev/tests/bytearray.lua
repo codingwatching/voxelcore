@@ -38,7 +38,7 @@ asserts.equals(6, arr[3])
 -- =============================
 
 arr = Bytearray({254, 255, 255, 255, 255, 255, 255, 255})
--- asserts.equals(U64view(arr)[1], 2 ^ 64 - 2)
+asserts.equals(U64view(arr)[1], ctypes.uint64(2) ^ 64 - 2)
 asserts.equals(I64view(arr)[1], -2)
 asserts.equals(U32view(arr)[1], 2 ^ 32 - 2)
 asserts.equals(I32view(arr)[1], -2)
