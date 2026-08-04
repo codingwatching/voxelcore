@@ -198,7 +198,7 @@ local function move(self, fromindex, toindex, size)
         error("specified destination byte range is out of array bounds")
     end
 
-    FFI.C.memmove(self.bytes + self.toindex - 1, self.bytes + self.fromindex - 1, size)
+    FFI.C.memmove(self.bytes + toindex - 1, self.bytes + fromindex - 1, size)
 end
 
 local bytearray_methods = {
