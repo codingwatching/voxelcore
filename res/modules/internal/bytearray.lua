@@ -339,6 +339,9 @@ local function create_FFIview_class(name, typename)
                     return i, ptr[i - 1]
                 end
             end
+        end,
+        typesize = function()
+            return typesize
         end
     }
     return function (bytes)
