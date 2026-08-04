@@ -314,7 +314,7 @@ U16view = bytearray.FFIU16view
 I16view = bytearray.FFII16view
 U32view = bytearray.FFIU32view
 I32view = bytearray.FFII32view
-F32view = bytearray.FFIF32view
+FLTview = bytearray.FFIFLTview
 Bytearray_construct = function(...) return Bytearray(...) end
 
 bit.compile = require "core:bitwise/compiler"

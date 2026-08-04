@@ -356,7 +356,7 @@ local FFII16view = create_FFIview_class("FFII16view", "int16_t")
 local FFIU16view = create_FFIview_class("FFIU16view", "uint16_t")
 local FFII32view = create_FFIview_class("FFII32view", "int32_t")
 local FFIU32view = create_FFIview_class("FFIU32view", "uint32_t")
-local FFIF32view = create_FFIview_class("FFIF32view", "float")
+local FFIFLTview = create_FFIview_class("FFIFLTview", "float")
 
 return {
     FFIBytearray = setmetatable(FFIBytearray, FFIBytearray),
@@ -366,5 +366,5 @@ return {
     FFII16view = FFII16view,
     FFIU32view = FFIU32view,
     FFII32view = FFII32view,
-    FFIF32view = FFIF32view,
+    FFIFLTview = FFIFLTview,
 }
