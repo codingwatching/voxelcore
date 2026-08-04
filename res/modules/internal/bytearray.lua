@@ -352,19 +352,27 @@ local function create_FFIview_class(name, typename)
     end
 end
 
+local FFII8view = create_FFIview_class("FFII8view", "int8_t")
 local FFII16view = create_FFIview_class("FFII16view", "int16_t")
 local FFIU16view = create_FFIview_class("FFIU16view", "uint16_t")
 local FFII32view = create_FFIview_class("FFII32view", "int32_t")
 local FFIU32view = create_FFIview_class("FFIU32view", "uint32_t")
+local FFII64view = create_FFIview_class("FFII32view", "int64_t")
+local FFIU64view = create_FFIview_class("FFIU32view", "uint64_t")
 local FFIFLTview = create_FFIview_class("FFIFLTview", "float")
+local FFIDBLview = create_FFIview_class("FFIDBLview", "double")
 
 return {
     FFIBytearray = setmetatable(FFIBytearray, FFIBytearray),
     FFIBytearray_as_string = FFIBytearray_as_string,
     FFIBytearray_as_ptr = FFIBytearray_as_ptr,
+    FFII8view = FFII8view,
     FFIU16view = FFIU16view,
     FFII16view = FFII16view,
     FFIU32view = FFIU32view,
     FFII32view = FFII32view,
+    FFIU64view = FFIU64view,
+    FFII64view = FFII64view,
     FFIFLTview = FFIFLTview,
+    FFIDBLview = FFIDBLview,
 }
