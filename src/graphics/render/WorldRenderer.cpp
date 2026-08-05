@@ -478,8 +478,6 @@ void WorldRenderer::renderFrame(
     glActiveTexture(GL_TEXTURE0);
 }
 
-#include <iostream>
-
 void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     int x = std::floor(player.currentCamera->position.x);
     int y = std::floor(player.currentCamera->position.y);
