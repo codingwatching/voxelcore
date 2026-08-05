@@ -464,8 +464,11 @@ void WorldRenderer::renderFrame(
     if (player.currentCamera == player.fpCamera) {
         renderHandsPass(pctx, camera);
     }
-    renderBlockOverlay(pctx);
-
+    {
+        auto bctx = pctx.sub();
+        bctx.useTexture(advanced_pipeline::TARGET_COLOR, nullptr);
+        renderBlockOverlay(pctx);
+    }
     glActiveTexture(GL_TEXTURE0);
 }
 
