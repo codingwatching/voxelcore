@@ -41,10 +41,14 @@ glm::vec2 Panel::getContentSize() const {
 void Panel::cropToContent() {
     if (maxLength > 0.0f) {
         setSize(glm::vec2(
-            glm::max(minLength, glm::min(maxLength, actualLengthX)), glm::max(minLength, glm::min(maxLength, actualLengthY))
+            glm::max(minLength, glm::min(maxLength, actualLengthX)),
+            glm::max(minLength, glm::min(maxLength, actualLengthY))
         ));
     } else {
-        setSize(glm::vec2(glm::max(minLength, actualLengthX), glm::max(minLength, actualLengthY)));
+        setSize(glm::vec2(
+            glm::max(minLength, actualLengthX),
+            glm::max(minLength, actualLengthY)
+        ));
     }
 }
 
