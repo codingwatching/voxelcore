@@ -21,7 +21,11 @@ SelectBox::SelectBox(
       options(std::move(options)), mode(mode) {
     listenAction(UIAction::CLICK, [this, contentWidth](GUI& gui) {
         auto panel = std::make_shared<Panel>(
-            gui, glm::vec2 {contentWidth, contentWidth}, glm::vec4 {2.0f}, 0.0f
+            gui,
+            getMode() == Mode::BUTTON ? glm::vec2 {contentWidth, contentWidth}
+                                      : getSize(),
+            glm::vec4 {2.0f},
+            0.0f
         );
         panel->setColor({});
         panel->setPadding(glm::vec4(0, size.y, 0, 0));
