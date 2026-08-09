@@ -192,6 +192,9 @@ Example of list description:
 - `width` - minimum content width. Default: 100.
 - `selected` - initially selected value. Default: "".
 - `onselect` - function to which the user-selected value is passed
+- `mode` - behaviour / display mode:
+    - `select` - default mode.
+    - `button` - button mode: the text is not replaced with the selected option; the element rendered as a regular button.
 
 ## *bindbox*
 

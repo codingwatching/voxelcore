@@ -260,7 +260,7 @@ void GUI::act(float delta, const glm::uvec2& vp) {
             hover = nullptr;
         }
     }
-    if (focus) {
+    if (focus && focusedOnStart == focus.get()) {
         actFocused();
     }
     if (focus && !focus->isFocused()) {
@@ -274,6 +274,7 @@ void GUI::postAct() {
         postRunnables.pop();
         callback();
     }
+    focusedOnStart = focus.get();
 }
 
 void GUI::draw(const DrawContext& pctx, Assets& assets) {
