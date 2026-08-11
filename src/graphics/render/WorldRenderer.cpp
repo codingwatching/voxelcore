@@ -492,8 +492,10 @@ void WorldRenderer::renderOpaquePass(
         ctx.useTexture(advanced_pipeline::TARGET_SKYBOX, skybox->getCubemap());
         ctx.useTexture(advanced_pipeline::TARGET_COLOR, nullptr);
         renderOpaque(ctx, camera, settings, hudVisible);
+
+        ctx.setDepthMask(false);
+        texts->render(wctx, camera, settings, hudVisible, true);
     }
-    texts->render(wctx, camera, settings, hudVisible, true);
 }
 
 void WorldRenderer::renderWeatherEffects(Camera& camera) {
