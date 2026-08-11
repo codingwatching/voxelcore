@@ -234,8 +234,6 @@ map:cos()
 map:tan()
 ```
 
-Casts height values ​​to absolute.
-
 ### Binary Operations
 
 Operations using a second map or a scalar.
