@@ -27,4 +27,5 @@ function on_hud_open()
         local velocity = vec3.add(throw_force, vec3.add(pvel, DROP_INIT_VEL))
         drop.rigidbody:set_vel(velocity)
     end)
+    rules.create("do-loot-non-player", true)
 end
