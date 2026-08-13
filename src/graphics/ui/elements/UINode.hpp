@@ -207,9 +207,6 @@ namespace gui {
         virtual void onFocus();
         virtual void doubleClick(int x, int y);
         virtual void click(int x, int y);
-        virtual void clickedOutside(Mousecode button) {
-            // Empty for all UINodes, except InventoryView
-        }
         virtual void clicked(Mousecode button);
         virtual void mouseMove(int x, int y) {};
         virtual void mouseRelease(int x, int y);
