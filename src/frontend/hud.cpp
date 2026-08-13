@@ -180,6 +180,7 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
         R"(<container size='4000' color='#00000000' z-index='-1' visible='false'
              onclick='events.emit(\"core:drop_outside_inventory\", 0)'
         onrightclick='events.emit(\"core:drop_outside_inventory\", 1)'
+        onmiddleclick='events.emit(\"core:drop_outside_inventory\", 2)'
         />)"
     );
 
