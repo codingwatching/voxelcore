@@ -1,7 +1,5 @@
 #include "InventoryView.hpp"
 
-#include <iostream>
-
 #include <glm/glm.hpp>
 #include <utility>
 
@@ -14,11 +12,8 @@
 #include "graphics/core/Batch2D.hpp"
 #include "graphics/core/DrawContext.hpp"
 #include "graphics/core/Font.hpp"
-#include "graphics/core/Shader.hpp"
-#include "graphics/core/Texture.hpp"
 #include "graphics/render/BlocksPreview.hpp"
 #include "graphics/ui/GUI.hpp"
-#include "items/Inventories.hpp"
 #include "items/Inventory.hpp"
 #include "items/ItemDef.hpp"
 #include "items/ItemStack.hpp"
