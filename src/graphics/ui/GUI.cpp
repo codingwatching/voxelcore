@@ -14,7 +14,6 @@
 #include "frontend/UiDocument.hpp"
 #include "frontend/locale.hpp"
 #include "graphics/core/Batch2D.hpp"
-#include "graphics/core/LineBatch.hpp"
 #include "graphics/core/Shader.hpp"
 #include "graphics/core/Font.hpp"
 #include "graphics/core/DrawContext.hpp"
