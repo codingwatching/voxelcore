@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "hud.hpp"
 
 #include "ContentGfxCache.hpp"
@@ -174,6 +176,14 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
         gui,
         "<container size='4000' color='#00000080' z-index='-1' visible='false'/>"
     );
+    
+    inventoryDropArea = guiutil::create(
+        gui,
+        R"(<container size='4000' color='#00000000' z-index='-1' visible='false'
+             onclick='events.emit(\"core:drop_outside_inventory\", 0)' 
+        onrightclick='events.emit(\"core:drop_outside_inventory\", 1)' 
+        />)"
+    );
 
     uicamera = std::make_unique<Camera>(glm::vec3(), 1);
     uicamera->perspective = false;
@@ -188,6 +198,7 @@ Hud::Hud(Engine& engine, LevelFrontend& frontend, Player& player)
 
     gui.add(debugPanel);
     gui.add(darkOverlay);
+    gui.add(inventoryDropArea);
     gui.add(hotbarView);
     gui.add(contentAccessPanel);
 
@@ -213,6 +224,7 @@ Hud::~Hud() {
     }
     gui.remove(hotbarView);
     gui.remove(darkOverlay);
+    gui.remove(inventoryDropArea);
     gui.remove(contentAccessPanel);
     gui.remove(debugPanel);
 }
@@ -358,6 +370,7 @@ void Hud::update(bool visible) {
     contentAccess->setMinSize(glm::vec2(1, windowSize.y));
     hotbarView->setVisible(visible && !(secondUI && !inventoryView));
     darkOverlay->setVisible(isMenuOpen);
+    inventoryDropArea->setVisible(inventoryOpen);
     menu.setVisible(isMenuOpen);
 
     if (visible) {
@@ -737,6 +750,10 @@ std::shared_ptr<Inventory> Hud::getSecondInventory() {
         return secondInvView->getInventory();
     }
     return nullptr;
+}
+
+std::shared_ptr<Inventory> Hud::getExchangeInventory() {
+    return exchangeSlotInv;
 }
 
 bool Hud::isContentAccess() const {
