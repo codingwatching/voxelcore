@@ -35,7 +35,7 @@ static int l_tostring(lua::State* L) {
 
     float components[4] = {quat.w, quat.x, quat.y, quat.z};
     std::stringstream ss;
-    ss << "quat" << "{";
+    ss << "quat {";
     for (int i = 0; i < 4; i++) {
         if (i > 0) {
             ss << ", ";
