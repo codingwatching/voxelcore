@@ -1,8 +1,8 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <iostream>
 #include <glm/gtx/string_cast.hpp> 
 #include "api_lua.hpp"
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <sstream>
