@@ -2,6 +2,26 @@ local util = {}
 
 local DROP_FORCE = 8
 local DROP_INIT_VEL = {0, 3, 0}
+local DROP_MAX_ITEM_DIR_SHIFT_DEGREES = 65
+
+local function calculate_item_drop_dir(pid)
+    local yaw, pitch = player.get_rot(pid)
+    local vp = gui.get_viewport()
+    local mpos = table.map(input.get_mouse_pos(), function(i, v)
+        return v / vp[i] - 0.5
+    end)
+    if not hud.is_inventory_open() and not hud.is_player_inventory_open() then
+        mpos = {0, 0}
+    end
+    pitch = math.clamp(pitch - mpos[2]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2, -90, 90)
+    yaw = math.rad(yaw + 90 -mpos[1]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2)
+    pitch = math.rad(pitch)
+    return vec3.normalize({
+       math.cos(yaw) * math.cos(pitch),
+       math.sin(pitch),
+      -math.sin(yaw) * math.cos(pitch)
+     })
+end
 
 ---@param mode integer 0 - whole stack, 1 - single item, 2 - dupe whole stack
 function util.drop_from_slot(invid, slot, mode)
@@ -30,7 +50,8 @@ function util.drop_from_slot(invid, slot, mode)
     local data = inventory.get_all_data(invid, slot)
     local pvel = { player.get_vel(pid) }
     local ppos = vec3.add({ player.get_pos(pid) }, { 0, 0.7, 0 })
-    local throw_force = vec3.mul(player.get_dir(pid), DROP_FORCE)
+    local dir = calculate_item_drop_dir(pid)
+    local throw_force = vec3.mul(dir, DROP_FORCE)
     local drop = util.drop(ppos, itemid, drop_itemcount, data, 1.5)
     if not drop then
         return
