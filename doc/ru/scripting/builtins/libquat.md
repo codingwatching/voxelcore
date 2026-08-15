@@ -9,10 +9,7 @@
 
 ```lua
 -- создаёт кватернион на основе матрицы вращения
-quat.from_mat4(m: matrix) -> quat
-
--- записывает кватернион по матрице вращения в dst
-quat.from_mat4(m: matrix, dst: quat)
+quat.from_mat4(m: matrix, [опционально] dst: quat) -> quat
 ```
 
 ## Кватернион из углов Эйлера - *quat.from_euler(...)*
@@ -20,31 +17,21 @@ quat.from_mat4(m: matrix, dst: quat)
 ```lua
 -- создаёт кватернион на основе вектора, содержащего углы Эйлера в порядке XYZ (pitch, yaw, roll)
 -- (значения углов строго в градусах)
-quat.from_euler(euler: vec3) -> quat
-
--- записывает кватернион в dst на основе вектора, содержащего углы Эйлера в порядке XYZ (pitch, yaw, roll)
--- (значения углов строго в градусах)
-quat.from_euler(euler: vec3, dst: quat)
+quat.from_euler(euler: vec3, [опционально] dst: quat) -> quat
 ```
 
 ## Композиция кватернионов - quat.mul(...)
 
 ```lua
 -- Умножает два кватерниона (композиция поворотов)
-quat.mul(a: quat, b: quat) -> quat
-
--- Записывает кватернион как произведение двух кватернионов (композиция поворотов)
-quat.mul(a: quat, b: quat, dst: quat)
+quat.mul(a: quat, b: quat, [опционально] dst: quat) -> quat
 ```
 
 ## Поворот 3д вектора на кватернион - quat.mul_vec3(...)
 
 ```lua
 -- Поворачивает вектор на заданный кватернион
-quat.mul_vec3(a: quat, b: vec3) -> vec3
-
--- Записывает результат поворота вектора на заданный кватернион
-quat.mul_vec3(a: quat, b: vec3, dst: vec3)
+quat.mul_vec3(a: quat, b: vec3, [опционально] dst: vec3) -> vec3
 ```
 
 ## Сферическая линейная интерполяция - *quat.slerp(...)*
@@ -54,11 +41,7 @@ quat.mul_vec3(a: quat, b: vec3, dst: vec3)
 ```lua
 -- создаёт кватернион как интерполяцию между a и b, 
 -- где t - фактор интерполяции
-quat.slerp(a: quat, b: quat, t: number) -> quat
-
--- записывает кватернион как интерполяцию между a и b в dst, 
--- где t - фактор интерполяции
-quat.slerp(a: quat, b: quat, t: number, dst: quat)
+quat.slerp(a: quat, b: quat, t: number, [опционально] dst: quat) -> quat
 ```
 
 ## Перевод в строку - *quat.tostring(...)*
