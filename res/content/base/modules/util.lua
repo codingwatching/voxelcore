@@ -13,14 +13,18 @@ local function calculate_item_drop_dir(pid)
     if not hud.is_inventory_open() and not hud.is_player_inventory_open() then
         mpos = {0, 0}
     end
-    pitch = math.clamp(pitch - mpos[2]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2, -90, 90)
-    yaw = math.rad(yaw + 90 -mpos[1]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2)
-    pitch = math.rad(pitch)
-    return vec3.normalize({
-       math.cos(yaw) * math.cos(pitch),
-       math.sin(pitch),
-      -math.sin(yaw) * math.cos(pitch)
-     })
+
+    local q_yaw = quat.from_euler({0, yaw, 0})
+    local q_pitch = quat.from_euler({pitch, 0, 0})
+    local q_rotation = quat.mul(q_yaw, q_pitch)
+
+    local q_shift = quat.from_euler({
+        -mpos[2]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2,
+        -mpos[1]*DROP_MAX_ITEM_DIR_SHIFT_DEGREES*2,
+        0,
+    })
+    quat.mul(q_rotation, q_shift, q_rotation)
+    return quat.mul_vec3(q_rotation, {0, 0, -1})
 end
 
 ---@param mode integer 0 - whole stack, 1 - single item, 2 - dupe whole stack
