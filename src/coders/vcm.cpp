@@ -55,12 +55,12 @@ model::Model VcmModel::squashed() const {
 }
 
 static const std::unordered_map<std::string, int> side_indices {
-    {"north", 0},
-    {"south", 1},
-    {"top", 2},
-    {"bottom", 3},
-    {"west", 4},
-    {"east", 5},
+    {"east", 0},
+    {"west", 1},
+    {"bottom", 2},
+    {"top", 3},
+    {"south", 4},
+    {"north", 5},
 };
 
 static bool to_boolean(const xml::Attribute& attr) {
@@ -306,7 +306,11 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
                     texfaces[idx] = elem->attr("texture").getText();
                 }
                 if (elem->has("region")) {
-                    regions[idx].set(elem->attr("region").asVec4());
+                    auto region = elem->attr("region").asVec4();
+                    if (idx % 2 == 1) {
+                        std::swap(region[0], region[2]);
+                    }
+                    regions[idx].set(region);
                 }
                 if (elem->has("region-scale")) {
                     regions[idx].scale(elem->attr("region-scale").asVec2());
