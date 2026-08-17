@@ -55,12 +55,12 @@ model::Model VcmModel::squashed() const {
 }
 
 static const std::unordered_map<std::string, int> side_indices {
-    {"east", 0},
-    {"west", 1},
-    {"bottom", 2},
-    {"top", 3},
-    {"south", 4},
-    {"north", 5},
+    {"west", 0},   // -X
+    {"east", 1},   // +X
+    {"bottom", 2}, // -Y
+    {"top", 3},    // +Y
+    {"north", 4},  // -Z
+    {"south", 5},  // +Z
 };
 
 static bool to_boolean(const xml::Attribute& attr) {
