@@ -1,20 +1,21 @@
 local util = {}
 
 local DROP_FORCE = 8
-local DROP_INIT_VEL = {0, 3, 0}
+local DROP_INIT_VEL = { 0, 3, 0 }
 
+--- Create a drop from slot, set it velocity, and return it
 ---@param mode integer 0 - whole stack, 1 - single item, 2 - dupe whole stack
-function util.drop_from_slot(invid, slot, mode)
+---@return table? entity, string? error
+function util.drop_from_slot(pid, invid, slot, mode)
     if invid == 0 then
-        return
+        return nil, "invid cannot be 0"
     end
-    local pid = hud.get_player()
     if mode == 2 and not player.is_infinite_items(pid) then
-        return
+        return nil, "no permission to dupe items"
     end
     local itemid, itemcount = inventory.get(invid, slot)
     if itemid == 0 then
-        return
+        return nil, "no item in slot"
     end
 
     local drop_itemcount = 1
@@ -31,24 +32,28 @@ function util.drop_from_slot(invid, slot, mode)
     local pvel = { player.get_vel(pid) }
     local ppos = vec3.add({ player.get_pos(pid) }, { 0, 0.7, 0 })
     local throw_force = vec3.mul(player.get_dir(pid), DROP_FORCE)
-    local drop = util.drop(ppos, itemid, drop_itemcount, data, 1.5)
+    local drop, err = util.drop(ppos, itemid, drop_itemcount, data, 1.5)
     if not drop then
-        return
+        return nil, err
     end
     local velocity = vec3.add(throw_force, vec3.add(pvel, DROP_INIT_VEL))
     drop.rigidbody:set_vel(velocity)
+    return drop
 end
 
+---@return table? entity, string? error
 function util.drop(ppos, itemid, count, data, pickup_delay)
     if itemid == 0 or not itemid then
-        return nil
+        return nil, "item is empty"
     end
-    return entities.spawn("base:drop", ppos, {base__drop={
-        id=itemid,
-        count=count,
-        data=data,
-        pickup_delay=pickup_delay
-    }})
+    return entities.spawn("base:drop", ppos, {
+        base__drop = {
+            id = itemid,
+            count = count,
+            data = data,
+            pickup_delay = pickup_delay
+        }
+    })
 end
 
 function util.calc_loot(loot_table)
@@ -66,7 +71,9 @@ function util.calc_loot(loot_table)
             if count == 0 then
                 goto continue
             end
-            table.insert(results, {item=item.index(loot.item), count=count})
+            table.insert(results, {
+                item = item.index(loot.item), count = count
+            })
         end
         ::continue::
     end
@@ -78,7 +85,7 @@ function util.block_loot(blockid)
     if lootscheme then
         return util.calc_loot(lootscheme)
     end
-    return {{item=block.get_picking_item(blockid), count=1}}
+    return { { item = block.get_picking_item(blockid), count = 1 } }
 end
 
 return util
