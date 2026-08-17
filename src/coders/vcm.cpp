@@ -267,12 +267,12 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
     }
 
     UVRegion regions[6] {};
-    regions[0].scale(to.x - from.x, to.y - from.y);
-    regions[1].scale(from.x - to.x, to.y - from.y);
+    regions[0].scale(to.z - from.z, to.y - from.y);
+    regions[1].scale(from.z - to.z, to.y - from.y);
     regions[2].scale(to.x - from.x, to.z - from.z);
     regions[3].scale(from.x - to.x, to.z - from.z);
-    regions[4].scale(to.z - from.z, to.y - from.y);
-    regions[5].scale(from.z - to.z, to.y - from.y);
+    regions[4].scale(to.x - from.x, to.y - from.y);
+    regions[5].scale(from.x - to.x, to.y - from.y);
 
     auto center = (from + to) * 0.5f;
     auto halfsize = (to - from) * 0.5f;
