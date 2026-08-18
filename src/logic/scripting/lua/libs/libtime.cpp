@@ -1,12 +1,12 @@
-#include <ctime>
-
 #include "api_lua.hpp"
 #include "engine/Engine.hpp"
+
+#include <ctime>
 
 using namespace scripting;
 
 #if defined(_WIN32) || defined(_WIN64)
-#define USE_MSVC_TIME_SAFE
+    #define USE_MSVC_TIME_SAFE
 #endif
 
 static int l_uptime(lua::State* L) {
