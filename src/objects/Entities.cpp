@@ -176,7 +176,8 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
 
     for (auto [entity, eid, transform, body] : view.each()) {
         if (eid.uid == settings.ignoredUid || !body.enabled ||
-            (settings.solidEntitiesOnly && !eid.def.solid)) {
+            (settings.solidEntitiesOnly && !eid.def.solid) ||
+            (!eid.def.selectable && !settings.includeNonSelectable)) {
             continue;
         }
         if (settings.entitiesFilter) {
@@ -491,10 +492,11 @@ void Entities::render(
 }
 
 bool Entities::hasBlockingInside(AABB aabb) {
+    constexpr float eps = 0.05f;
     auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, body] : view.each()) {
         AABB bodyAABB(body.hitbox.getAABB());
-        bodyAABB.scale({1, 0.95f, 1});
+        bodyAABB.scale(glm::vec3(1.0f - eps));
         if (eid.def.blocking && aabb.intersects(bodyAABB)) {
             return true;
         }

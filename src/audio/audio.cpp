@@ -173,6 +173,12 @@ void audio::initialize(
         logger.info() << "initializing NoAudio backend";
         backend = NoAudio::create().release();
     }
+    if (settings.inputDevice.get() == "auto") {
+        auto inputDevices = audio::get_input_devices_names();
+        if (!inputDevices.empty()) {
+            settings.inputDevice.set(inputDevices.at(0));
+        }
+    }
     struct {
         std::string name;
         NumberSetting* setting;

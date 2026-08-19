@@ -50,6 +50,13 @@ static int l_def_hitbox(lua::State* L) {
     return 0;
 }
 
+static int l_def_solid(lua::State* L) {
+    if (auto def = require_entity_def(L)) {
+        return lua::pushboolean(L, def->solid);
+    }
+    return 0;
+}
+
 static int l_defs_count(lua::State* L) {
     return lua::pushinteger(L, indices->entities.count());
 }
@@ -304,6 +311,10 @@ static int l_world_raycast(lua::State* L) {
         entityRaycast.entityFilterExcludeMode = lua::toboolean(L, -1);
         lua::pop(L);
     }
+    if (lua::getfield(L, "nonselect_entities", 1)) {
+        entityRaycast.includeNonSelectable = lua::toboolean(L, -1);
+        lua::pop(L);
+    }
     if (lua::getfield(L, "filter_blocks", 1)) {
         load_blocks_filter(L, -1, filteredBlocks);
         blocksRaycast.filter = &filteredBlocks;
@@ -373,6 +384,7 @@ const luaL_Reg entitylib[] = {
     {"def_index", lua::wrap<l_def_index>},
     {"def_name", lua::wrap<l_def_name>},
     {"def_hitbox", lua::wrap<l_def_hitbox>},
+    {"def_solid", lua::wrap<l_def_solid>},
     {"get_def", lua::wrap<l_get_def>},
     {"defs_count", lua::wrap<l_defs_count>},
     {"spawn", lua::wrap<l_spawn>},
