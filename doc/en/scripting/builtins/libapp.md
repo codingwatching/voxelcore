@@ -81,6 +81,12 @@ app.is_content_loaded() -> bool
 Checks if content is loaded.
 
 ```lua
+app.get_content() -> table<string>
+```
+
+Returns the current content configuration (list of packs IDs in loading order)
+
+```lua
 app.new_world(
     -- world name, empty string will create a nameless world
     name: str,
