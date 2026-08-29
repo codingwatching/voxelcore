@@ -11,6 +11,7 @@ local CONFIG_NAMES = {
 
 function on_open()
     refresh()
+    document.search_textbox.focused = true
 end
 
 function place_pack(panel, packinfo, callback)
