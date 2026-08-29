@@ -39,7 +39,7 @@ function refresh_search()
         local pos = content.pos
         local size = content.size
 
-        if title:lower():find(search_text) or search_text == '' then
+        if title:lower():find(search_text) or id:lower():find(search_text) or search_text == '' then
             content.enabled = true
             content.pos = {pos[1], visible * (size[2] + interval) - step}
             visible = visible + 1
