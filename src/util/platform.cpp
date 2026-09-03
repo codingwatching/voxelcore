@@ -267,12 +267,12 @@ public:
     }
 
     bool isActive() const override {
-#ifndef _WIN32
+#ifdef __linux__
         if (kill(pid, 0) == 0) {
             return true;
         }
         return errno != ESRCH;
-#else
+#elif defined(_WIN32)
         if (processHandle == nullptr) {
             return false;
         }
@@ -280,6 +280,9 @@ public:
         if (GetExitCodeProcess(processHandle, &exitCode)) {
             return exitCode == STILL_ACTIVE;
         }
+        return false;
+#elif defined(__APPLE__)
+        // FIXME: completely implement SystemProcess for MacOS
         return false;
 #endif
     }
