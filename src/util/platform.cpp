@@ -267,12 +267,12 @@ public:
     }
 
     bool isActive() const override {
-#ifdef __linux__
+#ifndef _WIN32
         if (kill(pid, 0) == 0) {
             return true;
         }
         return errno != ESRCH;
-#elif defined(_WIN32)
+#else
         if (processHandle == nullptr) {
             return false;
         }
