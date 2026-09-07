@@ -435,13 +435,14 @@ static assetload::postfunc load_vcm_model(
         }
         auto vcmModelPtr =
             std::make_unique<vcm::VcmModel>(std::move(vcmModel)).release();
-        return [=](Assets& assets) {
+        return [=, &loader](Assets& assets) {
             auto vcmModel = std::unique_ptr<vcm::VcmModel>(vcmModelPtr);
             for (auto& [partName, model] : vcmModel->parts) {
                 auto fullName = name + "." + partName;
                 logger.info()
                     << "store model part " << util::quote(partName)
                     << " as " << util::quote(fullName);
+                request_textures(loader, model);
                 assets.store(
                     std::make_unique<model::Model>(std::move(model)),
                     fullName
