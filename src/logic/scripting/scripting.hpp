@@ -257,6 +257,7 @@ namespace scripting {
     
     void load_vca_animation(
         const io::path& file,
+        const std::string_view* content,
         const std::string& identifier
     );
 

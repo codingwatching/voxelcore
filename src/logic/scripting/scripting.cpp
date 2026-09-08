@@ -844,13 +844,19 @@ void scripting::load_layout_script(
 
 void scripting::load_vca_animation(
     const io::path& file,
+    const std::string_view* content,
     const std::string& identifier
 ) {
     auto L = lua::get_main_state();
     if (lua::get_from_registry(L, lua::INTERNALS_TABLE, "load_vca_animation", true)) {
         lua::pushlstring(L, file.string());
+        if (content) {
+            lua::pushlstring(L, *content);
+        } else {
+            lua::pushnil(L);
+        }
         lua::pushlstring(L, identifier);
-        if (lua::call(L, 2, 0)) {
+        if (lua::call(L, 3, 0)) {
             lua::pop(L);
         }
         lua::pop(L);

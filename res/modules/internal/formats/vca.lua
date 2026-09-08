@@ -97,14 +97,13 @@ local function parse_track(root)
     return raw_track
 end
 
-local function load_vca(filepath)
-    local source = file.read(filepath)
+local function load_vca(source, filepath)
     local raw_track = parse_track(xml.parse_vcd(source, "track"))
     debug.print(raw_track)
     return animation.compile_track(raw_track, filepath)
 end
 
-function internals.load_vca_animation(filepath, identifier)
-    local track = load_vca(filepath)
+function internals.load_vca_animation(filepath, source, identifier)
+    local track = load_vca(source or file.read(filepath), filepath)
     internals.store_animation(identifier, track)
 end

@@ -55,7 +55,7 @@ assetload::postfunc assetload::animation(
     loader.attachToFile(path, {name, AssetType::ANIMATION});
 
     if (io::is_regular_file(path)) {
-        scripting::load_vca_animation(path, name);
+        scripting::load_vca_animation(path, nullptr, name);
     }
     return [](auto&) {};
 }
