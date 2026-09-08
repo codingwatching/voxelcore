@@ -57,8 +57,22 @@ local patterns =  {
     {name="sint", pattern="sin(t)"},
     {name="sint2", pattern="sin(t * 2)"},
 }
+local exclude_patters = {
+    "end",
+    (string.pattern_safe("'")),
+    (string.pattern_safe('"')),
+    (string.pattern_safe("--")),
+    (string.pattern_safe("..")),
+}
 
+--  TODO: replace with actual expression -> lua translator
 local function process_expression(src, memoised)
+    for i, pattern in ipairs(exclude_patters) do
+        if src:find(pattern) then
+            debug.print(exclude_patters)
+            error("invalid syntax "..string.escape(src))
+        end
+    end
     for i, pattern in ipairs(patterns) do
         local pattern_safe = string.pattern_safe(pattern.pattern)
         if src:find(pattern_safe) then
