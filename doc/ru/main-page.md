@@ -6,6 +6,7 @@
 ## Разделы
 
 - [XML разметка интерфейса](xml-ui-layouts.md)
+- [Анимация](animation.md)
 - [Аудио](audio.md)
 - [Движок генерации мира](world-generator.md)
 - [Консоль](console.md)
