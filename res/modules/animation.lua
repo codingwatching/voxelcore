@@ -10,7 +10,7 @@ local this = {
     INT_LINEAR = 2,
     INT_BEZIER = 3,
 
-    TRACE_CODEGEN = true,
+    TRACE_CODEGEN = false,
 }
 
 local INT_CONST = this.INT_CONST
@@ -156,7 +156,6 @@ local function codegen_track(raw_track, lineset, memoised, keysets, use_tsf)
             code = code .. "\n   local l" .. i .. " = (" ..
                 process_expression(line.expression, memoised) .. ")"
         elseif line.keys then
-            debug.print(raw_track)
             local target_keysets = keysets[lineset.target_name]
             if not target_keysets then
                 target_keysets = {}

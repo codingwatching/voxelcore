@@ -93,13 +93,11 @@ local function parse_track(root)
         table.insert(lineset.lines, line)
         ::continue::
     end
-    debug.print(raw_track)
     return raw_track
 end
 
 local function load_vca(source, filepath)
     local raw_track = parse_track(xml.parse_vcd(source, "track"))
-    debug.print(raw_track)
     return animation.compile_track(raw_track, filepath)
 end
 
