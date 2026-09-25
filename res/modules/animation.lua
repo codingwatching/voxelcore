@@ -48,9 +48,10 @@ local this = {
     INT_LINEAR = 2,
     INT_BEZIER = 3,
     INT_CUSTOM = 4,
-    ALMOST_HUGE = 1e9,
+    MAX_DURATION = 1e9,
+    MAX_FRAMES = 1e9,
 
-    TRACE_CODEGEN = true,
+    TRACE_CODEGEN = false,
 
     maths = {
         bezier_interpolation = bezier_interpolation

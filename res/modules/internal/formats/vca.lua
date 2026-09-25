@@ -107,9 +107,8 @@ local function parse_track(root)
         local line = {
             axis = node.by and ("xyz"):find(node.by) or "",
             channel = channel,
-            period = node.period or animation.ALMOST_HUGE
+            period = node.period or animation.MAX_FRAMES
         }
-        debug.print(animation.ALMOST_HUGE)
         if node.func then
             line.expression = node.func
         elseif node.curve then
