@@ -1,4 +1,4 @@
-local ALMOST_HUGE = 1e9
+local ALMOST_HUGE = animation.ALMOST_HUGE
 
 local rig = entity.skeleton
 
