@@ -150,16 +150,16 @@ local function codegen_track(raw_track, lineset, memoised, keysets, use_tsf)
                 local valueat = string.format("curves[%s]", string.escape(line.curve_func))
 
                 code = code .. string.format(
-                "\n   local l%d = value_at_custom(keysets['%s'][%d], t * %s, %s)",
-                i, lineset.target_name, i, raw_track.fps, valueat)
+                "\n   local l%d = value_at_custom(keysets['%s'][%d], t * %s %% %s, %s)",
+                i, lineset.target_name, i, raw_track.fps, line.period, valueat)
             elseif line.channel == animation.CH_TEXTURE then
                 code = code .. string.format(
-                    "\n   local l%d = string_at(keysets['%s'][%d], t * %s)",
-                    i, lineset.target_name, i, raw_track.fps)
+                    "\n   local l%d = string_at(keysets['%s'][%d], t * %s %% %s)",
+                    i, lineset.target_name, i, raw_track.fps, line.period)
             else
                 code = code .. string.format(
-                    "\n   local l%d = value_at(keysets['%s'][%d], t * %s, %s)",
-                    i, lineset.target_name, i, raw_track.fps, line.interp)
+                    "\n   local l%d = value_at(keysets['%s'][%d], t * %s %% %s, %s)",
+                    i, lineset.target_name, i, raw_track.fps, line.period, line.interp)
             end
         end
 
