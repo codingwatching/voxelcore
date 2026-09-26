@@ -133,7 +133,7 @@ for _, name in ipairs(math_funcs) do
     env[name] = math[name]
 end
 
-is_multiplier = {
+local is_multiplier = {
     [animation.CH_SCALE] = true,
     [animation.CH_ZOOM] = true,
 }
