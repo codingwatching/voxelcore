@@ -290,7 +290,7 @@ namespace gui {
 
         virtual void setGravity(Gravity gravity);
 
-        bool isSubnodeOf(const UINode* node);
+        bool isDescendantOf(const UINode* node);
 
         /// @brief collect all nodes having id
         static void getIndices(
