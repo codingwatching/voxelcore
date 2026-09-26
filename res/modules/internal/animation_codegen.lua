@@ -15,7 +15,13 @@ local exclude_patters = {
 }
 
 --  TODO: replace with actual expression -> lua translator
-local function process_expression(src, memoised)
+local function process_expression(src, memoised, ismul)
+    if ismul then
+        src = string.format("(%s) * intensity + (1.0 - intensity)", src)
+    else
+        src = string.format("(%s) * intensity", src)
+    end
+
     for i, pattern in ipairs(exclude_patters) do
         if src:find(pattern) then
             debug.print(exclude_patters)
@@ -127,6 +133,11 @@ for _, name in ipairs(math_funcs) do
     env[name] = math[name]
 end
 
+is_multiplier = {
+    [animation.CH_SCALE] = true,
+    [animation.CH_ZOOM] = true,
+}
+
 local function codegen_track(raw_track, lineset, memoised, keysets, use_tsf)
     local lines = lineset.lines
     local code = ""
@@ -137,7 +148,7 @@ local function codegen_track(raw_track, lineset, memoised, keysets, use_tsf)
     for i, line in ipairs(lines) do
         if line.expression then
             code = code .. "\n   local l" .. i .. " = (" ..
-                process_expression(line.expression, memoised) .. ")"
+                process_expression(line.expression, memoised, is_multiplier[line.channel]) .. ")"
         elseif line.keys then
             local target_keysets = keysets[lineset.target_name]
             if not target_keysets then
@@ -290,7 +301,7 @@ function internals.compile_animation_track(raw_track, track_name)
         code = memoised_code .. "\n" .. code
     end
 
-    local src = "return function(target, t, m)\n"
+    local src = "return function(target, t, intensity, m)\n m = m or 1\n"
         .. code .. "\nend"
 
     if animation.TRACE_CODEGEN then
