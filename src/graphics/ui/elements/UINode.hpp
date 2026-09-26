@@ -176,6 +176,7 @@ namespace gui {
         void setMouseOver(bool flag);
 
         virtual void setParent(UINode* node);
+        bool hasParent() const;
         UINode* getParent() const;
         std::shared_ptr<UINode> getParentShared() const;
 

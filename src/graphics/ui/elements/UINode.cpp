@@ -60,6 +60,10 @@ bool UINode::isHover() const {
     return hover;
 }
 
+bool UINode::hasParent() const {
+    return parent != nullptr;
+}
+
 void UINode::setParent(UINode* node) {
     parent = node;
 }
