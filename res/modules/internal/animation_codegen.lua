@@ -121,7 +121,7 @@ local env = {
 
 local math_funcs = {
     "sqrt", "min", "max", "deg", "rad", "log", "log10", "floor", "ceil", "sin",
-    "cos", "tan", "noise", "noise2", "sign", "round", "exp", "pi", "e"
+    "cos", "tan", "abs", "noise", "noise2", "sign", "round", "exp", "pi", "e"
 }
 for _, name in ipairs(math_funcs) do
     env[name] = math[name]
