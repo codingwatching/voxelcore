@@ -97,6 +97,9 @@ local PlayingTrack = {
 }
 
 function this.play(name, target)
+    if target and target.reset_pose then
+        target:reset_pose()
+    end
     local track = setmetatable({
         name = name,
         target = target,

@@ -194,7 +194,6 @@ local function codegen_track(raw_track, lineset, memoised, keysets, use_tsf)
         return code
     end
 
-    code = code .. "\n   mat4.idt(dst)"
     if translation[1] or translation[2] or translation[3] then
         code = code .. "\n   mat4.translate(dst, {" ..
         (translation[1] and ("l" .. translation[1]) or '0').. ", " ..
@@ -226,7 +225,6 @@ end
 
 local function codegen_rig_target(raw_track, context)
     local code = "\n if target.set_matrix and target.index then\n"
-    code = code .. "  local dst = DST\n"
     for bone, lineset in pairs(raw_track.linesets) do
         if lineset.target_type ~= "bone" and lineset.target_type ~= "texture" then
             goto continue
@@ -234,10 +232,13 @@ local function codegen_rig_target(raw_track, context)
         local lineset_code = codegen_track(
             raw_track, lineset, context.memoised, context.keysets, true)
 
-        code = code .. "\n  do" .. lineset_code .. "\n  end\n"
+        code = code
+            .. string.format("\n  local bone_index = target:index(%s)"
+            .. "\n  local dst = target:get_matrix(bone_index)", string.escape(bone))
+            .. "\n  do" .. lineset_code .. "\n  end\n"
         if lineset.target_type == "bone" then
             code = code ..
-                "  target:set_matrix(target:index(" .. string.escape(bone) .. "), dst)\n"
+                "  target:set_matrix(bone_index, dst)\n"
         end
         ::continue::
     end
