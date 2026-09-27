@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
+#include <utility>
 
 namespace util {
-    template<typename T, int capacity>
+    template<typename T, std::size_t capacity>
     class stack_vector {
         struct buffer {
             alignas(alignof(T)) char data[sizeof(T) * capacity];
@@ -16,18 +19,19 @@ namespace util {
             }
         };
     public:
+        using size_type = std::size_t;
         stack_vector() : size_(0) {}
 
         stack_vector(const stack_vector<T, capacity>& other)
             : size_(other.size_) {
-            for (int i = 0; i < size_; ++i) {
+            for (size_type i = 0; i < size_; ++i) {
                 new (&data_.ptr()[i]) T(other.data_.ptr()[i]);
             }
         }
 
         stack_vector(stack_vector<T, capacity>&& other) noexcept
             : size_(other.size_) {
-            for (int i = 0; i < size_; ++i) {
+            for (size_type i = 0; i < size_; ++i) {
                 new (&data_.ptr()[i]) T(std::move(other.data_.ptr()[i]));
             }
             other.size_ = 0;
@@ -77,29 +81,29 @@ namespace util {
         }
 
         void clear() noexcept {
-            for (int i = 0; i < size_; ++i) {
+            for (size_type i = 0; i < size_; ++i) {
                 data_.ptr()[i].~T();
             }
             size_ = 0;
         }
 
-        T& operator[](int index) {
+        T& operator[](size_type index) {
             return data_.ptr()[index];
         }
         
-        const T& operator[](int index) const {
+        const T& operator[](size_type index) const {
             return data_.ptr()[index];
         }
 
-        T& at(int index) {
-            if (index < 0 || index >= size_) {
+        T& at(size_type index) {
+            if (index >= size_) {
                 throw std::out_of_range("index out of range");
             }
             return data_.ptr()[index];
         }
 
-        const T& at(int index) const {
-            if (index < 0 || index >= size_) {
+        const T& at(size_type index) const {
+            if (index >= size_) {
                 throw std::out_of_range("index out of range");
             }
             return data_.ptr()[index];
@@ -121,7 +125,7 @@ namespace util {
             return data_.ptr()[size_ - 1];
         }
 
-        int size() const { 
+        size_type size() const { 
             return size_;
         }
 
@@ -150,6 +154,6 @@ namespace util {
         }
     private:
         buffer data_;
-        int size_;
+        size_type size_;
     };
 }
