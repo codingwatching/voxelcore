@@ -69,18 +69,16 @@ namespace util {
             ++size_;
         }
 
-        void pop_back() {
+        void pop_back() noexcept {
             if (size_ > 0) {
                 data_.ptr()[size_ - 1].~T();
                 --size_;
-            } else {
-                throw std::underflow_error("stack vector is empty");
-            }
+            } 
         }
 
-        void clear() {
+        void clear() noexcept {
             for (int i = 0; i < size_; ++i) {
-                data_.ptr()[i].~T(); 
+                data_.ptr()[i].~T();
             }
             size_ = 0;
         }
