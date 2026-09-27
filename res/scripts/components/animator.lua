@@ -38,6 +38,7 @@ function set_state(name, fade_time)
 end
 
 local function update(delta)
+    rig:reset_pose()
     for _, state in pairs(states) do
         state.timer = state.timer + delta
 
@@ -51,7 +52,7 @@ local function update(delta)
         end
 
         state.track = state.track or animation.get_track(state.track_id)
-        if state.track and intensity > 0.0 then
+        if state.track then
             state.track.func(
                 rig,
                 state.timer % math.min(MAX_DURATION, state.track.duration),
