@@ -26,6 +26,7 @@ namespace vector_fonts {
 struct Glyph {
     int yOffset;
     int xAdvance;
+    int xOffset = 0;
 };
 
 class Font {
