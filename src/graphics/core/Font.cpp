@@ -176,7 +176,7 @@ static inline void draw_text(
     int y = 0;
     bool hasLines = false;
 
-    float baseAdvance = glm::length(right);
+    const float cellAdvance = interval * font.getLineHeight();
 
     do {
         for (size_t i = 0; i < text.length(); i++) {
@@ -193,12 +193,12 @@ static inline void draw_text(
                 continue;
             }
             int yOffset = 0;
-            float advance = baseAdvance;
+            int xOffset = 0;
+            float advance = 1.0f;
             if (auto glyph = font.getGlyph(c)) {
                 yOffset = glyph->yOffset;
-                advance = glyph->xAdvance /
-                          static_cast<float>(font.getLineHeight()) * 2.0f *
-                          baseAdvance;
+                xOffset = glyph->xOffset;
+                advance = glyph->xAdvance / cellAdvance;
             }
             uint charpage = c >> 8;
             if (charpage == page){
@@ -207,7 +207,7 @@ static inline void draw_text(
                     batch,
                     pos,
                     glm::vec2(
-                        x,
+                        x + xOffset / cellAdvance,
                         y - yOffset * (is3d ? -1 : 1) /
                                 static_cast<float>(font.getLineHeight())
                     ),
@@ -221,7 +221,7 @@ static inline void draw_text(
             else if (charpage > page && charpage < next){
                 next = charpage;
             }
-            x += advance / baseAdvance;
+            x += advance;
         }
         page = next;
         next = MAX_CODEPAGES;
@@ -329,23 +329,22 @@ const Glyph* Font::getGlyph(int codepoint) {
     if (codepoint < 0) {
         return nullptr;
     }
-    if (codepoint < glyphs.size()) {
+    const int codepage = codepoint >> 8;
+    if (codepoint < glyphs.size() &&
+        (!fontFile.has_value() ||
+         (codepage < pages.size() && pages[codepage]))) {
         return &glyphs.at(codepoint);
     }
     if (!this->fontFile.has_value() || this->fontFile->expired()) {
         return nullptr;
     }
-    int codepage = codepoint >> 8;
     if (codepage >= 1024) {
         return nullptr;
     }
-    if (glyphs.size() < (codepage << 8)) {
-        glyphs.resize(codepage << 8);
-    }
     auto fontFile = this->fontFile->lock();
     if (pages.size() <= codepage) {
-        pages.resize(codepage);
+        pages.resize(codepage + 1);
     }
-    pages.push_back(fontFile->renderPage(codepage, glyphs, lineHeight));
+    pages[codepage] = fontFile->renderPage(codepage, glyphs, lineHeight);
     return &glyphs.at(codepoint);
 }
