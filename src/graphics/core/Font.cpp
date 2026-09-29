@@ -29,6 +29,10 @@ Font::Font(
     if (this->fontFile.has_value()) {
         if (auto fontPtr = this->fontFile->lock()) {
             monospace = fontPtr->isMonospace();
+            if (monospace && this->glyphs.size() > '0' &&
+                this->glyphs['0'].xAdvance > 0) {
+                glyphInterval = this->glyphs['0'].xAdvance;
+            }
         }
     }
 }
@@ -62,21 +66,13 @@ bool Font::isPrintableChar(uint codepoint) const {
 
 int FontMetrics::calcWidth(std::wstring_view text, size_t offset, size_t length) const {
     auto font = this->font.has_value() ? this->font->lock() : nullptr;
-    if (font == nullptr || font->isMonospace()) {
-        return std::min(text.length() - offset, length) * _glyphInterval;
+    if (font != nullptr) {
+        return font->calcWidth(text, offset, length);
     }
-    int totalWidth = 0;
-    for (int i = offset; i < offset + length && i < text.length(); i++) {
-        auto codepoint = text[i];
-        if (!font->isPrintableChar(codepoint)) {
-            totalWidth += _glyphInterval;
-        } else if (auto glyph = font->getGlyph(codepoint)) {
-            totalWidth += glyph->xAdvance;
-        } else {
-            totalWidth += _glyphInterval;
-        }
+    if (offset >= text.length()) {
+        return 0;
     }
-    return totalWidth;
+    return std::min(text.length() - offset, length) * _glyphInterval;
 }
 
 int Font::calcWidth(std::wstring_view text, size_t length) const {
@@ -84,7 +80,24 @@ int Font::calcWidth(std::wstring_view text, size_t length) const {
 }
 
 int Font::calcWidth(std::wstring_view text, size_t offset, size_t length) const {
-    return std::min(text.length()-offset, length) * glyphInterval;
+    if (offset >= text.length()) {
+        return 0;
+    }
+    size_t end = offset + std::min(text.length() - offset, length);
+    int width = 0;
+    for (size_t i = offset; i < end; i++) {
+        width += getAdvance(text[i]);
+    }
+    return width;
+}
+
+int Font::getAdvance(uint codepoint) const {
+    if (isPrintableChar(codepoint)) {
+        if (auto glyph = getGlyph(codepoint)) {
+            return glyph->xAdvance;
+        }
+    }
+    return glyphInterval;
 }
 
 static inline void draw_glyph(
@@ -194,11 +207,10 @@ static inline void draw_text(
             }
             int yOffset = 0;
             int xOffset = 0;
-            float advance = 1.0f;
+            float advance = font.getAdvance(c) / cellAdvance;
             if (auto glyph = font.getGlyph(c)) {
                 yOffset = glyph->yOffset;
                 xOffset = glyph->xOffset;
-                advance = glyph->xAdvance / cellAdvance;
             }
             uint charpage = c >> 8;
             if (charpage == page){
@@ -325,7 +337,7 @@ std::unique_ptr<Font> Font::createBitmapFont(
     return std::make_unique<Font>(std::move(textures), std::move(glyphs), res, 4);
 }
 
-const Glyph* Font::getGlyph(int codepoint) {
+const Glyph* Font::getGlyph(int codepoint) const {
     if (codepoint < 0) {
         return nullptr;
     }

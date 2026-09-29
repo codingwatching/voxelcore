@@ -57,6 +57,10 @@ public:
     /// @return pixel width of the substring
     int calcWidth(std::wstring_view text, size_t offset, size_t length) const;
 
+    /// @brief Get the horizontal advance of a character in pixels
+    /// @param codepoint character unicode codepoint
+    int getAdvance(uint codepoint) const;
+
     /// @brief Check if character is visible (non-whitespace)
     /// @param codepoint character unicode codepoint
     bool isPrintableChar(uint codepoint) const;
@@ -87,7 +91,7 @@ public:
         return {std::nullopt, lineHeight, yoffset, glyphInterval};
     }
  
-    const Glyph* getGlyph(int codepoint);
+    const Glyph* getGlyph(int codepoint) const;
 
     static std::unique_ptr<Font> createBitmapFont(
         std::vector<std::unique_ptr<ImageData>> pages
@@ -97,7 +101,7 @@ private:
     int yoffset;
     int glyphInterval;
     bool monospace = true;
-    std::vector<std::unique_ptr<Texture>> pages;
-    std::vector<Glyph> glyphs;
+    mutable std::vector<std::unique_ptr<Texture>> pages;
+    mutable std::vector<Glyph> glyphs;
     std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile;
 };
